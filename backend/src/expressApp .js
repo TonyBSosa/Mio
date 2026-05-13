@@ -1,10 +1,10 @@
-const express = require("express");
+const expressFramework = require("express");
 const cors = require("cors");
 
-const expressApp  = express();
+const expressApp  = expressFramework();
 
 expressApp .use(cors());
-expressApp .use(express.json());
+expressApp .use(expressFramework.json());
 
  
 expressApp .get("/", (req, res) => {
