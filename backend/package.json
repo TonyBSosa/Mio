@@ -14,9 +14,10 @@
   "author": "Tony Sosa",
   "type": "commonjs",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+"scripts": {
+  "test": "echo \"Error: no test specified\" && exit 1",
+  "dev": "nodemon server.js"
+},
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
