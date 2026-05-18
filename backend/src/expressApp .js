@@ -1,14 +1,17 @@
 const expressFramework = require("express");
 const cors = require("cors");
 
-const expressApp  = expressFramework();
+const userRoutes = require("./routes/userRoutes");
 
-expressApp .use(cors());
-expressApp .use(expressFramework.json());
+const expressApp = expressFramework();
 
- 
-expressApp .get("/", (req, res) => {
+expressApp.use(cors());
+expressApp.use(expressFramework.json());
+
+expressApp.get("/", (req, res) => {
   res.send("API MIO funcionando");
 });
- 
-module.exports = expressApp ;
+
+expressApp.use("/api/users", userRoutes);
+
+module.exports = expressApp;
