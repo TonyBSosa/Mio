@@ -2,32 +2,51 @@ const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
   {
-    name: {
+    nombre: {
       type: String,
-      required: true
+      required: true,
+      trim: true
     },
 
     email: {
       type: String,
       required: true,
-      unique: true
+      unique: true,
+      lowercase: true,
+      trim: true
     },
 
     password: {
       type: String,
-      required: true
+      required: true,
+      select: false
     },
 
-    role: {
+    rol: {
       type: String,
-      enum: ["seller", "admin"],
-      default: "seller"
+      enum: ["vendedor", "admin"],
+      default: "vendedor"
+    },
+
+    estado: {
+      type: String,
+      enum: ["activo", "inactivo"],
+      default: "activo"
     }
   },
   {
-    timestamps: true
+    timestamps: true,
+    collection: "usuarios"
   }
 );
+
+userSchema.set("toJSON", {
+  transform: (document, returnedObject) => {
+    delete returnedObject.password;
+    return returnedObject;
+  }
+});
+
 const User = mongoose.model("User", userSchema);
 
 module.exports = User;
