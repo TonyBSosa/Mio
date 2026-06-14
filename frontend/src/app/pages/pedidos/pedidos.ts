@@ -1,0 +1,375 @@
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { Router, RouterModule } from '@angular/router';
+
+import { AuthService } from '../../services/auth.service';
+import { ClienteService } from '../../services/cliente.service';
+import { LiveService } from '../../services/live.service';
+import { PedidoService } from '../../services/pedido.service';
+import { ProductoService } from '../../services/producto.service';
+
+@Component({
+  selector: 'app-pedidos',
+  imports: [FormsModule, RouterModule],
+  templateUrl: './pedidos.html',
+  styleUrl: './pedidos.css',
+})
+export class Pedidos implements OnInit {
+  pedidos: any[] = [];
+  clientes: any[] = [];
+  lives: any[] = [];
+  productos: any[] = [];
+
+  pedido = {
+    clienteId: '',
+    liveId: '',
+    producto: '',
+    cantidad: 1,
+    precio: 0,
+    estadoPago: 'pendiente',
+    estadoEntrega: 'pendiente',
+    observaciones: '',
+  };
+
+  editando = false;
+  pedidoEditandoId = '';
+  mensaje = '';
+  error = '';
+  cargando = false;
+
+  constructor(
+    private authService: AuthService,
+    private clienteService: ClienteService,
+    private liveService: LiveService,
+    private productoService: ProductoService,
+    private pedidoService: PedidoService,
+    private router: Router,
+    private detectorCambios: ChangeDetectorRef,
+  ) {}
+
+  ngOnInit() {
+    this.cargarDatosIniciales();
+  }
+
+  cargarDatosIniciales() {
+    this.listarClientes();
+    this.listarLives();
+    this.listarProductos();
+    this.listarPedidos();
+  }
+
+  listarPedidos() {
+    this.cargando = true;
+    this.error = '';
+
+    this.pedidoService.listarPedidos().subscribe({
+      next: (respuesta: any) => {
+        this.pedidos = respuesta;
+        this.cargando = false;
+        this.detectorCambios.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error al listar pedidos', error);
+        this.error = error.error?.mensaje || 'Error al listar pedidos';
+        this.cargando = false;
+        this.detectorCambios.detectChanges();
+      },
+    });
+  }
+
+  listarClientes() {
+    this.clienteService.listarClientes().subscribe({
+      next: (respuesta: any) => {
+        this.clientes = respuesta;
+        this.detectorCambios.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error al listar clientes', error);
+        this.error = error.error?.mensaje || 'Error al listar clientes';
+        this.detectorCambios.detectChanges();
+      },
+    });
+  }
+
+  listarLives() {
+    this.liveService.listarLives().subscribe({
+      next: (respuesta: any) => {
+        this.lives = respuesta;
+        this.detectorCambios.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error al listar Lives', error);
+        this.error = error.error?.mensaje || 'Error al listar Lives';
+        this.detectorCambios.detectChanges();
+      },
+    });
+  }
+
+  listarProductos() {
+    this.productoService.listarProductos().subscribe({
+      next: (respuesta: any) => {
+        this.productos = respuesta;
+        this.detectorCambios.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error al listar productos', error);
+        this.error = error.error?.mensaje || 'Error al listar productos';
+        this.detectorCambios.detectChanges();
+      },
+    });
+  }
+
+  guardarPedido() {
+    this.mensaje = '';
+    this.error = '';
+
+    if (!this.pedido.clienteId) {
+      this.error = 'El cliente es obligatorio';
+      return;
+    }
+
+    if (!this.pedido.liveId) {
+      this.error = 'El Live es obligatorio';
+      return;
+    }
+
+    if (!this.pedido.producto) {
+      this.error = 'El producto es obligatorio';
+      return;
+    }
+
+    if (this.pedido.cantidad < 1) {
+      this.error = 'La cantidad debe ser mayor o igual a 1';
+      return;
+    }
+
+    if (this.pedido.precio < 0) {
+      this.error = 'El precio debe ser mayor o igual a 0';
+      return;
+    }
+
+    this.cargando = true;
+
+    if (this.editando) {
+      this.pedidoService
+        .actualizarPedido(this.pedidoEditandoId, this.pedido)
+        .subscribe({
+          next: (pedidoActualizado: any) => {
+            const index = this.pedidos.findIndex(
+              (pedidoItem) => pedidoItem._id === this.pedidoEditandoId
+            );
+
+            if (index !== -1) {
+              this.pedidos[index] = pedidoActualizado;
+              this.pedidos = [...this.pedidos];
+            }
+
+            this.limpiarFormulario();
+            this.editando = false;
+            this.pedidoEditandoId = '';
+            this.mensaje = 'Pedido actualizado correctamente';
+            this.cargando = false;
+            this.detectorCambios.detectChanges();
+          },
+          error: (error) => {
+            console.error('Error al actualizar pedido', error);
+            this.error = error.error?.mensaje || 'Error al actualizar pedido';
+            this.cargando = false;
+            this.detectorCambios.detectChanges();
+          },
+        });
+    } else {
+      this.pedidoService.crearPedido(this.pedido).subscribe({
+        next: (pedidoCreado: any) => {
+          this.pedidos.push(pedidoCreado);
+          this.pedidos = [...this.pedidos];
+          this.limpiarFormulario();
+          this.mensaje = 'Pedido creado correctamente';
+          this.cargando = false;
+          this.detectorCambios.detectChanges();
+        },
+        error: (error) => {
+          console.error('Error al crear pedido', error);
+          this.error = error.error?.mensaje || 'Error al crear pedido';
+          this.cargando = false;
+          this.detectorCambios.detectChanges();
+        },
+      });
+    }
+  }
+
+  editarPedido(pedido: any) {
+    this.editando = true;
+    this.pedidoEditandoId = pedido._id;
+    this.pedido = {
+      clienteId: this.obtenerId(pedido.clienteId),
+      liveId: this.obtenerId(pedido.liveId),
+      producto: pedido.producto,
+      cantidad: pedido.cantidad,
+      precio: pedido.precio,
+      estadoPago: pedido.estadoPago,
+      estadoEntrega: pedido.estadoEntrega,
+      observaciones: pedido.observaciones,
+    };
+    this.mensaje = '';
+    this.error = '';
+  }
+
+  cancelarEdicion() {
+    this.editando = false;
+    this.pedidoEditandoId = '';
+    this.limpiarFormulario();
+  }
+
+  eliminarPedido(id: string) {
+    this.mensaje = '';
+    this.error = '';
+    this.cargando = true;
+
+    this.pedidoService.eliminarPedido(id).subscribe({
+      next: () => {
+        this.pedidos = this.pedidos.filter((pedidoItem) => pedidoItem._id !== id);
+        this.mensaje = 'Pedido eliminado correctamente';
+        this.cargando = false;
+        this.detectorCambios.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error al eliminar pedido', error);
+        this.error = error.error?.mensaje || 'Error al eliminar pedido';
+        this.cargando = false;
+        this.detectorCambios.detectChanges();
+      },
+    });
+  }
+
+  marcarPagado(pedido: any) {
+    this.actualizarPago(pedido, 'pagado');
+  }
+
+  marcarPendientePago(pedido: any) {
+    this.actualizarPago(pedido, 'pendiente');
+  }
+
+  marcarEntregado(pedido: any) {
+    this.actualizarEntrega(pedido, 'entregado');
+  }
+
+  marcarPendienteEntrega(pedido: any) {
+    this.actualizarEntrega(pedido, 'pendiente');
+  }
+
+  actualizarPago(pedido: any, estadoPago: string) {
+    this.mensaje = '';
+    this.error = '';
+    this.cargando = true;
+
+    this.pedidoService.marcarPago(pedido._id, estadoPago).subscribe({
+      next: (pedidoActualizado: any) => {
+        const index = this.pedidos.findIndex(
+          (pedidoItem) => pedidoItem._id === pedido._id
+        );
+
+        if (index !== -1) {
+          this.pedidos[index] = pedidoActualizado;
+          this.pedidos = [...this.pedidos];
+        }
+
+        this.mensaje = 'Estado de pago actualizado correctamente';
+        this.cargando = false;
+        this.detectorCambios.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error al cambiar pago', error);
+        this.error = error.error?.mensaje || 'Error al cambiar pago';
+        this.cargando = false;
+        this.detectorCambios.detectChanges();
+      },
+    });
+  }
+
+  actualizarEntrega(pedido: any, estadoEntrega: string) {
+    this.mensaje = '';
+    this.error = '';
+    this.cargando = true;
+
+    this.pedidoService.marcarEntrega(pedido._id, estadoEntrega).subscribe({
+      next: (pedidoActualizado: any) => {
+        const index = this.pedidos.findIndex(
+          (pedidoItem) => pedidoItem._id === pedido._id
+        );
+
+        if (index !== -1) {
+          this.pedidos[index] = pedidoActualizado;
+          this.pedidos = [...this.pedidos];
+        }
+
+        this.mensaje = 'Estado de entrega actualizado correctamente';
+        this.cargando = false;
+        this.detectorCambios.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error al cambiar entrega', error);
+        this.error = error.error?.mensaje || 'Error al cambiar entrega';
+        this.cargando = false;
+        this.detectorCambios.detectChanges();
+      },
+    });
+  }
+
+  seleccionarProducto(producto: any) {
+    if (!producto) {
+      return;
+    }
+
+    this.pedido.producto = producto.nombre;
+    this.pedido.precio = producto.precio;
+  }
+
+  obtenerNombreCliente(clienteId: any) {
+    if (clienteId && clienteId.nombre) {
+      return clienteId.nombre;
+    }
+
+    const id = this.obtenerId(clienteId);
+    const cliente = this.clientes.find((clienteItem) => clienteItem._id === id);
+
+    return cliente ? cliente.nombre : id;
+  }
+
+  obtenerNombreLive(liveId: any) {
+    if (liveId && liveId.nombre) {
+      return liveId.nombre;
+    }
+
+    const id = this.obtenerId(liveId);
+    const live = this.lives.find((liveItem) => liveItem._id === id);
+
+    return live ? live.nombre : id;
+  }
+
+  obtenerId(valor: any) {
+    return valor && valor._id ? valor._id : valor;
+  }
+
+  calcularTotal(pedido: any) {
+    return pedido.cantidad * pedido.precio;
+  }
+
+  limpiarFormulario() {
+    this.pedido = {
+      clienteId: '',
+      liveId: '',
+      producto: '',
+      cantidad: 1,
+      precio: 0,
+      estadoPago: 'pendiente',
+      estadoEntrega: 'pendiente',
+      observaciones: '',
+    };
+  }
+
+  cerrarSesion() {
+    this.authService.logout();
+    this.router.navigate(['/login']);
+  }
+}

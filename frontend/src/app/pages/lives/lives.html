@@ -1,0 +1,131 @@
+<section class="lives-page">
+  <header class="page-header">
+    <div>
+      <h2>Lives</h2>
+      <a routerLink="/clientes">Volver a Clientes</a>
+      <a routerLink="/productos">Ir a Productos</a>
+      <a routerLink="/pedidos">Ir a Pedidos</a>
+      <a routerLink="/resumen">Ir a Resumen</a>
+    </div>
+
+    <button type="button" (click)="cerrarSesion()">Cerrar sesion</button>
+  </header>
+
+  <form class="live-form" (ngSubmit)="guardarLive()">
+    <h3>{{ editando ? 'Editar Live' : 'Nuevo Live' }}</h3>
+
+    <div class="form-group">
+      <label for="nombre">Nombre</label>
+      <input
+        id="nombre"
+        name="nombre"
+        type="text"
+        [(ngModel)]="live.nombre"
+        required
+      >
+    </div>
+
+    <div class="form-group">
+      <label for="descripcion">Descripcion</label>
+      <input
+        id="descripcion"
+        name="descripcion"
+        type="text"
+        [(ngModel)]="live.descripcion"
+      >
+    </div>
+
+    <div class="form-group">
+      <label for="fecha">Fecha</label>
+      <input
+        id="fecha"
+        name="fecha"
+        type="date"
+        [(ngModel)]="live.fecha"
+      >
+    </div>
+
+    <div class="form-group">
+      <label for="estado">Estado</label>
+      <select id="estado" name="estado" [(ngModel)]="live.estado">
+        <option value="programado">programado</option>
+        <option value="activo">activo</option>
+        <option value="finalizado">finalizado</option>
+        <option value="cancelado">cancelado</option>
+      </select>
+    </div>
+
+    <button type="submit" [disabled]="cargando">
+      {{ editando ? 'Actualizar' : 'Guardar' }}
+    </button>
+
+    @if (editando) {
+      <button type="button" class="secondary" (click)="cancelarEdicion()">
+        Cancelar edicion
+      </button>
+    }
+  </form>
+
+  @if (mensaje) {
+    <p class="mensaje exito">{{ mensaje }}</p>
+  }
+
+  @if (error) {
+    <p class="mensaje error">{{ error }}</p>
+  }
+
+  <h3>Listado de Lives</h3>
+
+  @if (cargando) {
+    <p>Cargando...</p>
+  }
+
+  @if (!cargando && lives.length === 0) {
+    <p>No hay Lives registrados.</p>
+  }
+
+  @if (lives.length > 0) {
+    <table>
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Descripcion</th>
+          <th>Fecha</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (liveItem of lives; track liveItem._id) {
+          <tr>
+            <td>{{ liveItem.nombre }}</td>
+            <td>{{ liveItem.descripcion }}</td>
+            <td>{{ liveItem.fecha }}</td>
+            <td>{{ liveItem.estado }}</td>
+            <td>
+              <button type="button" (click)="editarLive(liveItem)">
+                Editar
+              </button>
+              <button type="button" (click)="cambiarEstado(liveItem, 'activo')">
+                Activar
+              </button>
+              <button type="button" (click)="cambiarEstado(liveItem, 'finalizado')">
+                Finalizar
+              </button>
+              <button type="button" (click)="cambiarEstado(liveItem, 'cancelado')">
+                Cancelar
+              </button>
+              <button
+                type="button"
+                class="danger"
+                (click)="eliminarLive(liveItem._id)"
+              >
+                Eliminar
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</section>

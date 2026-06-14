@@ -1,0 +1,86 @@
+<section class="resumen-page">
+  <header class="page-header">
+    <div>
+      <h2>Resumen por Live</h2>
+      <a routerLink="/clientes">Ir a Clientes</a>
+      <a routerLink="/lives">Ir a Lives</a>
+      <a routerLink="/productos">Ir a Productos</a>
+      <a routerLink="/pedidos">Ir a Pedidos</a>
+    </div>
+
+    <button type="button" (click)="cerrarSesion()">Cerrar sesion</button>
+  </header>
+
+  <form class="resumen-form" (ngSubmit)="consultarResumen()">
+    <h3>Consultar resumen</h3>
+
+    <div class="form-group">
+      <label for="liveId">Live</label>
+      <select id="liveId" name="liveId" [(ngModel)]="liveId">
+        <option value="">Seleccione un Live</option>
+        @for (liveItem of lives; track liveItem._id) {
+          <option [value]="liveItem._id">{{ liveItem.nombre }}</option>
+        }
+      </select>
+    </div>
+
+    <button type="submit" [disabled]="cargando">
+      Consultar resumen
+    </button>
+
+    <button type="button" class="secondary" (click)="limpiarResumen()">
+      Limpiar
+    </button>
+  </form>
+
+  @if (mensaje) {
+    <p class="mensaje exito">{{ mensaje }}</p>
+  }
+
+  @if (error) {
+    <p class="mensaje error">{{ error }}</p>
+  }
+
+  @if (cargando) {
+    <p>Cargando...</p>
+  }
+
+  @if (!cargando && lives.length === 0) {
+    <p>No hay Lives registrados.</p>
+  }
+
+  @if (resumen) {
+    <section class="resumen-box">
+      <h3>{{ resumen.nombreLive }}</h3>
+
+      <table>
+        <tbody>
+          <tr>
+            <th>Total pedidos</th>
+            <td>{{ resumen.totalPedidos }}</td>
+          </tr>
+          <tr>
+            <th>Total vendido</th>
+            <td>{{ resumen.totalVendido }}</td>
+          </tr>
+          <tr>
+            <th>Total pagado</th>
+            <td>{{ resumen.totalPagado }}</td>
+          </tr>
+          <tr>
+            <th>Total pendiente pago</th>
+            <td>{{ resumen.totalPendientePago }}</td>
+          </tr>
+          <tr>
+            <th>Total entregados</th>
+            <td>{{ resumen.totalEntregados }}</td>
+          </tr>
+          <tr>
+            <th>Total pendiente entrega</th>
+            <td>{{ resumen.totalPendienteEntrega }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  }
+</section>

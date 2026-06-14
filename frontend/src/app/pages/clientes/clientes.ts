@@ -1,13 +1,13 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 
 import { AuthService } from '../../services/auth.service';
 import { ClienteService } from '../../services/cliente.service';
 
 @Component({
   selector: 'app-clientes',
-  imports: [FormsModule],
+  imports: [FormsModule, RouterModule],
   templateUrl: './clientes.html',
   styleUrl: './clientes.css',
 })
