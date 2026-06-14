@@ -19,7 +19,7 @@ const liveSchema = new mongoose.Schema(
 
     estado: {
       type: String,
-      enum: ["programado", "activo", "finalizado", "cancelado"],
+      enum: ["programado", "activo", "pausado", "finalizado", "cancelado"],
       default: "programado"
     },
 

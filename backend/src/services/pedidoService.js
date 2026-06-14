@@ -52,7 +52,12 @@ const validarEstadoEntrega = (estadoEntrega) => {
   }
 };
 
-const validarClienteYLive = async (clienteId, liveId, vendedorId) => {
+const validarClienteYLive = async (
+  clienteId,
+  liveId,
+  vendedorId,
+  requerirLiveActivo = false
+) => {
   validarIdCliente(clienteId);
   validarIdLive(liveId);
 
@@ -72,6 +77,10 @@ const validarClienteYLive = async (clienteId, liveId, vendedorId) => {
 
   if (!live) {
     throw crearError(404, "Live no encontrado");
+  }
+
+  if (requerirLiveActivo && live.estado !== "activo") {
+    throw crearError(400, "Solo se pueden registrar pedidos en un Live activo.");
   }
 };
 
@@ -115,7 +124,7 @@ const crearPedido = async (data, vendedorId) => {
     validarEstadoEntrega(estadoEntrega);
   }
 
-  await validarClienteYLive(clienteId, liveId, vendedorId);
+  await validarClienteYLive(clienteId, liveId, vendedorId, true);
 
   return pedidoRepository.crearPedido({
     clienteId,

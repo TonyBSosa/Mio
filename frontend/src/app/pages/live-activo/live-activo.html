@@ -1,0 +1,202 @@
+<section class="live-activo-page">
+  <header class="page-header">
+    <div>
+      <h2>Live activo</h2>
+      <a routerLink="/dashboard">Ir a Dashboard</a>
+      <a routerLink="/pedidos">Ir a Pedidos</a>
+      <a routerLink="/lives">Ir a Lives</a>
+      <a routerLink="/resumen">Ir a Resumen</a>
+    </div>
+
+    <button type="button" (click)="cerrarSesion()">Cerrar sesion</button>
+  </header>
+
+  @if (mensaje) {
+    <p class="mensaje exito">{{ mensaje }}</p>
+  }
+
+  @if (error) {
+    <p class="mensaje error">{{ error }}</p>
+  }
+
+  @if (cargando) {
+    <p>Cargando...</p>
+  }
+
+  @if (!cargando && !liveActivo) {
+    <section class="empty-live">
+      <h3>No hay un Live activo</h3>
+      <p>Activa un Live desde el Dashboard para registrar pedidos.</p>
+      <a routerLink="/dashboard">Ir a Dashboard</a>
+    </section>
+  }
+
+  @if (liveActivo) {
+    <section class="live-header" [class.paused]="liveActivo.estado === 'pausado'">
+      <span class="live-indicator pulse">
+        {{ liveActivo.estado === 'activo' ? 'EN VIVO' : liveActivo.estado }}
+      </span>
+      <h3>{{ liveActivo.nombre }}</h3>
+      <p>{{ liveActivo.descripcion }}</p>
+
+      <div class="live-actions">
+        @if (liveActivo.estado === 'activo') {
+          <button type="button" [disabled]="cargando" (click)="pausarLive()">Pausar</button>
+        }
+
+        @if (liveActivo.estado === 'pausado') {
+          <button type="button" [disabled]="cargando" (click)="continuarLive()">Continuar</button>
+        }
+
+        @if (liveActivo.estado === 'activo' || liveActivo.estado === 'pausado') {
+          <button type="button" [disabled]="cargando" (click)="finalizarLive()">Finalizar</button>
+          <button type="button" class="danger" [disabled]="cargando" (click)="cancelarLive()">Cancelar</button>
+        }
+      </div>
+    </section>
+
+    @if (liveActivo.estado === 'pausado') {
+      <p class="mensaje error">El Live esta pausado. Continua el Live para registrar pedidos.</p>
+    }
+
+    <form class="pedido-form" (ngSubmit)="guardarPedido()">
+      <h3>Agregar pedido al Live</h3>
+
+      <div class="form-group">
+        <label for="clienteId">Cliente</label>
+        <select id="clienteId" name="clienteId" [(ngModel)]="pedido.clienteId">
+          <option value="">Seleccione un cliente</option>
+          @for (cliente of clientes; track cliente._id) {
+            <option [value]="cliente._id">{{ cliente.nombre }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="productoLista">Tomar producto registrado</label>
+        <select
+          id="productoLista"
+          name="productoLista"
+          #productoSeleccionado
+          (change)="seleccionarProducto(productos[productoSeleccionado.selectedIndex - 1])"
+        >
+          <option value="">Seleccione un producto</option>
+          @for (producto of productos; track producto._id) {
+            <option [value]="producto._id">
+              {{ producto.nombre }} - {{ producto.precio }}
+            </option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="producto">Producto</label>
+        <input id="producto" name="producto" type="text" [(ngModel)]="pedido.producto">
+      </div>
+
+      <div class="form-group">
+        <label for="cantidad">Cantidad</label>
+        <input id="cantidad" name="cantidad" type="number" [(ngModel)]="pedido.cantidad">
+      </div>
+
+      <div class="form-group">
+        <label for="precio">Precio</label>
+        <input id="precio" name="precio" type="number" [(ngModel)]="pedido.precio">
+      </div>
+
+      <div class="form-group">
+        <label for="observaciones">Observaciones</label>
+        <textarea
+          id="observaciones"
+          name="observaciones"
+          [(ngModel)]="pedido.observaciones"
+        ></textarea>
+      </div>
+
+      <button type="submit" [disabled]="cargando || liveActivo.estado !== 'activo'">
+        Agregar pedido al Live
+      </button>
+    </form>
+
+    <section class="resumen-box">
+      <h3>Resumen del Live</h3>
+
+      @if (resumen) {
+        <div class="resumen-grid">
+          <article>
+            <span>Pedidos</span>
+            <strong>{{ resumen.totalPedidos }}</strong>
+          </article>
+          <article>
+            <span>Total vendido</span>
+            <strong>{{ resumen.totalVendido }}</strong>
+          </article>
+          <article>
+            <span>Total pagado</span>
+            <strong>{{ resumen.totalPagado }}</strong>
+          </article>
+          <article>
+            <span>Pendiente pago</span>
+            <strong>{{ resumen.totalPendientePago }}</strong>
+          </article>
+          <article>
+            <span>Entregados</span>
+            <strong>{{ resumen.totalEntregados }}</strong>
+          </article>
+          <article>
+            <span>Pendiente entrega</span>
+            <strong>{{ resumen.totalPendienteEntrega }}</strong>
+          </article>
+        </div>
+      }
+
+      <a routerLink="/resumen">Ver pantalla de resumen</a>
+    </section>
+
+    <h3>Pedidos de este Live</h3>
+
+    @if (pedidosDelLive.length === 0) {
+      <p>No hay pedidos registrados en este Live.</p>
+    }
+
+    @if (pedidosDelLive.length > 0) {
+      <table>
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th>Producto</th>
+            <th>Cantidad</th>
+            <th>Precio</th>
+            <th>Total</th>
+            <th>Pago</th>
+            <th>Entrega</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (pedidoItem of pedidosDelLive; track pedidoItem._id) {
+            <tr>
+              <td>{{ obtenerNombreCliente(pedidoItem.clienteId) }}</td>
+              <td>{{ pedidoItem.producto }}</td>
+              <td>{{ pedidoItem.cantidad }}</td>
+              <td>{{ pedidoItem.precio }}</td>
+              <td>{{ calcularTotal(pedidoItem) }}</td>
+              <td>{{ pedidoItem.estadoPago }}</td>
+              <td>{{ pedidoItem.estadoEntrega }}</td>
+              <td>
+                <button type="button" (click)="marcarPagado(pedidoItem)">Marcar pagado</button>
+                <button type="button" (click)="marcarPendientePago(pedidoItem)">
+                  Marcar pendiente pago
+                </button>
+                <button type="button" (click)="marcarEntregado(pedidoItem)">Marcar entregado</button>
+                <button type="button" (click)="marcarPendienteEntrega(pedidoItem)">
+                  Marcar pendiente entrega
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  }
+</section>

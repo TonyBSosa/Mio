@@ -42,7 +42,7 @@ export class Login {
           }
 
           if (usuario?.rol === 'vendedor') {
-            this.router.navigate(['/clientes']);
+            this.router.navigate(['/dashboard']);
             return;
           }
 

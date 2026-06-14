@@ -28,6 +28,10 @@ export class LiveService {
     return this.http.get<any[]>(this.apiUrl, this.getHeaders());
   }
 
+  obtenerLiveActivo() {
+    return this.http.get(`${this.apiUrl}/activo/actual`, this.getHeaders());
+  }
+
   crearLive(live: any) {
     return this.http.post(this.apiUrl, live, this.getHeaders());
   }

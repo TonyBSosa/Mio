@@ -1,0 +1,159 @@
+<section class="dashboard-page">
+
+  <!-- Header -->
+  <header class="dashboard-header">
+    <div>
+      <h2>Dashboard del vendedor</h2>
+      @if (usuario) {
+        <p>Bienvenido, {{ usuario.nombre }}</p>
+      }
+    </div>
+    <div class="dashboard-header-actions">
+      <button type="button" class="btn-secondary" (click)="cerrarSesion()">
+        Cerrar sesión
+      </button>
+    </div>
+  </header>
+
+  <!-- Nav -->
+  <nav class="dashboard-nav" aria-label="Secciones">
+    <a routerLink="/clientes" routerLinkActive="active">Clientes</a>
+    <a routerLink="/lives" routerLinkActive="active">Lives</a>
+    <a routerLink="/productos" routerLinkActive="active">Productos</a>
+    <a routerLink="/pedidos" routerLinkActive="active">Pedidos</a>
+    <a routerLink="/live-activo" routerLinkActive="active">Live activo</a>
+    <a routerLink="/resumen" routerLinkActive="active">Resumen</a>
+    <a routerLink="/perfil-vendedor" routerLinkActive="active">Perfil publico</a>
+    @if (usuario?._id || usuario?.id) {
+      <a [routerLink]="'/catalogo/' + (usuario._id || usuario.id)">Ver mi catalogo publico</a>
+    }
+  </nav>
+
+  <!-- Mensajes -->
+  @if (mensaje) {
+    <p class="mensaje exito">{{ mensaje }}</p>
+  }
+  @if (error) {
+    <p class="mensaje error">{{ error }}</p>
+  }
+
+  <!-- Cargando -->
+  @if (cargando) {
+    <p>Cargando...</p>
+  }
+
+  <!-- Métricas -->
+  <section class="go-live-panel">
+    <p class="section-label">GO LIVE</p>
+
+    @if (liveActivo) {
+      <article class="live-active-card">
+        <div>
+          <span class="live-indicator pulse">EN VIVO</span>
+          <h3>{{ liveActivo.nombre }}</h3>
+          <p>{{ liveActivo.descripcion }}</p>
+        </div>
+
+        <div class="live-actions">
+          <a class="btn btn-live" routerLink="/live-activo">Ir al Live activo</a>
+          <button type="button" class="btn-secondary" [disabled]="cargando" (click)="pausarLive()">Pausar</button>
+          <button type="button" class="btn-secondary" [disabled]="cargando" (click)="finalizarLive()">Finalizar</button>
+          <button type="button" class="btn-secondary" [disabled]="cargando" (click)="cancelarLive()">Cancelar</button>
+        </div>
+      </article>
+    } @else {
+      <article class="go-live-card">
+        <div class="form-group">
+          <label for="liveSeleccionadoId">Live para activar</label>
+          <select
+            id="liveSeleccionadoId"
+            name="liveSeleccionadoId"
+            [(ngModel)]="liveSeleccionadoId"
+          >
+            <option value="">Seleccione un Live programado o pausado</option>
+            @for (live of obtenerLivesParaActivar(); track live._id) {
+              <option [value]="live._id">{{ live.nombre }} - {{ live.estado }}</option>
+            }
+          </select>
+        </div>
+
+        <button type="button" class="btn-go-live" [disabled]="cargando" (click)="activarLiveSeleccionado()">
+          GO LIVE
+        </button>
+      </article>
+    }
+  </section>
+
+  @if (!cargando) {
+    <p class="section-label">Métricas principales</p>
+
+    <section class="metricas-grid">
+
+      <article class="metric-card">
+        <span>Clientes</span>
+        <strong>{{ totalClientes }}</strong>
+      </article>
+
+      <article class="metric-card">
+        <span>Lives</span>
+        <strong>{{ totalLives }}</strong>
+      </article>
+
+      <article class="metric-card">
+        <span>Productos</span>
+        <strong>{{ totalProductos }}</strong>
+      </article>
+
+      <article class="metric-card">
+        <span>Pedidos</span>
+        <strong>{{ totalPedidos }}</strong>
+      </article>
+
+      <article class="metric-card">
+        <span>Total vendido</span>
+        <strong>{{ totalVendido }}</strong>
+      </article>
+
+      <article class="metric-card">
+        <span>Pagado</span>
+        <strong>{{ totalPagado }}</strong>
+      </article>
+
+      <article class="metric-card">
+        <span>Pendiente de pago</span>
+        <strong>{{ totalPendientePago }}</strong>
+      </article>
+
+      <article class="metric-card">
+        <span>Pendiente de entrega</span>
+        <strong>{{ totalPendienteEntrega }}</strong>
+      </article>
+
+    </section>
+
+    <!-- Destacados -->
+    <section class="destacados">
+      <p class="section-label">Destacados</p>
+
+      <div class="destacados-grid">
+
+        <article>
+          <span>Live con más ventas</span>
+          <strong>{{ topLive }}</strong>
+        </article>
+
+        <article>
+          <span>Artículo más vendido</span>
+          <strong>{{ topArticulo }}</strong>
+        </article>
+
+        <article>
+          <span>Cliente más recurrente</span>
+          <strong>{{ topCliente }}</strong>
+        </article>
+
+      </div>
+    </section>
+  }
+
+</section>

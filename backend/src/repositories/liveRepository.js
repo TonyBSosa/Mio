@@ -17,6 +17,21 @@ const buscarPorIdYVendedor = (id, vendedorId) => {
   });
 };
 
+const buscarActivoPorVendedor = (vendedorId) => {
+  return Live.findOne({
+    vendedorId,
+    estado: "activo"
+  }).sort({ updatedAt: -1 });
+};
+
+const buscarOtroActivoPorVendedor = (id, vendedorId) => {
+  return Live.findOne({
+    _id: { $ne: id },
+    vendedorId,
+    estado: "activo"
+  });
+};
+
 const actualizarPorIdYVendedor = (id, vendedorId, data) => {
   return Live.findOneAndUpdate(
     {
@@ -39,6 +54,8 @@ module.exports = {
   crearLive,
   listarPorVendedor,
   buscarPorIdYVendedor,
+  buscarActivoPorVendedor,
+  buscarOtroActivoPorVendedor,
   actualizarPorIdYVendedor,
   eliminarPorIdYVendedor
 };

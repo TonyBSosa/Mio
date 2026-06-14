@@ -4,6 +4,7 @@ const {
   crearLive,
   obtenerLives,
   obtenerLivePorId,
+  obtenerLiveActivoActual,
   actualizarLive,
   actualizarEstadoLive,
   eliminarLive
@@ -18,6 +19,7 @@ router.use(validarRol("vendedor"));
 
 router.post("/", crearLive);
 router.get("/", obtenerLives);
+router.get("/activo/actual", obtenerLiveActivoActual);
 router.get("/:id", obtenerLivePorId);
 router.put("/:id", actualizarLive);
 router.patch("/:id/estado", actualizarEstadoLive);

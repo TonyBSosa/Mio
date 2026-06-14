@@ -2,10 +2,13 @@
   <header class="page-header">
     <div>
       <h2>Lives</h2>
+      <a routerLink="/dashboard">Ir a Dashboard</a>
       <a routerLink="/clientes">Volver a Clientes</a>
       <a routerLink="/productos">Ir a Productos</a>
       <a routerLink="/pedidos">Ir a Pedidos</a>
+      <a routerLink="/live-activo">Ir al Live activo</a>
       <a routerLink="/resumen">Ir a Resumen</a>
+      <a routerLink="/perfil-vendedor">Ir a Perfil publico</a>
     </div>
 
     <button type="button" (click)="cerrarSesion()">Cerrar sesion</button>
@@ -50,6 +53,7 @@
       <select id="estado" name="estado" [(ngModel)]="live.estado">
         <option value="programado">programado</option>
         <option value="activo">activo</option>
+        <option value="pausado">pausado</option>
         <option value="finalizado">finalizado</option>
         <option value="cancelado">cancelado</option>
       </select>
@@ -108,6 +112,9 @@
               </button>
               <button type="button" (click)="cambiarEstado(liveItem, 'activo')">
                 Activar
+              </button>
+              <button type="button" (click)="cambiarEstado(liveItem, 'pausado')">
+                Pausar
               </button>
               <button type="button" (click)="cambiarEstado(liveItem, 'finalizado')">
                 Finalizar

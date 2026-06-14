@@ -19,6 +19,7 @@ export class Pedidos implements OnInit {
   clientes: any[] = [];
   lives: any[] = [];
   productos: any[] = [];
+  liveActivo: any = null;
 
   pedido = {
     clienteId: '',
@@ -52,10 +53,30 @@ export class Pedidos implements OnInit {
   }
 
   cargarDatosIniciales() {
+    this.cargarLiveActivo();
     this.listarClientes();
     this.listarLives();
     this.listarProductos();
     this.listarPedidos();
+  }
+
+  cargarLiveActivo() {
+    this.liveService.obtenerLiveActivo().subscribe({
+      next: (respuesta: any) => {
+        this.liveActivo = respuesta;
+
+        if (this.liveActivo && !this.editando) {
+          this.pedido.liveId = this.liveActivo._id;
+        }
+
+        this.detectorCambios.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error al cargar Live activo', error);
+        this.error = error.error?.mensaje || 'Error al cargar Live activo';
+        this.detectorCambios.detectChanges();
+      },
+    });
   }
 
   listarPedidos() {
@@ -128,9 +149,13 @@ export class Pedidos implements OnInit {
       return;
     }
 
-    if (!this.pedido.liveId) {
-      this.error = 'El Live es obligatorio';
+    if (!this.editando && !this.liveActivo) {
+      this.error = 'Los pedidos deben registrarse en el Live activo';
       return;
+    }
+
+    if (!this.editando) {
+      this.pedido.liveId = this.liveActivo._id;
     }
 
     if (!this.pedido.producto) {
@@ -358,7 +383,7 @@ export class Pedidos implements OnInit {
   limpiarFormulario() {
     this.pedido = {
       clienteId: '',
-      liveId: '',
+      liveId: this.liveActivo ? this.liveActivo._id : '',
       producto: '',
       cantidad: 1,
       precio: 0,

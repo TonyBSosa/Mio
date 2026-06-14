@@ -51,6 +51,16 @@ const obtenerLivePorId = async (req, res) => {
   }
 };
 
+const obtenerLiveActivoActual = async (req, res) => {
+  try {
+    const live = await liveService.obtenerLiveActivoActual(obtenerVendedorId(req));
+
+    res.json(live);
+  } catch (error) {
+    responderError(res, error, "Error al obtener Live activo");
+  }
+};
+
 const actualizarLive = async (req, res) => {
   try {
     const live = await liveService.actualizarLive(
@@ -97,6 +107,7 @@ module.exports = {
   crearLive,
   obtenerLives,
   obtenerLivePorId,
+  obtenerLiveActivoActual,
   actualizarLive,
   actualizarEstadoLive,
   eliminarLive

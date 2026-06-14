@@ -2,10 +2,13 @@
   <header class="page-header">
     <div>
       <h2>Pedidos</h2>
+      <a routerLink="/dashboard">Ir a Dashboard</a>
       <a routerLink="/clientes">Ir a Clientes</a>
       <a routerLink="/lives">Ir a Lives</a>
       <a routerLink="/productos">Ir a Productos</a>
+      <a routerLink="/live-activo">Ir al Live activo</a>
       <a routerLink="/resumen">Ir a Resumen</a>
+      <a routerLink="/perfil-vendedor">Ir a Perfil publico</a>
     </div>
 
     <button type="button" (click)="cerrarSesion()">Cerrar sesion</button>
@@ -13,6 +16,19 @@
 
   <form class="pedido-form" (ngSubmit)="guardarPedido()">
     <h3>{{ editando ? 'Editar pedido' : 'Nuevo pedido' }}</h3>
+
+    <p class="mensaje aviso">
+      Los pedidos deben registrarse en el Live activo.
+      <a routerLink="/live-activo">Ir al Live activo</a>
+    </p>
+
+    @if (liveActivo && !editando) {
+      <p>Live activo seleccionado: <strong>{{ liveActivo.nombre }}</strong></p>
+    }
+
+    @if (!liveActivo && !editando) {
+      <p class="mensaje error">No hay un Live activo para registrar pedidos.</p>
+    }
 
     <div class="form-group">
       <label for="clienteId">Cliente</label>
@@ -24,6 +40,7 @@
       </select>
     </div>
 
+    @if (editando) {
     <div class="form-group">
       <label for="liveId">Live</label>
       <select id="liveId" name="liveId" [(ngModel)]="pedido.liveId">
@@ -33,6 +50,7 @@
         }
       </select>
     </div>
+    }
 
     <div class="form-group">
       <label for="productoLista">Tomar producto registrado</label>

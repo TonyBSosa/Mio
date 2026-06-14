@@ -1,0 +1,96 @@
+<section class="catalogo-page">
+  @if (cargando) {
+    <p>Cargando...</p>
+  }
+
+  @if (error) {
+    <p class="mensaje error">{{ error }}</p>
+  }
+
+  @if (mensaje) {
+    <p class="mensaje exito">{{ mensaje }}</p>
+  }
+
+  @if (perfil) {
+    <header class="catalogo-header">
+      <h1>{{ perfil.nombrePublico || 'Catalogo del vendedor' }}</h1>
+      <p>{{ perfil.descripcion }}</p>
+
+      <div class="redes">
+        @if (perfil.facebook) {
+          <a [href]="perfil.facebook" target="_blank">Facebook</a>
+        }
+        @if (perfil.instagram) {
+          <a [href]="perfil.instagram" target="_blank">Instagram</a>
+        }
+        @if (perfil.tiktok) {
+          <a [href]="perfil.tiktok" target="_blank">TikTok</a>
+        }
+        @if (perfil.whatsapp) {
+          <a [href]="perfil.whatsapp" target="_blank">WhatsApp</a>
+        }
+        @if (perfil.enlaceLive) {
+          <a [href]="perfil.enlaceLive" target="_blank">Ver Live</a>
+        }
+      </div>
+
+      <button type="button" (click)="mostrarMensajeSeguimiento()">
+        Seguir vendedor / crear cuenta para seguir eventos
+      </button>
+    </header>
+  }
+
+  @if (liveActivo) {
+    <section class="catalogo-live-activo">
+      <span class="live-indicator pulse">EN VIVO AHORA</span>
+      <h2>{{ liveActivo.nombre }}</h2>
+      <p>{{ liveActivo.descripcion }}</p>
+
+      @if (perfil?.enlaceLive) {
+        <a [href]="perfil.enlaceLive" target="_blank">Ver Live</a>
+      }
+    </section>
+  }
+
+  <section class="catalogo-section">
+    <h2>Proximos eventos Live</h2>
+
+    @if (livesProgramados.length === 0 && !cargando) {
+      <p>No hay eventos programados.</p>
+    }
+
+    @if (livesProgramados.length > 0) {
+      <div class="grid">
+        @for (live of livesProgramados; track live._id) {
+          <article class="card">
+            <h3>{{ live.nombre }}</h3>
+            <p>{{ live.descripcion }}</p>
+            <p>{{ live.fecha }}</p>
+            <strong>{{ live.estado }}</strong>
+          </article>
+        }
+      </div>
+    }
+  </section>
+
+  <section class="catalogo-section">
+    <h2>Productos activos</h2>
+
+    @if (productos.length === 0 && !cargando) {
+      <p>No hay productos disponibles.</p>
+    }
+
+    @if (productos.length > 0) {
+      <div class="grid">
+        @for (producto of productos; track producto._id) {
+          <article class="card">
+            <h3>{{ producto.nombre }}</h3>
+            <p>{{ producto.descripcion }}</p>
+            <p>{{ producto.categoria }}</p>
+            <strong>{{ producto.precio }}</strong>
+          </article>
+        }
+      </div>
+    }
+  </section>
+</section>

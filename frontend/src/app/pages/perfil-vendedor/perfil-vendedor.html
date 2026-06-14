@@ -1,0 +1,88 @@
+<section class="perfil-page">
+  <header class="page-header">
+    <div>
+      <h2>Perfil publico</h2>
+      <a routerLink="/dashboard">Ir a Dashboard</a>
+      <a routerLink="/clientes">Ir a Clientes</a>
+      <a routerLink="/lives">Ir a Lives</a>
+      <a routerLink="/productos">Ir a Productos</a>
+      <a routerLink="/pedidos">Ir a Pedidos</a>
+      <a routerLink="/resumen">Ir a Resumen</a>
+    </div>
+
+    <button type="button" (click)="cerrarSesion()">Cerrar sesion</button>
+  </header>
+
+  <form class="perfil-form" (ngSubmit)="guardarPerfil()">
+    <h3>Datos publicos</h3>
+
+    <div class="form-group">
+      <label for="nombrePublico">Nombre publico</label>
+      <input
+        id="nombrePublico"
+        name="nombrePublico"
+        type="text"
+        [(ngModel)]="perfil.nombrePublico"
+      >
+    </div>
+
+    <div class="form-group">
+      <label for="descripcion">Descripcion</label>
+      <textarea
+        id="descripcion"
+        name="descripcion"
+        [(ngModel)]="perfil.descripcion"
+      ></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="facebook">Facebook</label>
+      <input id="facebook" name="facebook" type="text" [(ngModel)]="perfil.facebook">
+    </div>
+
+    <div class="form-group">
+      <label for="instagram">Instagram</label>
+      <input id="instagram" name="instagram" type="text" [(ngModel)]="perfil.instagram">
+    </div>
+
+    <div class="form-group">
+      <label for="tiktok">TikTok</label>
+      <input id="tiktok" name="tiktok" type="text" [(ngModel)]="perfil.tiktok">
+    </div>
+
+    <div class="form-group">
+      <label for="whatsapp">WhatsApp</label>
+      <input id="whatsapp" name="whatsapp" type="text" [(ngModel)]="perfil.whatsapp">
+    </div>
+
+    <div class="form-group">
+      <label for="enlaceLive">Enlace Live</label>
+      <input
+        id="enlaceLive"
+        name="enlaceLive"
+        type="text"
+        [(ngModel)]="perfil.enlaceLive"
+      >
+    </div>
+
+    <button type="submit" [disabled]="cargando">Guardar</button>
+  </form>
+
+  @if (mensaje) {
+    <p class="mensaje exito">{{ mensaje }}</p>
+  }
+
+  @if (error) {
+    <p class="mensaje error">{{ error }}</p>
+  }
+
+  @if (cargando) {
+    <p>Cargando...</p>
+  }
+
+  <section class="catalogo-box">
+    <h3>Catalogo publico</h3>
+    <p>{{ enlaceCatalogo }}</p>
+    <a [routerLink]="enlaceCatalogo">Ver mi catalogo publico</a>
+  </section>
+</section>

@@ -8,6 +8,8 @@ const liveRoutes = require("./routes/liveRoutes");
 const productoRoutes = require("./routes/productoRoutes");
 const pedidoRoutes = require("./routes/pedidoRoutes");
 const resumenRoutes = require("./routes/resumenRoutes");
+const perfilVendedorRoutes = require("./routes/perfilVendedorRoutes");
+const catalogoPublicoRoutes = require("./routes/catalogoPublicoRoutes");
 
 const expressApp = expressFramework();
 
@@ -25,5 +27,7 @@ expressApp.use("/api/lives", liveRoutes);
 expressApp.use("/api/productos", productoRoutes);
 expressApp.use("/api/pedidos", pedidoRoutes);
 expressApp.use("/api/resumen", resumenRoutes);
+expressApp.use("/api/perfil-vendedor", perfilVendedorRoutes);
+expressApp.use("/api/public/catalogo", catalogoPublicoRoutes);
 
 module.exports = expressApp;
