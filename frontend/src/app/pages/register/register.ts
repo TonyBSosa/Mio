@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 
@@ -20,10 +20,16 @@ export class Register {
   constructor(
     private authService: AuthService,
     private router: Router,
+    private detectorCambios: ChangeDetectorRef,
   ) {}
 
   register() {
     if (this.cargando) return;
+
+    if (!this.nombre || !this.email || !this.password) {
+      this.mensaje = 'Nombre, email y password son obligatorios';
+      return;
+    }
 
     this.cargando = true;
     this.mensaje = '';
@@ -34,13 +40,25 @@ export class Register {
         next: (respuesta) => {
           this.authService.guardarSesion(respuesta);
           this.cargando = false;
+          this.detectorCambios.detectChanges();
           this.router.navigate(['/clientes']);
         },
         error: (error) => {
           console.error('Error al registrar usuario', error);
-          this.mensaje = error.error?.mensaje || 'Error al registrar usuario';
+          this.mensaje = this.obtenerMensajeError(error);
           this.cargando = false;
+          this.detectorCambios.detectChanges();
         },
       });
+  }
+
+  obtenerMensajeError(error: any) {
+    const mensaje = error.error?.mensaje || '';
+
+    if (mensaje === 'Ya existe un usuario con ese email') {
+      return 'Ya hay una cuenta registrada con ese correo';
+    }
+
+    return mensaje || 'Error al registrar usuario';
   }
 }

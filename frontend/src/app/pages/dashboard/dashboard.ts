@@ -371,6 +371,26 @@ export class Dashboard implements OnInit {
     return mensaje;
   }
 
+  mostrarFecha(fecha: any) {
+    if (!fecha) {
+      return 'Sin fecha';
+    }
+
+    const fechaObjeto = new Date(fecha);
+
+    if (Number.isNaN(fechaObjeto.getTime())) {
+      return 'Sin fecha';
+    }
+
+    return fechaObjeto.toLocaleString('es-HN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+
   cerrarSesion() {
     this.authService.logout();
     this.router.navigate(['/login']);

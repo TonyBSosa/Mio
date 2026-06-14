@@ -43,7 +43,7 @@
       <input
         id="fecha"
         name="fecha"
-        type="date"
+        type="datetime-local"
         [(ngModel)]="live.fecha"
       >
     </div>
@@ -104,7 +104,7 @@
           <tr>
             <td>{{ liveItem.nombre }}</td>
             <td>{{ liveItem.descripcion }}</td>
-            <td>{{ liveItem.fecha }}</td>
+            <td>{{ mostrarFecha(liveItem.fecha) }}</td>
             <td>{{ liveItem.estado }}</td>
             <td>
               <button type="button" (click)="editarLive(liveItem)">

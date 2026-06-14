@@ -52,6 +52,7 @@
           <span class="live-indicator pulse">EN VIVO</span>
           <h3>{{ liveActivo.nombre }}</h3>
           <p>{{ liveActivo.descripcion }}</p>
+          <p>{{ mostrarFecha(liveActivo.fecha) }}</p>
         </div>
 
         <div class="live-actions">
@@ -72,7 +73,9 @@
           >
             <option value="">Seleccione un Live programado o pausado</option>
             @for (live of obtenerLivesParaActivar(); track live._id) {
-              <option [value]="live._id">{{ live.nombre }} - {{ live.estado }}</option>
+              <option [value]="live._id">
+                {{ live.nombre }} - {{ live.estado }} - {{ mostrarFecha(live.fecha) }}
+              </option>
             }
           </select>
         </div>

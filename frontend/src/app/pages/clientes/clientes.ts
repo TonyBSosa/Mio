@@ -7,9 +7,10 @@ import { ClienteService } from '../../services/cliente.service';
 
 @Component({
   selector: 'app-clientes',
+  standalone: true,
   imports: [FormsModule, RouterModule],
   templateUrl: './clientes.html',
-  styleUrl: './clientes.css',
+  styleUrls: ['./clientes.css'],
 })
 export class Clientes implements OnInit {
   clientes: any[] = [];

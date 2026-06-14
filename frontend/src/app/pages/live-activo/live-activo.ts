@@ -34,6 +34,14 @@ export class LiveActivo implements OnInit {
     observaciones: '',
   };
 
+  modoCliente = 'existente';
+
+  clienteRapido = {
+    nombre: '',
+    telefono: '',
+    direccion: '',
+  };
+
   mensaje = '';
   error = '';
   cargando = false;
@@ -194,11 +202,6 @@ export class LiveActivo implements OnInit {
       return;
     }
 
-    if (!this.pedido.clienteId) {
-      this.error = 'El cliente es obligatorio';
-      return;
-    }
-
     if (!this.pedido.producto) {
       this.error = 'El producto es obligatorio';
       return;
@@ -217,12 +220,55 @@ export class LiveActivo implements OnInit {
     this.cargando = true;
     this.pedido.liveId = this.liveActivo._id;
 
+    if (this.modoCliente === 'nuevo') {
+      this.crearPedidoConClienteRapido();
+    } else {
+      this.crearPedidoConClienteExistente();
+    }
+  }
+
+  crearPedidoConClienteExistente() {
+    if (!this.pedido.clienteId) {
+      this.error = 'El cliente es obligatorio';
+      this.cargando = false;
+      return;
+    }
+
+    this.crearPedidoFinal();
+  }
+
+  crearPedidoConClienteRapido() {
+    if (!this.clienteRapido.nombre) {
+      this.error = 'El nombre del cliente es obligatorio';
+      this.cargando = false;
+      return;
+    }
+
+    this.clienteService.crearCliente(this.clienteRapido).subscribe({
+      next: (clienteCreado: any) => {
+        this.clientes.push(clienteCreado);
+        this.clientes = [...this.clientes];
+        this.pedido.clienteId = clienteCreado._id;
+        this.crearPedidoFinal(true);
+      },
+      error: (error) => {
+        console.error('Error al crear cliente rapido', error);
+        this.error = 'No se pudo crear el cliente rapido.';
+        this.cargando = false;
+        this.detectorCambios.detectChanges();
+      },
+    });
+  }
+
+  crearPedidoFinal(clienteRapidoCreado = false) {
     this.pedidoService.crearPedido(this.pedido).subscribe({
       next: (pedidoCreado: any) => {
         this.pedidos.push(pedidoCreado);
         this.pedidos = [...this.pedidos];
         this.filtrarPedidosDelLive();
-        this.limpiarFormulario();
+        this.limpiarFormularioPedido();
+        this.limpiarClienteRapido();
+        this.modoCliente = 'existente';
         this.consultarResumen();
         this.mensaje = 'Pedido agregado al Live correctamente';
         this.cargando = false;
@@ -230,7 +276,9 @@ export class LiveActivo implements OnInit {
       },
       error: (error) => {
         console.error('Error al crear pedido', error);
-        this.error = error.error?.mensaje || 'Error al crear pedido';
+        this.error = clienteRapidoCreado
+          ? 'Cliente creado, pero no se pudo registrar el pedido.'
+          : error.error?.mensaje || 'Error al crear pedido';
         this.cargando = false;
         this.detectorCambios.detectChanges();
       },
@@ -388,7 +436,27 @@ export class LiveActivo implements OnInit {
     return pedido.cantidad * pedido.precio;
   }
 
-  limpiarFormulario() {
+  mostrarFecha(fecha: any) {
+    if (!fecha) {
+      return 'Sin fecha';
+    }
+
+    const fechaObjeto = new Date(fecha);
+
+    if (Number.isNaN(fechaObjeto.getTime())) {
+      return 'Sin fecha';
+    }
+
+    return fechaObjeto.toLocaleString('es-HN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+
+  limpiarFormularioPedido() {
     this.pedido = {
       clienteId: '',
       liveId: this.liveActivo ? this.liveActivo._id : '',
@@ -398,6 +466,18 @@ export class LiveActivo implements OnInit {
       estadoPago: 'pendiente',
       estadoEntrega: 'pendiente',
       observaciones: '',
+    };
+  }
+
+  limpiarFormulario() {
+    this.limpiarFormularioPedido();
+  }
+
+  limpiarClienteRapido() {
+    this.clienteRapido = {
+      nombre: '',
+      telefono: '',
+      direccion: '',
     };
   }
 

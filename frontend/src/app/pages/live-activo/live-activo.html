@@ -38,6 +38,7 @@
       </span>
       <h3>{{ liveActivo.nombre }}</h3>
       <p>{{ liveActivo.descripcion }}</p>
+      <p>{{ mostrarFecha(liveActivo.fecha) }}</p>
 
       <div class="live-actions">
         @if (liveActivo.estado === 'activo') {
@@ -63,14 +64,60 @@
       <h3>Agregar pedido al Live</h3>
 
       <div class="form-group">
-        <label for="clienteId">Cliente</label>
-        <select id="clienteId" name="clienteId" [(ngModel)]="pedido.clienteId">
-          <option value="">Seleccione un cliente</option>
-          @for (cliente of clientes; track cliente._id) {
-            <option [value]="cliente._id">{{ cliente.nombre }}</option>
-          }
+        <label for="modoCliente">Tipo de cliente</label>
+        <select id="modoCliente" name="modoCliente" [(ngModel)]="modoCliente">
+          <option value="existente">Cliente existente</option>
+          <option value="nuevo">Cliente nuevo rapido</option>
         </select>
       </div>
+
+      @if (modoCliente === 'existente') {
+        <div class="form-group">
+          <label for="clienteId">Cliente</label>
+          <select id="clienteId" name="clienteId" [(ngModel)]="pedido.clienteId">
+            <option value="">Seleccione un cliente</option>
+            @for (cliente of clientes; track cliente._id) {
+              <option [value]="cliente._id">{{ cliente.nombre }}</option>
+            }
+          </select>
+        </div>
+      }
+
+      @if (modoCliente === 'nuevo') {
+        <section class="cliente-rapido-box">
+          <h4>Cliente rapido</h4>
+
+          <div class="form-group">
+            <label for="clienteRapidoNombre">Nombre</label>
+            <input
+              id="clienteRapidoNombre"
+              name="clienteRapidoNombre"
+              type="text"
+              [(ngModel)]="clienteRapido.nombre"
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="clienteRapidoTelefono">Telefono</label>
+            <input
+              id="clienteRapidoTelefono"
+              name="clienteRapidoTelefono"
+              type="text"
+              [(ngModel)]="clienteRapido.telefono"
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="clienteRapidoDireccion">Direccion</label>
+            <input
+              id="clienteRapidoDireccion"
+              name="clienteRapidoDireccion"
+              type="text"
+              [(ngModel)]="clienteRapido.direccion"
+            >
+          </div>
+        </section>
+      }
 
       <div class="form-group">
         <label for="productoLista">Tomar producto registrado</label>

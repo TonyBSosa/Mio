@@ -120,7 +120,7 @@ export class Lives implements OnInit {
     this.live = {
       nombre: live.nombre,
       descripcion: live.descripcion,
-      fecha: live.fecha ? live.fecha.substring(0, 10) : '',
+      fecha: this.formatearFechaParaInput(live.fecha),
       estado: live.estado,
     };
     this.mensaje = '';
@@ -190,6 +190,44 @@ export class Lives implements OnInit {
       fecha: '',
       estado: 'programado',
     };
+  }
+
+  formatearFechaParaInput(fecha: any) {
+    if (!fecha) {
+      return '';
+    }
+
+    const fechaObjeto = new Date(fecha);
+
+    if (Number.isNaN(fechaObjeto.getTime())) {
+      return '';
+    }
+
+    const fechaLocal = new Date(
+      fechaObjeto.getTime() - fechaObjeto.getTimezoneOffset() * 60000
+    );
+
+    return fechaLocal.toISOString().slice(0, 16);
+  }
+
+  mostrarFecha(fecha: any) {
+    if (!fecha) {
+      return 'Sin fecha';
+    }
+
+    const fechaObjeto = new Date(fecha);
+
+    if (Number.isNaN(fechaObjeto.getTime())) {
+      return 'Sin fecha';
+    }
+
+    return fechaObjeto.toLocaleString('es-HN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   }
 
   cerrarSesion() {
