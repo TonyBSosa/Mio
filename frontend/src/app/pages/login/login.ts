@@ -33,7 +33,22 @@ export class Login {
         next: (respuesta) => {
           this.authService.guardarSesion(respuesta);
           this.cargando = false;
-          this.router.navigate(['/clientes']);
+
+          const usuario: any = this.authService.getUsuario();
+
+          if (usuario?.rol === 'admin') {
+            this.router.navigate(['/admin/usuarios']);
+            return;
+          }
+
+          if (usuario?.rol === 'vendedor') {
+            this.router.navigate(['/clientes']);
+            return;
+          }
+
+          this.mensaje = 'Rol de usuario no valido';
+          this.authService.logout();
+          this.router.navigate(['/login']);
         },
         error: (error) => {
           console.error('Error al iniciar sesion', error);

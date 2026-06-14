@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 
+import { UsuariosAdmin } from './pages/admin/usuarios/usuarios';
 import { Clientes } from './pages/clientes/clientes';
 import { Lives } from './pages/lives/lives';
 import { Login } from './pages/login/login';
@@ -16,6 +17,7 @@ export const routes: Routes = [
   { path: 'productos', component: Productos },
   { path: 'pedidos', component: Pedidos },
   { path: 'resumen', component: Resumen },
+  { path: 'admin/usuarios', component: UsuariosAdmin },
   { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: '**', redirectTo: 'login' },
 ];

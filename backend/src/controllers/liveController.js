@@ -1,187 +1,95 @@
-const mongoose = require("mongoose");
-
-const Live = require("../models/lives");
+const liveService = require("../services/liveService");
 
 const obtenerVendedorId = (req) => req.usuario._id || req.usuario.id;
 
+const responderError = (res, error, mensajeDefault) => {
+  if (error.status) {
+    return res.status(error.status).json({
+      mensaje: error.mensaje
+    });
+  }
+
+  return res.status(500).json({
+    mensaje: mensajeDefault,
+    error: error.message
+  });
+};
+
 const crearLive = async (req, res) => {
   try {
-    const { nombre, descripcion, fecha, estado } = req.body;
-
-    if (!nombre) {
-      return res.status(400).json({
-        mensaje: "El nombre del Live es obligatorio"
-      });
-    }
-
-    const live = await Live.create({
-      nombre,
-      descripcion,
-      fecha,
-      estado,
-      vendedorId: obtenerVendedorId(req)
-    });
+    const live = await liveService.crearLive(
+      req.body,
+      obtenerVendedorId(req)
+    );
 
     res.status(201).json(live);
   } catch (error) {
-    res.status(500).json({
-      mensaje: "Error al crear Live",
-      error: error.message
-    });
+    responderError(res, error, "Error al crear Live");
   }
 };
 
 const obtenerLives = async (req, res) => {
   try {
-    const lives = await Live.find({
-      vendedorId: obtenerVendedorId(req)
-    });
+    const lives = await liveService.listarLives(obtenerVendedorId(req));
 
     res.json(lives);
   } catch (error) {
-    res.status(500).json({
-      mensaje: "Error al obtener Lives",
-      error: error.message
-    });
+    responderError(res, error, "Error al obtener Lives");
   }
 };
 
 const obtenerLivePorId = async (req, res) => {
   try {
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({
-        mensaje: "ID de Live invalido"
-      });
-    }
-
-    const live = await Live.findOne({
-      _id: req.params.id,
-      vendedorId: obtenerVendedorId(req)
-    });
-
-    if (!live) {
-      return res.status(404).json({
-        mensaje: "Live no encontrado"
-      });
-    }
+    const live = await liveService.obtenerLivePorId(
+      req.params.id,
+      obtenerVendedorId(req)
+    );
 
     res.json(live);
   } catch (error) {
-    res.status(500).json({
-      mensaje: "Error al obtener Live",
-      error: error.message
-    });
+    responderError(res, error, "Error al obtener Live");
   }
 };
 
 const actualizarLive = async (req, res) => {
   try {
-    const { nombre, descripcion, fecha, estado } = req.body;
-
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({
-        mensaje: "ID de Live invalido"
-      });
-    }
-
-    const datosActualizar = {};
-
-    if (nombre !== undefined) datosActualizar.nombre = nombre;
-    if (descripcion !== undefined) datosActualizar.descripcion = descripcion;
-    if (fecha !== undefined) datosActualizar.fecha = fecha;
-    if (estado !== undefined) datosActualizar.estado = estado;
-
-    const live = await Live.findOneAndUpdate(
-      {
-        _id: req.params.id,
-        vendedorId: obtenerVendedorId(req)
-      },
-      datosActualizar,
-      { new: true, runValidators: true }
+    const live = await liveService.actualizarLive(
+      req.params.id,
+      req.body,
+      obtenerVendedorId(req)
     );
-
-    if (!live) {
-      return res.status(404).json({
-        mensaje: "Live no encontrado"
-      });
-    }
 
     res.json(live);
   } catch (error) {
-    res.status(500).json({
-      mensaje: "Error al actualizar Live",
-      error: error.message
-    });
+    responderError(res, error, "Error al actualizar Live");
   }
 };
 
 const actualizarEstadoLive = async (req, res) => {
   try {
     const { estado } = req.body;
-
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({
-        mensaje: "ID de Live invalido"
-      });
-    }
-
-    if (!estado) {
-      return res.status(400).json({
-        mensaje: "El estado es obligatorio"
-      });
-    }
-
-    const live = await Live.findOneAndUpdate(
-      {
-        _id: req.params.id,
-        vendedorId: obtenerVendedorId(req)
-      },
-      { estado },
-      { new: true, runValidators: true }
+    const live = await liveService.actualizarEstadoLive(
+      req.params.id,
+      estado,
+      obtenerVendedorId(req)
     );
-
-    if (!live) {
-      return res.status(404).json({
-        mensaje: "Live no encontrado"
-      });
-    }
 
     res.json(live);
   } catch (error) {
-    res.status(500).json({
-      mensaje: "Error al actualizar estado del Live",
-      error: error.message
-    });
+    responderError(res, error, "Error al actualizar estado del Live");
   }
 };
 
 const eliminarLive = async (req, res) => {
   try {
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({
-        mensaje: "ID de Live invalido"
-      });
-    }
+    const respuesta = await liveService.eliminarLive(
+      req.params.id,
+      obtenerVendedorId(req)
+    );
 
-    const live = await Live.findOneAndDelete({
-      _id: req.params.id,
-      vendedorId: obtenerVendedorId(req)
-    });
-
-    if (!live) {
-      return res.status(404).json({
-        mensaje: "Live no encontrado"
-      });
-    }
-
-    res.json({
-      mensaje: "Live eliminado correctamente"
-    });
+    res.json(respuesta);
   } catch (error) {
-    res.status(500).json({
-      mensaje: "Error al eliminar Live",
-      error: error.message
-    });
+    responderError(res, error, "Error al eliminar Live");
   }
 };
 

@@ -1,211 +1,95 @@
-const mongoose = require("mongoose");
-
-const Producto = require("../models/productos");
+const productoService = require("../services/productoService");
 
 const obtenerVendedorId = (req) => req.usuario._id || req.usuario.id;
 
-const precioEsValido = (precio) => {
-  if (precio === undefined || precio === null || precio === "") {
-    return false;
+const responderError = (res, error, mensajeDefault) => {
+  if (error.status) {
+    return res.status(error.status).json({
+      mensaje: error.mensaje
+    });
   }
 
-  const precioNumerico = Number(precio);
-
-  return !Number.isNaN(precioNumerico) && precioNumerico >= 0;
+  return res.status(500).json({
+    mensaje: mensajeDefault,
+    error: error.message
+  });
 };
 
 const crearProducto = async (req, res) => {
   try {
-    const { nombre, descripcion, categoria, precio, estado } = req.body;
-
-    if (!nombre) {
-      return res.status(400).json({
-        mensaje: "El nombre del producto es obligatorio"
-      });
-    }
-
-    if (!precioEsValido(precio)) {
-      return res.status(400).json({
-        mensaje: "El precio es obligatorio y debe ser mayor o igual a 0"
-      });
-    }
-
-    const producto = await Producto.create({
-      vendedorId: obtenerVendedorId(req),
-      nombre,
-      descripcion,
-      categoria,
-      precio,
-      estado
-    });
+    const producto = await productoService.crearProducto(
+      req.body,
+      obtenerVendedorId(req)
+    );
 
     res.status(201).json(producto);
   } catch (error) {
-    res.status(500).json({
-      mensaje: "Error al crear producto",
-      error: error.message
-    });
+    responderError(res, error, "Error al crear producto");
   }
 };
 
 const obtenerProductos = async (req, res) => {
   try {
-    const productos = await Producto.find({
-      vendedorId: obtenerVendedorId(req)
-    });
+    const productos = await productoService.listarProductos(obtenerVendedorId(req));
 
     res.json(productos);
   } catch (error) {
-    res.status(500).json({
-      mensaje: "Error al obtener productos",
-      error: error.message
-    });
+    responderError(res, error, "Error al obtener productos");
   }
 };
 
 const obtenerProductoPorId = async (req, res) => {
   try {
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({
-        mensaje: "ID de producto invalido"
-      });
-    }
-
-    const producto = await Producto.findOne({
-      _id: req.params.id,
-      vendedorId: obtenerVendedorId(req)
-    });
-
-    if (!producto) {
-      return res.status(404).json({
-        mensaje: "Producto no encontrado"
-      });
-    }
+    const producto = await productoService.obtenerProductoPorId(
+      req.params.id,
+      obtenerVendedorId(req)
+    );
 
     res.json(producto);
   } catch (error) {
-    res.status(500).json({
-      mensaje: "Error al obtener producto",
-      error: error.message
-    });
+    responderError(res, error, "Error al obtener producto");
   }
 };
 
 const actualizarProducto = async (req, res) => {
   try {
-    const { nombre, descripcion, categoria, precio, estado } = req.body;
-
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({
-        mensaje: "ID de producto invalido"
-      });
-    }
-
-    if (precio !== undefined && !precioEsValido(precio)) {
-      return res.status(400).json({
-        mensaje: "El precio debe ser mayor o igual a 0"
-      });
-    }
-
-    const datosActualizar = {};
-
-    if (nombre !== undefined) datosActualizar.nombre = nombre;
-    if (descripcion !== undefined) datosActualizar.descripcion = descripcion;
-    if (categoria !== undefined) datosActualizar.categoria = categoria;
-    if (precio !== undefined) datosActualizar.precio = precio;
-    if (estado !== undefined) datosActualizar.estado = estado;
-
-    const producto = await Producto.findOneAndUpdate(
-      {
-        _id: req.params.id,
-        vendedorId: obtenerVendedorId(req)
-      },
-      datosActualizar,
-      { new: true, runValidators: true }
+    const producto = await productoService.actualizarProducto(
+      req.params.id,
+      req.body,
+      obtenerVendedorId(req)
     );
-
-    if (!producto) {
-      return res.status(404).json({
-        mensaje: "Producto no encontrado"
-      });
-    }
 
     res.json(producto);
   } catch (error) {
-    res.status(500).json({
-      mensaje: "Error al actualizar producto",
-      error: error.message
-    });
+    responderError(res, error, "Error al actualizar producto");
   }
 };
 
 const actualizarEstadoProducto = async (req, res) => {
   try {
     const { estado } = req.body;
-
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({
-        mensaje: "ID de producto invalido"
-      });
-    }
-
-    if (!estado) {
-      return res.status(400).json({
-        mensaje: "El estado es obligatorio"
-      });
-    }
-
-    const producto = await Producto.findOneAndUpdate(
-      {
-        _id: req.params.id,
-        vendedorId: obtenerVendedorId(req)
-      },
-      { estado },
-      { new: true, runValidators: true }
+    const producto = await productoService.actualizarEstadoProducto(
+      req.params.id,
+      estado,
+      obtenerVendedorId(req)
     );
-
-    if (!producto) {
-      return res.status(404).json({
-        mensaje: "Producto no encontrado"
-      });
-    }
 
     res.json(producto);
   } catch (error) {
-    res.status(500).json({
-      mensaje: "Error al actualizar estado del producto",
-      error: error.message
-    });
+    responderError(res, error, "Error al actualizar estado del producto");
   }
 };
 
 const eliminarProducto = async (req, res) => {
   try {
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({
-        mensaje: "ID de producto invalido"
-      });
-    }
+    const respuesta = await productoService.eliminarProducto(
+      req.params.id,
+      obtenerVendedorId(req)
+    );
 
-    const producto = await Producto.findOneAndDelete({
-      _id: req.params.id,
-      vendedorId: obtenerVendedorId(req)
-    });
-
-    if (!producto) {
-      return res.status(404).json({
-        mensaje: "Producto no encontrado"
-      });
-    }
-
-    res.json({
-      mensaje: "Producto eliminado correctamente"
-    });
+    res.json(respuesta);
   } catch (error) {
-    res.status(500).json({
-      mensaje: "Error al eliminar producto",
-      error: error.message
-    });
+    responderError(res, error, "Error al eliminar producto");
   }
 };
 
