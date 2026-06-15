@@ -11,7 +11,7 @@ const generarToken = (usuarioId) => {
 
 const registrar = async (req, res) => {
   try {
-    const { nombre, email, password } = req.body;
+    const { nombre, email, password, rol } = req.body;
 
     if (!nombre || !email || !password) {
       return res.status(400).json({
@@ -28,11 +28,25 @@ const registrar = async (req, res) => {
     }
 
     const passwordHasheado = await bcrypt.hash(password, 10);
+    const rolRegistro = rol || "vendedor";
+
+    if (rolRegistro === "admin") {
+      return res.status(400).json({
+        mensaje: "No se permite registrar administradores desde este formulario."
+      });
+    }
+
+    if (!["vendedor", "cliente"].includes(rolRegistro)) {
+      return res.status(400).json({
+        mensaje: "Rol de usuario invalido"
+      });
+    }
 
     const usuario = await User.create({
       nombre,
       email,
-      password: passwordHasheado
+      password: passwordHasheado,
+      rol: rolRegistro
     });
 
     res.status(201).json({

@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 
 const userRepository = require("../repositories/userRepository");
 
-const ROLES_USUARIO = ["admin", "vendedor"];
+const ROLES_USUARIO = ["admin", "vendedor", "cliente"];
 const ESTADOS_USUARIO = ["activo", "inactivo"];
 
 const crearError = (status, mensaje) => {

@@ -21,11 +21,12 @@ export class AuthService {
     });
   }
 
-  register(nombre: string, email: string, password: string) {
+  register(nombre: string, email: string, password: string, rol = 'vendedor') {
     return this.http.post<AuthResponse>(`${this.apiUrl}/register`, {
       nombre,
       email,
       password,
+      rol,
     });
   }
 

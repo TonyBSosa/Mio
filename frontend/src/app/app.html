@@ -1,3 +1,17 @@
-<h1>MIO</h1>
+<main class="app-shell">
+  <header class="app-header">
+    <a class="brand" routerLink="/bienvenida">
+      <span class="brand-mark">M</span>
+      <span>MIO</span>
+    </a>
 
-<router-outlet></router-outlet>
+    <nav class="app-nav">
+      <a routerLink="/bienvenida">Inicio</a>
+      <a routerLink="/cliente/inicio">Explorar</a>
+     </nav>
+  </header>
+
+  <section class="app-content">
+    <router-outlet></router-outlet>
+  </section>
+</main>

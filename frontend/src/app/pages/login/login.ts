@@ -53,6 +53,11 @@ export class Login {
             return;
           }
 
+          if (usuario?.rol === 'cliente') {
+            this.router.navigate(['/cliente/inicio']);
+            return;
+          }
+
           this.mensaje = 'Rol de usuario no valido';
           this.authService.logout();
           this.router.navigate(['/login']);

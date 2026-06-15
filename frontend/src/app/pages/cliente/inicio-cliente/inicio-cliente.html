@@ -1,0 +1,105 @@
+<section class="cliente-page">
+  <header class="cliente-header">
+    <div>
+      <h2>Explorar eventos y vendedores</h2>
+      @if (usuario) {
+        <p>Bienvenido, {{ usuario.nombre }}</p>
+      } @else {
+        <p>Descubre eventos activos y catalogos publicos.</p>
+      }
+    </div>
+
+    <div class="header-actions">
+     
+      @if (usuario) {
+        <button type="button" (click)="cerrarSesion()">Cerrar sesion</button>
+      }
+    </div>
+  </header>
+
+  @if (mensaje) {
+    <p class="mensaje exito">{{ mensaje }}</p>
+  }
+
+  @if (error) {
+    <p class="mensaje error">{{ error }}</p>
+  }
+
+  @if (cargando) {
+    <p>Cargando...</p>
+  }
+
+  <section class="seccion">
+    <p class="section-label">Eventos activos</p>
+
+    @if (eventosActivos.length === 0 && !cargando) {
+      <p>No hay eventos activos en este momento.</p>
+    }
+
+    <div class="grid">
+      @for (evento of eventosActivos; track evento._id) {
+        <article class="card live-card">
+          <span>EN VIVO</span>
+          <h3>{{ evento.nombre }}</h3>
+          <p>{{ evento.descripcion }}</p>
+          <p>{{ mostrarFecha(evento.fecha) }}</p>
+          <small>{{ evento.nombrePublico }}</small>
+          <div>
+            <a [routerLink]="'/catalogo/' + evento.vendedorId">Ver catalogo</a>
+            <button type="button" (click)="mostrarMensajeFaseSiguiente()">
+              Seguir vendedor
+            </button>
+          </div>
+        </article>
+      }
+    </div>
+  </section>
+
+  <section class="seccion">
+    <p class="section-label">Proximos eventos</p>
+
+    @if (eventosProgramados.length === 0 && !cargando) {
+      <p>No hay eventos programados.</p>
+    }
+
+    <div class="grid">
+      @for (evento of eventosProgramados; track evento._id) {
+        <article class="card">
+          <h3>{{ evento.nombre }}</h3>
+          <p>{{ evento.descripcion }}</p>
+          <p>{{ mostrarFecha(evento.fecha) }}</p>
+          <small>{{ evento.nombrePublico }}</small>
+          <div>
+            <a [routerLink]="'/catalogo/' + evento.vendedorId">Ver catalogo</a>
+            <button type="button" (click)="mostrarMensajeFaseSiguiente()">
+              Solicitar ser cliente
+            </button>
+          </div>
+        </article>
+      }
+    </div>
+  </section>
+
+  <section class="seccion">
+    <p class="section-label">Vendedores disponibles</p>
+
+    @if (vendedores.length === 0 && !cargando) {
+      <p>No hay vendedores disponibles.</p>
+    }
+
+    <div class="grid">
+      @for (vendedor of vendedores; track vendedor.vendedorId) {
+        <article class="card">
+          <h3>{{ vendedor.nombrePublico || 'Vendedor' }}</h3>
+          <p>{{ vendedor.descripcion }}</p>
+          <div>
+            <a [routerLink]="'/catalogo/' + vendedor.vendedorId">Ver catalogo</a>
+            <button type="button" (click)="mostrarMensajeFaseSiguiente()">
+              Seguir vendedor
+            </button>
+          </div>
+        </article>
+      }
+    </div>
+  </section>
+</section>

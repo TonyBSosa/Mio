@@ -6,6 +6,7 @@ import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-register',
+  standalone: true,
   imports: [FormsModule, RouterModule],
   templateUrl: './register.html',
   styleUrl: './register.css',
@@ -16,12 +17,26 @@ export class Register {
   password = '';
   mensaje = '';
   cargando = false;
+  rolRegistro = 'vendedor';
+  titulo = 'Crear cuenta de vendedor';
 
   constructor(
     private authService: AuthService,
     private router: Router,
     private detectorCambios: ChangeDetectorRef,
   ) {}
+
+  ngOnInit() {
+    const ruta = this.router.url;
+
+    if (ruta.includes('register-cliente')) {
+      this.rolRegistro = 'cliente';
+      this.titulo = 'Crear cuenta de cliente';
+    } else {
+      this.rolRegistro = 'vendedor';
+      this.titulo = 'Crear cuenta de vendedor';
+    }
+  }
 
   register() {
     if (this.cargando) return;
@@ -35,13 +50,19 @@ export class Register {
     this.mensaje = '';
 
     this.authService
-      .register(this.nombre, this.email, this.password)
+      .register(this.nombre, this.email, this.password, this.rolRegistro)
       .subscribe({
         next: (respuesta) => {
           this.authService.guardarSesion(respuesta);
           this.cargando = false;
           this.detectorCambios.detectChanges();
-          this.router.navigate(['/clientes']);
+
+          if (this.rolRegistro === 'cliente') {
+            this.router.navigate(['/cliente/inicio']);
+            return;
+          }
+
+          this.router.navigate(['/dashboard']);
         },
         error: (error) => {
           console.error('Error al registrar usuario', error);
