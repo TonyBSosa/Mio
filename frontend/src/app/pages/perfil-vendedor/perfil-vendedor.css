@@ -1,0 +1,153 @@
+/* === Layout principal === */
+.perfil-page {
+  max-width: 1100px;
+  margin: 40px auto;
+  padding: 24px;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: #1f2933;
+}
+
+/* === Header y navegacion === */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.page-header h2 {
+  font-size: 20px;
+  font-weight: 500;
+  margin: 0 0 4px;
+}
+
+.page-header p {
+  margin: 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.page-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 24px;
+  padding: 6px;
+  border: 0.5px solid #e5e7eb;
+  border-radius: 12px;
+  background: #f9fafb;
+}
+
+.page-nav a {
+  font-size: 13px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  color: #6b7280;
+  text-decoration: none;
+}
+
+/* === Formulario === */
+.perfil-form,
+.catalogo-box {
+  padding: 18px 22px;
+  margin-bottom: 22px;
+  border: 0.5px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.perfil-form h3,
+.catalogo-box h3 {
+  font-size: 15px;
+  font-weight: 500;
+  margin: 0 0 14px;
+}
+
+.catalogo-box p {
+  margin: 0 0 12px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.catalogo-box a {
+  display: inline-flex;
+  padding: 8px 14px;
+  border-radius: 8px;
+  color: #185fa5;
+  text-decoration: none;
+  background: #e6f1fb;
+}
+
+.form-group {
+  margin-bottom: 12px;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+input,
+textarea {
+  width: 100%;
+  padding: 9px 12px;
+  border: 0.5px solid #d1d5db;
+  border-radius: 8px;
+  box-sizing: border-box;
+  font-size: 14px;
+  background: #f9fafb;
+}
+
+textarea {
+  min-height: 88px;
+  resize: vertical;
+}
+
+/* === Botones y mensajes === */
+button {
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 16px;
+  margin: 0 8px 8px 0;
+  border: 0;
+  border-radius: 8px;
+  background: #185fa5;
+  color: #e6f1fb;
+  cursor: pointer;
+}
+
+.btn-secondary {
+  background: #f3f4f6;
+  color: #1f2933;
+  border: 0.5px solid #d1d5db;
+}
+
+.mensaje {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin: 0 0 16px;
+}
+
+.exito {
+  background: #eaf3de;
+  color: #3b6d11;
+}
+
+.error {
+  background: #fcebeb;
+  color: #a32d2d;
+}
+
+@media (max-width: 700px) {
+  .page-header {
+    flex-direction: column;
+  }
+}
