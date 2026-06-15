@@ -42,6 +42,7 @@ export class LiveActivo implements OnInit {
     direccion: '',
   };
 
+  productoSeleccionadoId = '';
   mensaje = '';
   error = '';
   cargando = false;
@@ -142,7 +143,9 @@ export class LiveActivo implements OnInit {
   listarProductos() {
     this.productoService.listarProductos().subscribe({
       next: (respuesta: any) => {
-        this.productos = respuesta;
+        this.productos = respuesta.filter(
+          (producto: any) => producto.estado === 'activo'
+        );
         this.detectorCambios.detectChanges();
       },
       error: (error) => {
@@ -186,6 +189,15 @@ export class LiveActivo implements OnInit {
 
     this.pedido.producto = producto.nombre;
     this.pedido.precio = producto.precio;
+    this.productoSeleccionadoId = producto._id;
+  }
+
+  seleccionarProductoPorId() {
+    const producto = this.productos.find(
+      (productoItem) => productoItem._id === this.productoSeleccionadoId
+    );
+
+    this.seleccionarProducto(producto);
   }
 
   guardarPedido() {
@@ -263,9 +275,16 @@ export class LiveActivo implements OnInit {
   crearPedidoFinal(clienteRapidoCreado = false) {
     this.pedidoService.crearPedido(this.pedido).subscribe({
       next: (pedidoCreado: any) => {
+        const productoId = this.productoSeleccionadoId;
+
         this.pedidos.push(pedidoCreado);
         this.pedidos = [...this.pedidos];
         this.filtrarPedidosDelLive();
+
+        if (productoId) {
+          this.apartarProductoSeleccionado(productoId);
+        }
+
         this.limpiarFormularioPedido();
         this.limpiarClienteRapido();
         this.modoCliente = 'existente';
@@ -280,6 +299,25 @@ export class LiveActivo implements OnInit {
           ? 'Cliente creado, pero no se pudo registrar el pedido.'
           : error.error?.mensaje || 'Error al crear pedido';
         this.cargando = false;
+        this.detectorCambios.detectChanges();
+      },
+    });
+  }
+
+  apartarProductoSeleccionado(productoId: string) {
+    this.productoService.cambiarEstado(productoId, 'apartado').subscribe({
+      next: () => {
+        this.productos = this.productos.filter(
+          (producto) => producto._id !== productoId
+        );
+        this.mensaje = 'Pedido agregado al Live correctamente. Producto apartado.';
+        this.detectorCambios.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error al apartar producto', error);
+        this.error =
+          error.error?.mensaje ||
+          'Pedido creado, pero no se pudo marcar el producto como apartado.';
         this.detectorCambios.detectChanges();
       },
     });
@@ -467,6 +505,7 @@ export class LiveActivo implements OnInit {
       estadoEntrega: 'pendiente',
       observaciones: '',
     };
+    this.productoSeleccionadoId = '';
   }
 
   limpiarFormulario() {
@@ -483,6 +522,5 @@ export class LiveActivo implements OnInit {
 
   cerrarSesion() {
     this.authService.logout();
-    this.router.navigate(['/login']);
   }
 }

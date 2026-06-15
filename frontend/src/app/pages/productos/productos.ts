@@ -13,6 +13,11 @@ import { ProductoService } from '../../services/producto.service';
 })
 export class Productos implements OnInit {
   productos: any[] = [];
+  productosFiltrados: any[] = [];
+  categorias: string[] = [];
+  filtroNombre = '';
+  filtroCategoria = '';
+  filtroEstado = '';
 
   producto = {
     nombre: '',
@@ -46,6 +51,8 @@ export class Productos implements OnInit {
     this.productoService.listarProductos().subscribe({
       next: (respuesta: any) => {
         this.productos = respuesta;
+        this.actualizarCategorias();
+        this.filtrarProductos();
         this.cargando = false;
         this.detectorCambios.detectChanges();
       },
@@ -86,6 +93,8 @@ export class Productos implements OnInit {
             if (index !== -1) {
               this.productos[index] = productoActualizado;
               this.productos = [...this.productos];
+              this.actualizarCategorias();
+              this.filtrarProductos();
             }
 
             this.limpiarFormulario();
@@ -107,6 +116,8 @@ export class Productos implements OnInit {
         next: (productoCreado: any) => {
           this.productos.push(productoCreado);
           this.productos = [...this.productos];
+          this.actualizarCategorias();
+          this.filtrarProductos();
           this.limpiarFormulario();
           this.mensaje = 'Producto creado correctamente';
           this.cargando = false;
@@ -152,6 +163,8 @@ export class Productos implements OnInit {
         this.productos = this.productos.filter(
           (productoItem) => productoItem._id !== id
         );
+        this.actualizarCategorias();
+        this.filtrarProductos();
         this.mensaje = 'Producto eliminado correctamente';
         this.cargando = false;
         this.detectorCambios.detectChanges();
@@ -179,6 +192,8 @@ export class Productos implements OnInit {
         if (index !== -1) {
           this.productos[index] = productoActualizado;
           this.productos = [...this.productos];
+          this.actualizarCategorias();
+          this.filtrarProductos();
         }
 
         this.mensaje = 'Estado actualizado correctamente';
@@ -204,8 +219,39 @@ export class Productos implements OnInit {
     };
   }
 
+  filtrarProductos() {
+    const textoNombre = this.filtroNombre.trim().toLowerCase();
+
+    this.productosFiltrados = this.productos.filter((productoItem) => {
+      const nombre = String(productoItem.nombre || '').toLowerCase();
+      const categoria = String(productoItem.categoria || '');
+      const estado = String(productoItem.estado || '');
+
+      const coincideNombre = !textoNombre || nombre.includes(textoNombre);
+      const coincideCategoria =
+        !this.filtroCategoria || categoria === this.filtroCategoria;
+      const coincideEstado = !this.filtroEstado || estado === this.filtroEstado;
+
+      return coincideNombre && coincideCategoria && coincideEstado;
+    });
+  }
+
+  limpiarFiltros() {
+    this.filtroNombre = '';
+    this.filtroCategoria = '';
+    this.filtroEstado = '';
+    this.filtrarProductos();
+  }
+
+  actualizarCategorias() {
+    const categoriasUnicas = this.productos
+      .map((productoItem) => productoItem.categoria)
+      .filter((categoria) => !!categoria);
+
+    this.categorias = [...new Set(categoriasUnicas)];
+  }
+
   cerrarSesion() {
     this.authService.logout();
-    this.router.navigate(['/login']);
   }
 }

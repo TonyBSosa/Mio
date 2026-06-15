@@ -32,6 +32,7 @@
   <!-- Mensajes -->
   @if (mensaje) {
     <p class="mensaje exito">{{ mensaje }}</p>
+    
   }
   @if (error) {
     <p class="mensaje error">{{ error }}</p>
@@ -128,7 +129,7 @@
       </article>
 
       <article class="metric-card">
-        <span>Pendiente de entrega</span>
+        <span>Pedidos pendientes de entrega</span>
         <strong>{{ totalPendienteEntrega }}</strong>
       </article>
 

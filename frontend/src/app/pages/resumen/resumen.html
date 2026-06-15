@@ -2,16 +2,20 @@
   <header class="page-header">
     <div>
       <h2>Resumen por Live</h2>
+      <p>Consulta ventas, pagos y entregas agrupadas por evento Live.</p>
+    </div>
+
+    <button type="button" class="btn-secondary" (click)="cerrarSesion()">Cerrar sesion</button>
+  </header>
+
+  <nav class="page-nav">
       <a routerLink="/dashboard">Ir a Dashboard</a>
       <a routerLink="/clientes">Ir a Clientes</a>
       <a routerLink="/lives">Ir a Lives</a>
       <a routerLink="/productos">Ir a Productos</a>
       <a routerLink="/pedidos">Ir a Pedidos</a>
       <a routerLink="/perfil-vendedor">Ir a Perfil publico</a>
-    </div>
-
-    <button type="button" (click)="cerrarSesion()">Cerrar sesion</button>
-  </header>
+  </nav>
 
   <form class="resumen-form" (ngSubmit)="consultarResumen()">
     <h3>Consultar resumen</h3>
@@ -26,7 +30,7 @@
       </select>
     </div>
 
-    <button type="submit" [disabled]="cargando">
+    <button type="submit" class="btn-primary" [disabled]="cargando">
       Consultar resumen
     </button>
 
@@ -78,7 +82,7 @@
             <td>{{ resumen.totalEntregados }}</td>
           </tr>
           <tr>
-            <th>Total pendiente entrega</th>
+            <th>Pedidos pendientes de entrega</th>
             <td>{{ resumen.totalPendienteEntrega }}</td>
           </tr>
         </tbody>

@@ -32,7 +32,7 @@ const productoSchema = new mongoose.Schema(
 
     estado: {
       type: String,
-      enum: ["activo", "inactivo"],
+      enum: ["activo", "inactivo", "apartado"],
       default: "activo"
     }
   },

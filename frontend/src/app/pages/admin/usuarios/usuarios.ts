@@ -221,6 +221,5 @@ export class UsuariosAdmin implements OnInit {
 
   cerrarSesion() {
     this.authService.logout();
-    this.router.navigate(['/login']);
   }
 }

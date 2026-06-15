@@ -1,5 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { RouterModule } from '@angular/router';
+
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-bienvenida',
@@ -8,4 +10,12 @@ import { RouterModule } from '@angular/router';
   templateUrl: './bienvenida.html',
   styleUrl: './bienvenida.css',
 })
-export class Bienvenida {}
+export class Bienvenida implements OnInit {
+  constructor(private authService: AuthService) {}
+
+  ngOnInit() {
+    if (this.authService.estaAutenticado()) {
+      this.authService.redirigirPorRol();
+    }
+  }
+}

@@ -39,19 +39,33 @@ h1 {
 }
 
 .acciones {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, 195px);
+  align-items: stretch;
   gap: 10px;
   margin-top: 28px;
 }
 
 .acciones a,
 .explorar-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   text-decoration: none;
   border-radius: 8px;
-  padding: 10px 16px;
+  padding: 0 16px;
   font-size: 14px;
   font-weight: 600;
+  box-sizing: border-box;
+  height: 48px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.acciones .btn-primary,
+.acciones .btn-client,
+.acciones .btn-secondary {
+  width: 100%;
 }
 
 .btn-primary {
@@ -60,9 +74,12 @@ h1 {
 }
 
 .btn-client {
-  background: #dc2626;
+  background: #b11d1d;
   color: #ffffff;
+ 
+  
 }
+   
 
 .btn-secondary {
   background: #f3f4f6;
@@ -71,7 +88,6 @@ h1 {
 }
 
 .explorar-link {
-  display: inline-flex;
   margin-top: 16px;
   color: #185fa5;
   padding-left: 0;
@@ -127,6 +143,16 @@ h1 {
 
   h1 {
     font-size: 34px;
+  }
+
+  .acciones .btn-primary,
+  .acciones .btn-client,
+  .acciones .btn-secondary {
+    width: 100%;
+  }
+
+  .acciones {
+    grid-template-columns: 1fr;
   }
 }
  

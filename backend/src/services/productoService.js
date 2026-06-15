@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const productoRepository = require("../repositories/productoRepository");
 
-const ESTADOS_PRODUCTO = ["activo", "inactivo"];
+const ESTADOS_PRODUCTO = ["activo", "inactivo", "apartado"];
 
 const crearError = (status, mensaje) => {
   const error = new Error(mensaje);

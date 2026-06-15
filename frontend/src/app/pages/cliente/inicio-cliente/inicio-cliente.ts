@@ -104,6 +104,5 @@ export class InicioCliente implements OnInit {
 
   cerrarSesion() {
     this.authService.logout();
-    this.router.navigate(['/bienvenida']);
   }
 }

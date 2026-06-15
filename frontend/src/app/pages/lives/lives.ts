@@ -232,6 +232,5 @@ export class Lives implements OnInit {
 
   cerrarSesion() {
     this.authService.logout();
-    this.router.navigate(['/login']);
   }
 }

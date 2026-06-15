@@ -2,16 +2,20 @@
   <header class="page-header">
     <div>
       <h2>Productos</h2>
+      <p>Administra el catalogo de productos disponibles para tus Lives.</p>
+    </div>
+
+    <button type="button" class="btn-secondary" (click)="cerrarSesion()">Cerrar sesion</button>
+  </header>
+
+  <nav class="page-nav">
       <a routerLink="/dashboard">Ir a Dashboard</a>
       <a routerLink="/clientes">Ir a Clientes</a>
       <a routerLink="/lives">Ir a Lives</a>
       <a routerLink="/pedidos">Ir a Pedidos</a>
       <a routerLink="/resumen">Ir a Resumen</a>
       <a routerLink="/perfil-vendedor">Ir a Perfil publico</a>
-    </div>
-
-    <button type="button" (click)="cerrarSesion()">Cerrar sesion</button>
-  </header>
+  </nav>
 
   <form class="producto-form" (ngSubmit)="guardarProducto()">
     <h3>{{ editando ? 'Editar producto' : 'Nuevo producto' }}</h3>
@@ -62,10 +66,11 @@
       <select id="estado" name="estado" [(ngModel)]="producto.estado">
         <option value="activo">activo</option>
         <option value="inactivo">inactivo</option>
+        <option value="apartado">apartado</option>
       </select>
     </div>
 
-    <button type="submit" [disabled]="cargando">
+    <button type="submit" class="btn-primary" [disabled]="cargando">
       {{ editando ? 'Actualizar' : 'Guardar' }}
     </button>
 
@@ -84,7 +89,57 @@
     <p class="mensaje error">{{ error }}</p>
   }
 
-  <h3>Listado de productos</h3>
+  <h3 class="section-label">Listado de productos</h3>
+
+  <section class="filtros-box">
+    <div class="form-group">
+      <label for="filtroNombre">Buscar producto</label>
+      <input
+        id="filtroNombre"
+        name="filtroNombre"
+        type="text"
+        placeholder="Ejemplo: blusa, pantalon"
+        [(ngModel)]="filtroNombre"
+        (input)="filtrarProductos()"
+      >
+    </div>
+
+    <div class="form-group">
+      <label for="filtroCategoria">Filtrar por categoria</label>
+      <select
+        id="filtroCategoria"
+        name="filtroCategoria"
+        [(ngModel)]="filtroCategoria"
+        (change)="filtrarProductos()"
+      >
+        <option value="">Todas las categorias</option>
+        @for (categoriaItem of categorias; track categoriaItem) {
+          <option [value]="categoriaItem">{{ categoriaItem }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="filtroEstado">Filtrar por estado</label>
+      <select
+        id="filtroEstado"
+        name="filtroEstado"
+        [(ngModel)]="filtroEstado"
+        (change)="filtrarProductos()"
+      >
+        <option value="">Todos los estados</option>
+        <option value="activo">activo</option>
+        <option value="inactivo">inactivo</option>
+        <option value="apartado">apartado</option>
+      </select>
+    </div>
+
+    <div class="filtros-actions">
+      <button type="button" class="secondary" (click)="limpiarFiltros()">
+        Limpiar filtros
+      </button>
+    </div>
+  </section>
 
   @if (cargando) {
     <p>Cargando...</p>
@@ -94,7 +149,11 @@
     <p>No hay productos registrados.</p>
   }
 
-  @if (productos.length > 0) {
+  @if (!cargando && productos.length > 0 && productosFiltrados.length === 0) {
+    <p>No hay productos que coincidan con los filtros.</p>
+  }
+
+  @if (productosFiltrados.length > 0) {
     <table>
       <thead>
         <tr>
@@ -107,7 +166,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (productoItem of productos; track productoItem._id) {
+        @for (productoItem of productosFiltrados; track productoItem._id) {
           <tr>
             <td>{{ productoItem.nombre }}</td>
             <td>{{ productoItem.descripcion }}</td>
@@ -118,12 +177,21 @@
               <button type="button" (click)="editarProducto(productoItem)">
                 Editar
               </button>
-              <button type="button" (click)="cambiarEstado(productoItem, 'activo')">
-                Activar
-              </button>
-              <button type="button" (click)="cambiarEstado(productoItem, 'inactivo')">
-                Inactivar
-              </button>
+              @if (productoItem.estado !== 'activo') {
+                <button type="button" (click)="cambiarEstado(productoItem, 'activo')">
+                  Activar
+                </button>
+              }
+              @if (productoItem.estado !== 'inactivo') {
+                <button type="button" (click)="cambiarEstado(productoItem, 'inactivo')">
+                  Inactivar
+                </button>
+              }
+              @if (productoItem.estado !== 'apartado') {
+                <button type="button" (click)="cambiarEstado(productoItem, 'apartado')">
+                  Apartar
+                </button>
+              }
               <button
                 type="button"
                 class="danger"

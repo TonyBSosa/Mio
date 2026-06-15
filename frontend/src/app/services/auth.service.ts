@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 
 interface AuthResponse {
   token: string;
@@ -12,7 +13,10 @@ interface AuthResponse {
 export class AuthService {
   private apiUrl = 'http://localhost:3000/api/auth';
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private router: Router,
+  ) {}
 
   login(email: string, password: string) {
     return this.http.post<AuthResponse>(`${this.apiUrl}/login`, {
@@ -44,15 +48,51 @@ export class AuthService {
   getUsuario() {
     const usuario = localStorage.getItem('usuario');
 
-    return usuario ? JSON.parse(usuario) : null;
+    if (!usuario) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(usuario);
+    } catch {
+      return null;
+    }
+  }
+
+  getRol() {
+    const usuario = this.getUsuario();
+
+    return usuario?.rol || '';
   }
 
   logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('usuario');
+    this.router.navigate(['/bienvenida']);
   }
 
   estaAutenticado() {
-    return !!this.getToken();
+    return !!this.getToken() && !!this.getUsuario();
+  }
+
+  redirigirPorRol() {
+    const rol = this.getRol();
+
+    if (rol === 'admin') {
+      this.router.navigate(['/admin/usuarios']);
+      return;
+    }
+
+    if (rol === 'vendedor') {
+      this.router.navigate(['/dashboard']);
+      return;
+    }
+
+    if (rol === 'cliente') {
+      this.router.navigate(['/cliente/inicio']);
+      return;
+    }
+
+    this.router.navigate(['/login']);
   }
 }

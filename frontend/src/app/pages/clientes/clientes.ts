@@ -167,6 +167,5 @@ export class Clientes implements OnInit {
 
   cerrarSesion() {
     this.authService.logout();
-    this.router.navigate(['/login']);
   }
 }

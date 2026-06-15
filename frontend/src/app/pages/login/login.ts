@@ -1,6 +1,6 @@
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { RouterModule } from '@angular/router';
 
 import { AuthService } from '../../services/auth.service';
 
@@ -10,7 +10,7 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './login.html',
   styleUrl: './login.css',
 })
-export class Login {
+export class Login implements OnInit {
   email = '';
   password = '';
   mensaje = '';
@@ -18,9 +18,14 @@ export class Login {
 
   constructor(
     private authService: AuthService,
-    private router: Router,
     private detectorCambios: ChangeDetectorRef,
   ) {}
+
+  ngOnInit() {
+    if (this.authService.estaAutenticado()) {
+      this.authService.redirigirPorRol();
+    }
+  }
 
   login() {
     if (this.cargando) return;
@@ -41,27 +46,14 @@ export class Login {
           this.cargando = false;
           this.detectorCambios.detectChanges();
 
-          const usuario: any = this.authService.getUsuario();
-
-          if (usuario?.rol === 'admin') {
-            this.router.navigate(['/admin/usuarios']);
+          if (!this.authService.getRol()) {
+            this.mensaje = 'Rol de usuario no valido';
+            this.authService.logout();
+            this.detectorCambios.detectChanges();
             return;
           }
 
-          if (usuario?.rol === 'vendedor') {
-            this.router.navigate(['/dashboard']);
-            return;
-          }
-
-          if (usuario?.rol === 'cliente') {
-            this.router.navigate(['/cliente/inicio']);
-            return;
-          }
-
-          this.mensaje = 'Rol de usuario no valido';
-          this.authService.logout();
-          this.router.navigate(['/login']);
-          this.detectorCambios.detectChanges();
+          this.authService.redirigirPorRol();
         },
         error: (error) => {
           console.error('Error al iniciar sesion', error);

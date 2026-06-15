@@ -2,16 +2,20 @@
   <header class="page-header">
     <div>
       <h2>Perfil publico</h2>
+      <p>Configura la informacion que veran los clientes en tu catalogo publico.</p>
+    </div>
+
+    <button type="button" class="btn-secondary" (click)="cerrarSesion()">Cerrar sesion</button>
+  </header>
+
+  <nav class="page-nav">
       <a routerLink="/dashboard">Ir a Dashboard</a>
       <a routerLink="/clientes">Ir a Clientes</a>
       <a routerLink="/lives">Ir a Lives</a>
       <a routerLink="/productos">Ir a Productos</a>
       <a routerLink="/pedidos">Ir a Pedidos</a>
       <a routerLink="/resumen">Ir a Resumen</a>
-    </div>
-
-    <button type="button" (click)="cerrarSesion()">Cerrar sesion</button>
-  </header>
+  </nav>
 
   <form class="perfil-form" (ngSubmit)="guardarPerfil()">
     <h3>Datos publicos</h3>
@@ -65,7 +69,7 @@
       >
     </div>
 
-    <button type="submit" [disabled]="cargando">Guardar</button>
+    <button type="submit" class="btn-primary" [disabled]="cargando">Guardar</button>
   </form>
 
   @if (mensaje) {

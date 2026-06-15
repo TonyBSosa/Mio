@@ -99,6 +99,5 @@ export class PerfilVendedor implements OnInit {
 
   cerrarSesion() {
     this.authService.logout();
-    this.router.navigate(['/login']);
   }
 }

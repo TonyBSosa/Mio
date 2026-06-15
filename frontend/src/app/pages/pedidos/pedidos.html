@@ -2,6 +2,13 @@
   <header class="page-header">
     <div>
       <h2>Pedidos</h2>
+      <p>Consulta y actualiza pedidos, pagos y entregas del vendedor.</p>
+    </div>
+
+    <button type="button" class="btn-secondary" (click)="cerrarSesion()">Cerrar sesion</button>
+  </header>
+
+  <nav class="page-nav">
       <a routerLink="/dashboard">Ir a Dashboard</a>
       <a routerLink="/clientes">Ir a Clientes</a>
       <a routerLink="/lives">Ir a Lives</a>
@@ -9,25 +16,31 @@
       <a routerLink="/live-activo">Ir al Live activo</a>
       <a routerLink="/resumen">Ir a Resumen</a>
       <a routerLink="/perfil-vendedor">Ir a Perfil publico</a>
-    </div>
+  </nav>
 
-    <button type="button" (click)="cerrarSesion()">Cerrar sesion</button>
-  </header>
+  @if (!liveActivo && !editando) {
+    <section class="post-live-box">
+      <h3>Gestion de pedidos despues del Live</h3>
+      <p>
+        No hay un Live activo. Puedes buscar pedidos existentes y actualizar pagos o entregas.
+        Para registrar pedidos nuevos, activa un Live desde el Dashboard o desde Live activo.
+      </p>
+      <a routerLink="/dashboard">Ir a Dashboard</a>
+      <a routerLink="/live-activo">Ir al Live activo</a>
+    </section>
+  }
 
+  @if (liveActivo || editando) {
   <form class="pedido-form" (ngSubmit)="guardarPedido()">
     <h3>{{ editando ? 'Editar pedido' : 'Nuevo pedido' }}</h3>
 
     <p class="mensaje aviso">
-      Los pedidos deben registrarse en el Live activo.
+      Los pedidos nuevos se registran en el Live activo. Los pedidos ya creados pueden actualizarse despues del evento.
       <a routerLink="/live-activo">Ir al Live activo</a>
     </p>
 
     @if (liveActivo && !editando) {
       <p>Live activo seleccionado: <strong>{{ liveActivo.nombre }}</strong></p>
-    }
-
-    @if (!liveActivo && !editando) {
-      <p class="mensaje error">No hay un Live activo para registrar pedidos.</p>
     }
 
     <div class="form-group">
@@ -129,7 +142,7 @@
       ></textarea>
     </div>
 
-    <button type="submit" [disabled]="cargando">
+    <button type="submit" class="btn-primary" [disabled]="cargando">
       {{ editando ? 'Actualizar' : 'Guardar' }}
     </button>
 
@@ -139,6 +152,7 @@
       </button>
     }
   </form>
+  }
 
   @if (mensaje) {
     <p class="mensaje exito">{{ mensaje }}</p>
@@ -148,7 +162,57 @@
     <p class="mensaje error">{{ error }}</p>
   }
 
-  <h3>Listado de pedidos</h3>
+  <h3 class="section-label">Listado de pedidos</h3>
+
+  <section class="filtros-box">
+    <div class="form-group">
+      <label for="filtroLiveId">Filtrar por Live</label>
+      <select
+        id="filtroLiveId"
+        name="filtroLiveId"
+        [(ngModel)]="filtroLiveId"
+        (change)="filtrarPedidos()"
+      >
+        <option value="">Todos los Lives</option>
+        @for (liveItem of lives; track liveItem._id) {
+          <option [value]="liveItem._id">{{ liveItem.nombre }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="filtroClienteId">Filtrar por cliente</label>
+      <select
+        id="filtroClienteId"
+        name="filtroClienteId"
+        [(ngModel)]="filtroClienteId"
+        (change)="filtrarPedidos()"
+      >
+        <option value="">Todos los clientes</option>
+        @for (clienteItem of clientes; track clienteItem._id) {
+          <option [value]="clienteItem._id">{{ clienteItem.nombre }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="filtroProducto">Buscar producto</label>
+      <input
+        id="filtroProducto"
+        name="filtroProducto"
+        type="text"
+        placeholder="Ejemplo: blusa, pantalon"
+        [(ngModel)]="filtroProducto"
+        (input)="filtrarPedidos()"
+      >
+    </div>
+
+    <div class="filtros-actions">
+      <button type="button" class="secondary" (click)="limpiarFiltros()">
+        Limpiar filtros
+      </button>
+    </div>
+  </section>
 
   @if (cargando) {
     <p>Cargando...</p>
@@ -158,7 +222,11 @@
     <p>No hay pedidos registrados.</p>
   }
 
-  @if (pedidos.length > 0) {
+  @if (!cargando && pedidos.length > 0 && pedidosFiltrados.length === 0) {
+    <p>No hay pedidos que coincidan con los filtros.</p>
+  }
+
+  @if (pedidosFiltrados.length > 0) {
     <table>
       <thead>
         <tr>
@@ -174,7 +242,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (pedidoItem of pedidos; track pedidoItem._id) {
+        @for (pedidoItem of pedidosFiltrados; track pedidoItem._id) {
           <tr>
             <td>{{ obtenerNombreCliente(pedidoItem.clienteId) }}</td>
             <td>{{ obtenerNombreLive(pedidoItem.liveId) }}</td>
@@ -182,31 +250,50 @@
             <td>{{ pedidoItem.cantidad }}</td>
             <td>{{ pedidoItem.precio }}</td>
             <td>{{ calcularTotal(pedidoItem) }}</td>
-            <td>{{ pedidoItem.estadoPago }}</td>
-            <td>{{ pedidoItem.estadoEntrega }}</td>
             <td>
-              <button type="button" (click)="editarPedido(pedidoItem)">
-                Editar
-              </button>
-              <button type="button" (click)="marcarPagado(pedidoItem)">
-                Marcar pagado
-              </button>
-              <button type="button" (click)="marcarPendientePago(pedidoItem)">
-                Marcar pendiente pago
-              </button>
-              <button type="button" (click)="marcarEntregado(pedidoItem)">
-                Marcar entregado
-              </button>
-              <button type="button" (click)="marcarPendienteEntrega(pedidoItem)">
-                Marcar pendiente entrega
-              </button>
-              <button
-                type="button"
-                class="danger"
-                (click)="eliminarPedido(pedidoItem._id)"
-              >
-                Eliminar
-              </button>
+              <span class="estado-badge" [class.estado-ok]="pedidoItem.estadoPago === 'pagado'">
+                {{ pedidoItem.estadoPago }}
+              </span>
+            </td>
+            <td>
+              <span class="estado-badge" [class.estado-ok]="pedidoItem.estadoEntrega === 'entregado'">
+                {{ pedidoItem.estadoEntrega }}
+              </span>
+            </td>
+            <td>
+              <div class="acciones-tabla">
+                <button type="button" class="btn-small" (click)="editarPedido(pedidoItem)">
+                  Editar
+                </button>
+
+                @if (pedidoItem.estadoPago === 'pendiente') {
+                  <button type="button" class="btn-small" (click)="marcarPagado(pedidoItem)">
+                    Pagado
+                  </button>
+                } @else {
+                  <button type="button" class="btn-small secondary" (click)="marcarPendientePago(pedidoItem)">
+                    Pago pendiente
+                  </button>
+                }
+
+                @if (pedidoItem.estadoEntrega === 'pendiente') {
+                  <button type="button" class="btn-small" (click)="marcarEntregado(pedidoItem)">
+                    Entregado
+                  </button>
+                } @else {
+                  <button type="button" class="btn-small secondary" (click)="marcarPendienteEntrega(pedidoItem)">
+                    Entrega pendiente
+                  </button>
+                }
+
+                <button
+                  type="button"
+                  class="btn-small danger"
+                  (click)="eliminarPedido(pedidoItem._id)"
+                >
+                  Eliminar
+                </button>
+              </div>
             </td>
           </tr>
         }

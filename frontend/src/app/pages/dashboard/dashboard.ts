@@ -298,7 +298,7 @@ export class Dashboard implements OnInit {
     this.error = '';
 
     if (!this.liveSeleccionadoId) {
-      this.error = 'Seleccione un Live para activar';
+      this.error = 'Seleccione un Live para activar o crea uno nuevo';
       return;
     }
 
@@ -393,6 +393,5 @@ export class Dashboard implements OnInit {
 
   cerrarSesion() {
     this.authService.logout();
-    this.router.navigate(['/login']);
   }
 }

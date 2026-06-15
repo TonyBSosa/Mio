@@ -2,14 +2,18 @@
   <header class="page-header">
     <div>
       <h2>Live activo</h2>
+      <p>Opera el evento en vivo, registra pedidos y controla pagos y entregas.</p>
+    </div>
+
+    <button type="button" class="btn-secondary" (click)="cerrarSesion()">Cerrar sesion</button>
+  </header>
+
+  <nav class="page-nav">
       <a routerLink="/dashboard">Ir a Dashboard</a>
       <a routerLink="/pedidos">Ir a Pedidos</a>
       <a routerLink="/lives">Ir a Lives</a>
       <a routerLink="/resumen">Ir a Resumen</a>
-    </div>
-
-    <button type="button" (click)="cerrarSesion()">Cerrar sesion</button>
-  </header>
+  </nav>
 
   @if (mensaje) {
     <p class="mensaje exito">{{ mensaje }}</p>
@@ -124,8 +128,8 @@
         <select
           id="productoLista"
           name="productoLista"
-          #productoSeleccionado
-          (change)="seleccionarProducto(productos[productoSeleccionado.selectedIndex - 1])"
+          [(ngModel)]="productoSeleccionadoId"
+          (change)="seleccionarProductoPorId()"
         >
           <option value="">Seleccione un producto</option>
           @for (producto of productos; track producto._id) {
@@ -160,7 +164,7 @@
         ></textarea>
       </div>
 
-      <button type="submit" [disabled]="cargando || liveActivo.estado !== 'activo'">
+      <button type="submit" class="btn-primary" [disabled]="cargando || liveActivo.estado !== 'activo'">
         Agregar pedido al Live
       </button>
     </form>
@@ -200,7 +204,7 @@
       <a routerLink="/resumen">Ver pantalla de resumen</a>
     </section>
 
-    <h3>Pedidos de este Live</h3>
+    <h3 class="section-label">Pedidos de este Live</h3>
 
     @if (pedidosDelLive.length === 0) {
       <p>No hay pedidos registrados en este Live.</p>

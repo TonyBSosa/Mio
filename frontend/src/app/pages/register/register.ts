@@ -56,13 +56,7 @@ export class Register {
           this.authService.guardarSesion(respuesta);
           this.cargando = false;
           this.detectorCambios.detectChanges();
-
-          if (this.rolRegistro === 'cliente') {
-            this.router.navigate(['/cliente/inicio']);
-            return;
-          }
-
-          this.router.navigate(['/dashboard']);
+          this.authService.redirigirPorRol();
         },
         error: (error) => {
           console.error('Error al registrar usuario', error);
