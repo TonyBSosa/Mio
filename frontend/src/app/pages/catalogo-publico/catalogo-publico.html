@@ -82,13 +82,77 @@
     }
 
     @if (productos.length > 0) {
+      <section class="catalogo-filtros">
+        <div class="form-group">
+          <label for="filtroProducto">Buscar producto</label>
+          <input
+            id="filtroProducto"
+            name="filtroProducto"
+            type="text"
+            placeholder="Ejemplo: bolsa, sabanas"
+            [(ngModel)]="filtroProducto"
+            (input)="filtrarProductos()"
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="filtroCategoria">Categoria</label>
+          <select
+            id="filtroCategoria"
+            name="filtroCategoria"
+            [(ngModel)]="filtroCategoria"
+            (change)="filtrarProductos()"
+          >
+            <option value="">Todas</option>
+            @for (categoria of categorias; track categoria) {
+              <option [value]="categoria">{{ categoria }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="filtroPrecioMaximo">Precio maximo</label>
+          <input
+            id="filtroPrecioMaximo"
+            name="filtroPrecioMaximo"
+            type="number"
+            [(ngModel)]="filtroPrecioMaximo"
+            (input)="filtrarProductos()"
+          >
+        </div>
+
+        <button type="button" class="btn-limpiar" (click)="limpiarFiltros()">
+          Limpiar
+        </button>
+      </section>
+    }
+
+    @if (productos.length > 0 && productosFiltrados.length === 0) {
+      <p>No hay productos que coincidan con los filtros.</p>
+    }
+
+    @if (productosFiltrados.length > 0) {
       <div class="grid">
-        @for (producto of productos; track producto._id) {
+        @for (producto of productosFiltrados; track producto._id) {
           <article class="card">
-            <h3>{{ producto.nombre }}</h3>
-            <p>{{ producto.descripcion }}</p>
-            <p>{{ producto.categoria }}</p>
-            <strong>{{ producto.precio }}</strong>
+            <div class="producto-card-contenido">
+              @if (obtenerFotoProducto(producto)) {
+                <img
+                  class="producto-foto"
+                  [src]="obtenerFotoProducto(producto)"
+                  [alt]="producto.nombre"
+                >
+              } @else {
+                <div class="producto-sin-foto">Sin foto</div>
+              }
+
+              <div class="producto-info">
+                <h3>{{ producto.nombre }}</h3>
+                <p>{{ producto.descripcion }}</p>
+                <p>{{ producto.categoria }}</p>
+                <strong>{{ producto.precio }}</strong>
+              </div>
+            </div>
           </article>
         }
       </div>

@@ -34,7 +34,7 @@ const validarEstadoProducto = (estado) => {
 };
 
 const crearProducto = async (data, vendedorId) => {
-  const { nombre, descripcion, categoria, precio, estado } = data;
+  const { nombre, descripcion, categoria, foto, precio, estado } = data;
 
   if (!nombre) {
     throw crearError(400, "El nombre del producto es obligatorio");
@@ -53,6 +53,7 @@ const crearProducto = async (data, vendedorId) => {
     nombre,
     descripcion,
     categoria,
+    foto,
     precio,
     estado
   });
@@ -77,7 +78,7 @@ const obtenerProductoPorId = async (id, vendedorId) => {
 const actualizarProducto = async (id, data, vendedorId) => {
   validarIdProducto(id);
 
-  const { nombre, descripcion, categoria, precio, estado } = data;
+  const { nombre, descripcion, categoria, foto, precio, estado } = data;
 
   if (nombre !== undefined && !nombre) {
     throw crearError(400, "El nombre del producto es obligatorio");
@@ -96,6 +97,7 @@ const actualizarProducto = async (id, data, vendedorId) => {
   if (nombre !== undefined) datosActualizar.nombre = nombre;
   if (descripcion !== undefined) datosActualizar.descripcion = descripcion;
   if (categoria !== undefined) datosActualizar.categoria = categoria;
+  if (foto !== undefined) datosActualizar.foto = foto;
   if (precio !== undefined) datosActualizar.precio = precio;
   if (estado !== undefined) datosActualizar.estado = estado;
 

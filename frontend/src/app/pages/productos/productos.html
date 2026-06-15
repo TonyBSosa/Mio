@@ -52,6 +52,17 @@
     </div>
 
     <div class="form-group">
+      <label for="foto">Agregar foto</label>
+      <input
+        id="foto"
+        name="foto"
+        type="text"
+        placeholder="URL de la foto del producto"
+        [(ngModel)]="producto.foto"
+      >
+    </div>
+
+    <div class="form-group">
       <label for="precio">Precio</label>
       <input
         id="precio"
@@ -160,6 +171,7 @@
           <th>Nombre</th>
           <th>Descripcion</th>
           <th>Categoria</th>
+          <th>Foto</th>
           <th>Precio</th>
           <th>Estado</th>
           <th>Acciones</th>
@@ -171,6 +183,13 @@
             <td>{{ productoItem.nombre }}</td>
             <td>{{ productoItem.descripcion }}</td>
             <td>{{ productoItem.categoria }}</td>
+            <td>
+              @if (productoItem.foto) {
+                <img class="producto-thumb" [src]="productoItem.foto" [alt]="productoItem.nombre">
+              } @else {
+                Sin foto
+              }
+            </td>
             <td>{{ productoItem.precio }}</td>
             <td>{{ productoItem.estado }}</td>
             <td>

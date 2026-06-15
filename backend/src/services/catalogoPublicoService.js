@@ -27,6 +27,25 @@ const formatearPerfil = (perfil) => {
   };
 };
 
+const formatearProducto = (producto) => {
+  const productoPlano = producto?.toObject ? producto.toObject() : producto;
+
+  return {
+    _id: productoPlano._id,
+    nombre: productoPlano.nombre || "",
+    descripcion: productoPlano.descripcion || "",
+    categoria: productoPlano.categoria || "",
+    precio: productoPlano.precio || 0,
+    estado: productoPlano.estado || "",
+    foto:
+      productoPlano.foto ||
+      productoPlano.imagen ||
+      productoPlano.imagenUrl ||
+      productoPlano.urlFoto ||
+      ""
+  };
+};
+
 const obtenerCatalogo = async (vendedorId) => {
   validarVendedorId(vendedorId);
 
@@ -40,7 +59,7 @@ const obtenerCatalogo = async (vendedorId) => {
 
   return {
     perfil: formatearPerfil(perfil),
-    productos,
+    productos: productos.map((producto) => formatearProducto(producto)),
     lives
   };
 };

@@ -23,6 +23,7 @@ export class Productos implements OnInit {
     nombre: '',
     descripcion: '',
     categoria: '',
+    foto: '',
     precio: 0,
     estado: 'activo',
   };
@@ -140,6 +141,7 @@ export class Productos implements OnInit {
       nombre: producto.nombre,
       descripcion: producto.descripcion,
       categoria: producto.categoria,
+      foto: producto.foto || '',
       precio: producto.precio,
       estado: producto.estado,
     };
@@ -214,6 +216,7 @@ export class Productos implements OnInit {
       nombre: '',
       descripcion: '',
       categoria: '',
+      foto: '',
       precio: 0,
       estado: 'activo',
     };
