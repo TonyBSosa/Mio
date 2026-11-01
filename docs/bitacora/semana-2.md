@@ -1,6 +1,6 @@
 # Bitácora de semana 2
 
-Fecha de preparación: 1 de noviembre de 2026, hora local de Honduras. Estado: **en preparación; no declarar entrega terminada**.
+Fecha de preparación y aceptación: 1 de noviembre de 2026, hora local de Honduras. Estado: **HU-01 aceptada; registro histórico de preparación y cierre abajo**.
 
 ## Objetivo
 
@@ -49,3 +49,9 @@ Tras iniciar sesión el responsable en GitHub, se ejecutó el publicador con `-A
 Los documentos se publicaron en `main` con el commit `67729ed`. En la sesión de vendedor abierta por el responsable se comprobó creación y normalización de `DEMO-S2-001`, persistencia tras recarga, búsqueda por código, rechazo de duplicado real, rechazo de espacios internos y longitud de 31 caracteres, y generación automática de código. En viewport 390 × 844 se creó, recargó y buscó `DEMO-S2-MOVIL`; no se presenta como prueba en teléfono físico.
 
 `npm run build:deploy` con la API pública pasó y generó `main-HNRMTOXR.js`, el mismo bundle observado en producción. Resultados y capturas: [HU-01-produccion.md](../evidencias/HU-01-produccion.md). Falta comprobar reutilización del código entre dos tiendas: el responsable necesita una segunda cuenta. Por ello la Issue #1 y el release de cierre permanecen pendientes.
+
+## Cierre de aceptación
+
+El responsable creó e inició sesión con un segundo vendedor. Su catálogo estaba vacío y no mostraba las piezas de la primera tienda. Se creó `DEMO-S2-001`, nombre ficticio «Prueba semana 2 - Tienda B», L250; después de recargar y buscar por código apareció únicamente esa pieza. Se completó así el último criterio de HU-01. Captura y resultados en el documento de evidencia. La publicación de capturas y resultados fue autorizada expresamente por el responsable.
+
+El commit de aceptación contiene `Closes #1`, para cerrar la historia desde `main`. La versión de esta entrega se identifica mediante el [release semana-2](https://github.com/TonyBSosa/Mio/releases/tag/semana-2), sobre ese commit; su página muestra el hash exacto. Los resultados locales de cinco pruebas backend y compilaciones frontend están registrados arriba y no se reinterpretan como pruebas completas de seguridad o concurrencia. La vista móvil se comprobó a 390 × 844; la prueba en teléfono físico continúa como revisión adicional del piloto. Las demás historias siguen abiertas.

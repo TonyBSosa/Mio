@@ -13,7 +13,7 @@ Código de la funcionalidad: commit `313a363`, conservado en `67729ed`. El front
 | Guardar código de 31 letras A | Rechazado con mensaje de longitud/formato |
 | Crear pieza dejando código vacío | Guardada con código generado `P-F0DD67F62DC0` |
 | Vista de 390 × 844: crear `demo-s2-movil`, recargar y buscar | Guardada y encontrada como `DEMO-S2-MOVIL`, L150 |
-| Reutilizar `DEMO-S2-001` con otro vendedor | Pendiente de segunda cuenta de prueba |
+| Reutilizar `DEMO-S2-001` con otro vendedor | Aprobado: segunda tienda inicialmente vacía; guardó «Prueba semana 2 - Tienda B», L250, y conservó su única pieza al recargar y buscar. No mostró las piezas de A |
 
 La prueba móvil utiliza un viewport de navegador, no un teléfono físico. El formulario se adapta a una columna y permite completar las acciones; el listado ancho requiere desplazamiento horizontal. Se restauró el tamaño del navegador al terminar.
 
@@ -23,4 +23,6 @@ La prueba móvil utiliza un viewport de navegador, no un teléfono físico. El f
 
 ![Búsqueda desde vista móvil](hu01-movil.png)
 
-Se crearon tres piezas ficticias en la primera tienda: `DEMO-S2-001`, `P-F0DD67F62DC0` y `DEMO-S2-MOVIL`. No se eliminaron datos ni se modificó la pieza preexistente. El rechazo de duplicados se comprobó contra la base real del despliegue; no se realizó auditoría global de índices, seguridad o concurrencia. HU-01 sigue abierta hasta completar el criterio entre tiendas y registrar el cierre.
+![Pieza propia de la segunda tienda con el mismo código](hu01-tienda-b.png)
+
+Se crearon tres piezas ficticias en la primera tienda: `DEMO-S2-001`, `P-F0DD67F62DC0` y `DEMO-S2-MOVIL`; en B se creó otra `DEMO-S2-001`. No se eliminaron datos ni se modificó la pieza preexistente. El rechazo de duplicados se comprobó contra la base real del despliegue; no se realizó auditoría global de índices, seguridad o concurrencia. Los criterios de HU-01 quedaron comprobados; el commit de aceptación cierra la Issue #1 mediante `Closes #1`.

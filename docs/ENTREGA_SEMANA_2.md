@@ -1,6 +1,6 @@
 # Entrega de semana 2: primera historia viva
 
-Estado al 1 de noviembre de 2026: **preparación local avanzada; entrega todavía no cerrada**.
+Estado de aceptación al 1 de noviembre de 2026: **HU-01 verificada en producción y lista para su cierre desde el commit de entrega**. El release y la Issue enlazados abajo permiten comprobar su publicación final.
 
 ## Requisitos y comprobación
 
@@ -9,11 +9,11 @@ Estado al 1 de noviembre de 2026: **preparación local avanzada; entrega todaví
 | Mapa por rol, actividades, tareas, detalles y dos cortes | Preparado en [mapa-historias.md](mapa-historias.md) |
 | ≥15 historias en GitHub Issues, criterios Dado/Cuando/Entonces y MVP etiquetado | 18 publicadas: Issues #1–#18; HU-01 a HU-11 con etiqueta MVP; URLs en [registro](evidencias/issues-semana-2.json) |
 | Plan de diez semanas y piso de app completa | Preparado en [plan.md](plan.md) |
-| Primera historia del MVP funcionando en producción | HU-01 comprobada en primera tienda y viewport móvil; falta criterio entre dos tiendas. [Evidencia](evidencias/HU-01-produccion.md) |
-| Issue cerrada desde un commit | Pendiente: obtener número real y usar `Closes #NUMERO` en commit de cierre tras verificar |
+| Primera historia del MVP funcionando en producción | HU-01 comprobada en dos tiendas y viewport móvil. [Evidencia](evidencias/HU-01-produccion.md) |
+| Issue cerrada desde un commit | [Issue #1](https://github.com/TonyBSosa/Mio/issues/1), referenciada por `Closes #1` en el commit de aceptación |
 | Bitácora semana 2 | [bitacora/semana-2.md](bitacora/semana-2.md), con límites y pendientes explícitos |
-| Release o etiqueta semana-2 | Pendiente; crearlo sobre el commit final verificado |
-| ≥10 commits, ≥3 últimos 10 días | HEAD local revisado: 17 totales; 3 recientes (31 oct.–1 nov.); confirmar remoto final |
+| Release o etiqueta semana-2 | [Versión de entrega semana-2](https://github.com/TonyBSosa/Mio/releases/tag/semana-2), sobre el commit de aceptación |
+| ≥10 commits, ≥3 últimos 10 días | Antes del commit de aceptación: 19 totales, 5 recientes; el cierre añade uno más |
 | Token en README | Conservado: `LEARN-CAP-D03DECFA` |
 | Aplicación pública HTTPS | Frontend y API respondieron 200 el 1 nov.; esto no sustituye aceptación de HU-01 |
 
@@ -33,13 +33,13 @@ Usar cuentas y nombres ficticios, sin datos de clientes reales. Fecha, dispositi
 
 | Paso | Acción | Resultado esperado | Resultado observado |
 |---|---|---|---|
-| 1 | Entrar como vendedor A; crear Blusa, L200, código ` blusa-01 ` | Se muestra `BLUSA-01` | Pendiente |
-| 2 | Recargar Productos y buscar `blusa-01` | La pieza persiste y se encuentra por código | Pendiente |
-| 3 | Crear otra pieza con `BLUSA-01` en A | Mensaje de conflicto; no hay duplicado | Pendiente |
-| 4 | Entrar como vendedor B y crear `BLUSA-01` | Se permite; A y B no ven piezas privadas ajenas | Pendiente |
-| 5 | Crear pieza sin código | Se genera código `P-...` | Pendiente |
-| 6 | Intentar código `BLUSA 01` y después uno de 31 caracteres | Se rechazan con mensaje; no se guardan | Pendiente |
-| 7 | Repetir crear/buscar desde teléfono y recargar ruta `/productos` | Formulario y listado utilizables; ruta carga | Pendiente |
+| 1 | Vendedor A: crear pieza L200 con ` demo-s2-001 ` | Se normaliza a mayúsculas | Aprobado: `DEMO-S2-001` |
+| 2 | Recargar Productos y buscar `demo-s2-001` | Persiste y se encuentra por código | Aprobado: una coincidencia por L200 |
+| 3 | Crear otra pieza con `DEMO-S2-001` en A | Conflicto; no hay duplicado | Aprobado: mensaje de código existente |
+| 4 | Vendedor B: crear `DEMO-S2-001` | Se permite como pieza propia | Aprobado: pieza de B por L250; catálogo no muestra las piezas de A |
+| 5 | Crear pieza sin código | Se genera código `P-...` | Aprobado: `P-F0DD67F62DC0` |
+| 6 | Intentar `BLUSA 01` y código de 31 caracteres | Se rechazan con mensaje | Aprobado: ambos rechazos observados |
+| 7 | Crear/buscar en viewport 390 × 844 y recargar `/productos` | Flujo utilizable; ruta carga | Aprobado: `DEMO-S2-MOVIL`, L150; teléfono físico no probado |
 
 El duplicado real verifica el comportamiento del índice en el entorno usado. Las pruebas con repositorios simulados no lo verifican. No alterar el índice de producción sin revisar primero datos y respaldo si se detecta un fallo.
 

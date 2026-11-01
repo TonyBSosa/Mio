@@ -8,7 +8,7 @@ Cada sección es el cuerpo listo para una GitHub Issue. El script [publicar-back
 
 Como vendedor quiero asignar y buscar un código de pieza para identificar sin confusión lo que solicita un comprador.
 
-Etiquetas: `historia`, `MVP`, `P0`. Tamaño: S. Estado: código existente; primera historia elegida, aceptación publicada pendiente.
+Etiquetas: `historia`, `MVP`, `P0`. Tamaño: S. Estado: aceptada tras verificación en producción y viewport móvil. [Issue #1](https://github.com/TonyBSosa/Mio/issues/1); [evidencia](evidencias/HU-01-produccion.md). Primera historia de la entrega semana 2.
 
 - Dado un vendedor autenticado, cuando crea una pieza llamada Blusa por L200 con código ` blusa-01 `, entonces se guarda y muestra como `BLUSA-01` y permanece al recargar.
 - Dado ese catálogo, cuando busca `blusa-01`, entonces encuentra la pieza por su código.

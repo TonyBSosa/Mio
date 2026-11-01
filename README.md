@@ -23,7 +23,7 @@ Token de propiedad del curso: `LEARN-CAP-D03DECFA`
 - [Bitácora de semana 2](docs/bitacora/semana-2.md).
 - [Estudio previo al reto del módulo 2](docs/academico/PREPARACION_RETO_MODULO_2.md).
 
-El [backlog ya está publicado en GitHub Issues](https://github.com/TonyBSosa/Mio/issues). La aceptación de HU-01 en producción y el release `semana-2` están pendientes; la documentación no acredita todavía una entrega cerrada.
+El [backlog está publicado en GitHub Issues](https://github.com/TonyBSosa/Mio/issues): 18 historias, 11 del MVP. HU-01 fue [verificada en producción](docs/evidencias/HU-01-produccion.md), incluyendo códigos por tienda y vista móvil. Versión de entrega: [semana-2](https://github.com/TonyBSosa/Mio/releases/tag/semana-2).
 
 ## Estado del prototipo
 
