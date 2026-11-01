@@ -9,7 +9,7 @@ Estado al 1 de noviembre de 2026: **preparación local avanzada; entrega todaví
 | Mapa por rol, actividades, tareas, detalles y dos cortes | Preparado en [mapa-historias.md](mapa-historias.md) |
 | ≥15 historias en GitHub Issues, criterios Dado/Cuando/Entonces y MVP etiquetado | 18 publicadas: Issues #1–#18; HU-01 a HU-11 con etiqueta MVP; URLs en [registro](evidencias/issues-semana-2.json) |
 | Plan de diez semanas y piso de app completa | Preparado en [plan.md](plan.md) |
-| Primera historia del MVP funcionando en producción | HU-01 seleccionada; código existente; aceptación real y móvil pendientes |
+| Primera historia del MVP funcionando en producción | HU-01 comprobada en primera tienda y viewport móvil; falta criterio entre dos tiendas. [Evidencia](evidencias/HU-01-produccion.md) |
 | Issue cerrada desde un commit | Pendiente: obtener número real y usar `Closes #NUMERO` en commit de cierre tras verificar |
 | Bitácora semana 2 | [bitacora/semana-2.md](bitacora/semana-2.md), con límites y pendientes explícitos |
 | Release o etiqueta semana-2 | Pendiente; crearlo sobre el commit final verificado |

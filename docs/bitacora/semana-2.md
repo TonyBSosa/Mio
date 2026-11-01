@@ -43,3 +43,9 @@ No se migró a PostgreSQL, no se implementaron abonos ni se realizaron entrevist
 ## Actualización: publicación del backlog
 
 Tras iniciar sesión el responsable en GitHub, se ejecutó el publicador con `-Aplicar`: **18 Issues creadas**, #1 a #18, con criterios de aceptación; #1 a #11 etiquetadas `MVP`. URLs conservadas en [issues-semana-2.json](../evidencias/issues-semana-2.json). HU-01 corresponde a https://github.com/TonyBSosa/Mio/issues/1. Se mantienen abiertas hasta cumplir su Definición de Hecho. Esta actualización resuelve el pendiente de autenticación y publicación indicado en el registro inicial.
+
+## Actualización: verificación observada de HU-01
+
+Los documentos se publicaron en `main` con el commit `67729ed`. En la sesión de vendedor abierta por el responsable se comprobó creación y normalización de `DEMO-S2-001`, persistencia tras recarga, búsqueda por código, rechazo de duplicado real, rechazo de espacios internos y longitud de 31 caracteres, y generación automática de código. En viewport 390 × 844 se creó, recargó y buscó `DEMO-S2-MOVIL`; no se presenta como prueba en teléfono físico.
+
+`npm run build:deploy` con la API pública pasó y generó `main-HNRMTOXR.js`, el mismo bundle observado en producción. Resultados y capturas: [HU-01-produccion.md](../evidencias/HU-01-produccion.md). Falta comprobar reutilización del código entre dos tiendas: el responsable necesita una segunda cuenta. Por ello la Issue #1 y el release de cierre permanecen pendientes.
