@@ -184,15 +184,25 @@ export class LiveActivo implements OnInit {
 
   seleccionarProducto(producto: any) {
     if (!producto) {
+      this.productoSeleccionadoId = '';
+      this.pedido.producto = '';
+      this.pedido.precio = 0;
+      this.pedido.cantidad = 1;
       return;
     }
 
     this.pedido.producto = producto.nombre;
     this.pedido.precio = producto.precio;
+    this.pedido.cantidad = 1;
     this.productoSeleccionadoId = producto._id;
   }
 
   seleccionarProductoPorId() {
+    if (!this.productoSeleccionadoId) {
+      this.seleccionarProducto(null);
+      return;
+    }
+
     const producto = this.productos.find(
       (productoItem) => productoItem._id === this.productoSeleccionadoId
     );
@@ -273,32 +283,44 @@ export class LiveActivo implements OnInit {
   }
 
   crearPedidoFinal(clienteRapidoCreado = false) {
-    this.pedidoService.crearPedido(this.pedido).subscribe({
+    const payload = {
+      ...this.pedido,
+      cantidad: this.productoSeleccionadoId ? 1 : Number(this.pedido.cantidad || 1),
+      productoId: this.productoSeleccionadoId || undefined,
+    };
+
+    this.pedidoService.crearPedido(payload).subscribe({
       next: (pedidoCreado: any) => {
         const productoId = this.productoSeleccionadoId;
 
-        this.pedidos.push(pedidoCreado);
+        this.pedidos.unshift(pedidoCreado);
         this.pedidos = [...this.pedidos];
         this.filtrarPedidosDelLive();
 
         if (productoId) {
-          this.apartarProductoSeleccionado(productoId);
+          this.productos = this.productos.filter(
+            (producto) => producto._id !== productoId
+          );
         }
 
         this.limpiarFormularioPedido();
         this.limpiarClienteRapido();
         this.modoCliente = 'existente';
         this.consultarResumen();
-        this.mensaje = 'Pedido agregado al Live correctamente';
+        this.mensaje = productoId
+          ? 'Pedido agregado al Live y pieza apartada automáticamente.'
+          : 'Pedido agregado al Live correctamente.';
         this.cargando = false;
         this.detectorCambios.detectChanges();
       },
       error: (error) => {
         console.error('Error al crear pedido', error);
         this.error = clienteRapidoCreado
-          ? 'Cliente creado, pero no se pudo registrar el pedido.'
+          ? 'Cliente creado, pero no se pudo registrar el pedido: ' +
+            (error.error?.mensaje || '')
           : error.error?.mensaje || 'Error al crear pedido';
         this.cargando = false;
+        this.listarProductos();
         this.detectorCambios.detectChanges();
       },
     });

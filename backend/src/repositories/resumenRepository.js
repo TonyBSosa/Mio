@@ -15,7 +15,22 @@ const listarPedidosPorLiveYVendedor = (liveId, vendedorId) => {
   });
 };
 
+const listarPedidosDirectosPorVendedor = (vendedorId) => {
+  return Pedido.find({
+    vendedorId,
+    $or: [{ liveId: null }, { liveId: { $exists: false } }]
+  });
+};
+
+const listarTodosPedidosPorVendedor = (vendedorId) => {
+  return Pedido.find({
+    vendedorId
+  });
+};
+
 module.exports = {
   buscarLivePorIdYVendedor,
-  listarPedidosPorLiveYVendedor
+  listarPedidosPorLiveYVendedor,
+  listarPedidosDirectosPorVendedor,
+  listarTodosPedidosPorVendedor
 };

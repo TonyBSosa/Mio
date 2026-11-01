@@ -1,4 +1,5 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 
 import { AuthService } from '../../../services/auth.service';
@@ -7,7 +8,7 @@ import { ExplorarPublicoService } from '../../../services/explorar-publico.servi
 @Component({
   selector: 'app-inicio-cliente',
   standalone: true,
-  imports: [RouterModule],
+  imports: [FormsModule, RouterModule],
   templateUrl: './inicio-cliente.html',
   styleUrl: './inicio-cliente.css',
 })
@@ -16,6 +17,7 @@ export class InicioCliente implements OnInit {
   eventos: any[] = [];
   eventosActivos: any[] = [];
   eventosProgramados: any[] = [];
+  textoBusqueda = '';
   usuario: any = null;
   mensaje = '';
   error = '';
@@ -75,6 +77,39 @@ export class InicioCliente implements OnInit {
   finalizarCarga() {
     this.cargando = false;
     this.detectorCambios.detectChanges();
+  }
+
+  ejecutarBusqueda() {
+    const q = this.textoBusqueda.trim();
+    if (!q) {
+      this.cargarDatos();
+      return;
+    }
+
+    this.cargando = true;
+    this.error = '';
+
+    this.explorarPublicoService.buscar(q).subscribe({
+      next: (resultado: any) => {
+        this.vendedores = resultado?.vendedores || [];
+        this.eventos = resultado?.eventos || [];
+        this.eventosActivos = this.eventos.filter((evento) => evento.estado === 'activo');
+        this.eventosProgramados = this.eventos.filter(
+          (evento) => evento.estado === 'programado'
+        );
+        this.finalizarCarga();
+      },
+      error: (error) => {
+        console.error('Error al buscar', error);
+        this.error = error.error?.mensaje || 'Error al realizar la búsqueda';
+        this.finalizarCarga();
+      },
+    });
+  }
+
+  limpiarBusqueda() {
+    this.textoBusqueda = '';
+    this.cargarDatos();
   }
 
   mostrarMensajeFaseSiguiente() {

@@ -10,6 +10,7 @@ import { ProductoService } from '../../services/producto.service';
 
 @Component({
   selector: 'app-pedidos',
+  standalone: true,
   imports: [FormsModule, RouterModule],
   templateUrl: './pedidos.html',
   styleUrl: './pedidos.css',
@@ -21,11 +22,16 @@ export class Pedidos implements OnInit {
   lives: any[] = [];
   productos: any[] = [];
   liveActivo: any = null;
+
   filtroLiveId = '';
   filtroClienteId = '';
   filtroProducto = '';
 
+  busquedaPieza = '';
+  piezaSeleccionada: any = null;
+
   pedido = {
+    productoId: '',
     clienteId: '',
     liveId: '',
     producto: '',
@@ -69,7 +75,7 @@ export class Pedidos implements OnInit {
       next: (respuesta: any) => {
         this.liveActivo = respuesta;
 
-        if (this.liveActivo && !this.editando) {
+        if (this.liveActivo && !this.editando && !this.pedido.liveId) {
           this.pedido.liveId = this.liveActivo._id;
         }
 
@@ -89,14 +95,14 @@ export class Pedidos implements OnInit {
 
     this.pedidoService.listarPedidos().subscribe({
       next: (respuesta: any) => {
-        this.pedidos = respuesta;
+        this.pedidos = Array.isArray(respuesta) ? respuesta : [];
         this.filtrarPedidos();
         this.cargando = false;
         this.detectorCambios.detectChanges();
       },
       error: (error) => {
         console.error('Error al listar pedidos', error);
-        this.error = error.error?.mensaje || 'Error al listar pedidos';
+        this.error = error.error?.mensaje || error.error?.error || 'Error al listar pedidos';
         this.cargando = false;
         this.detectorCambios.detectChanges();
       },
@@ -106,13 +112,12 @@ export class Pedidos implements OnInit {
   listarClientes() {
     this.clienteService.listarClientes().subscribe({
       next: (respuesta: any) => {
-        this.clientes = respuesta;
+        this.clientes = Array.isArray(respuesta) ? respuesta : [];
         this.filtrarPedidos();
         this.detectorCambios.detectChanges();
       },
       error: (error) => {
         console.error('Error al listar clientes', error);
-        this.error = error.error?.mensaje || 'Error al listar clientes';
         this.detectorCambios.detectChanges();
       },
     });
@@ -121,13 +126,12 @@ export class Pedidos implements OnInit {
   listarLives() {
     this.liveService.listarLives().subscribe({
       next: (respuesta: any) => {
-        this.lives = respuesta;
+        this.lives = Array.isArray(respuesta) ? respuesta : [];
         this.filtrarPedidos();
         this.detectorCambios.detectChanges();
       },
       error: (error) => {
         console.error('Error al listar Lives', error);
-        this.error = error.error?.mensaje || 'Error al listar Lives';
         this.detectorCambios.detectChanges();
       },
     });
@@ -136,18 +140,89 @@ export class Pedidos implements OnInit {
   listarProductos() {
     this.productoService.listarProductos().subscribe({
       next: (respuesta: any) => {
-        this.productos = respuesta;
+        this.productos = Array.isArray(respuesta) ? respuesta : [];
+        if (this.editando && this.pedido.productoId) {
+          this.piezaSeleccionada =
+            this.productos.find(
+              (p) => String(this.obtenerId(p._id)) === String(this.pedido.productoId)
+            ) || null;
+        }
         this.detectorCambios.detectChanges();
       },
       error: (error) => {
         console.error('Error al listar productos', error);
-        this.error = error.error?.mensaje || 'Error al listar productos';
         this.detectorCambios.detectChanges();
       },
     });
   }
 
+  get piezasDisponibles(): any[] {
+    const texto = this.busquedaPieza.trim().toLowerCase();
+    return this.productos.filter((p) => {
+      if (p.estado !== 'activo') {
+        return false;
+      }
+      if (!texto) {
+        return true;
+      }
+      const cod = String(p.codigo || '').toLowerCase();
+      const nom = String(p.nombre || '').toLowerCase();
+      return cod.includes(texto) || nom.includes(texto);
+    });
+  }
+
+  get livesDisponibles(): any[] {
+    return this.lives.filter((l) => {
+      if (this.editando && String(this.obtenerId(l._id)) === String(this.pedido.liveId)) {
+        return true;
+      }
+      return l.estado === 'activo';
+    });
+  }
+
+  seleccionarProducto(producto: any) {
+    if (!producto) {
+      this.deseleccionarProducto();
+      return;
+    }
+
+    this.piezaSeleccionada = producto;
+    this.pedido.productoId = producto._id;
+    this.pedido.producto = producto.nombre;
+    this.pedido.precio = Number(producto.precio) || 0;
+    this.pedido.cantidad = 1;
+    this.busquedaPieza = '';
+    this.detectorCambios.detectChanges();
+  }
+
+  deseleccionarProducto() {
+    this.piezaSeleccionada = null;
+    this.pedido.productoId = '';
+    this.pedido.producto = '';
+    this.pedido.cantidad = 1;
+    this.pedido.precio = 0;
+    this.busquedaPieza = '';
+    this.detectorCambios.detectChanges();
+  }
+
+  onSelectorPiezaChange(event: Event) {
+    const select = event.target as HTMLSelectElement;
+    const productoId = select?.value;
+    if (!productoId) {
+      this.deseleccionarProducto();
+      return;
+    }
+    const producto = this.productos.find((p) => String(p._id) === String(productoId));
+    if (producto) {
+      this.seleccionarProducto(producto);
+    }
+  }
+
   guardarPedido() {
+    if (this.cargando) {
+      return;
+    }
+
     this.mensaje = '';
     this.error = '';
 
@@ -156,35 +231,53 @@ export class Pedidos implements OnInit {
       return;
     }
 
-    if (!this.editando && !this.liveActivo) {
-      this.error = 'Los pedidos deben registrarse en el Live activo';
+    if (!this.pedido.producto && !this.pedido.productoId) {
+      this.error = 'Debes seleccionar o ingresar un producto';
       return;
     }
 
-    if (!this.editando) {
-      this.pedido.liveId = this.liveActivo._id;
-    }
-
-    if (!this.pedido.producto) {
-      this.error = 'El producto es obligatorio';
-      return;
-    }
-
-    if (this.pedido.cantidad < 1) {
-      this.error = 'La cantidad debe ser mayor o igual a 1';
-      return;
-    }
-
-    if (this.pedido.precio < 0) {
+    if (
+      this.pedido.precio === null ||
+      this.pedido.precio === undefined ||
+      Number(this.pedido.precio) < 0
+    ) {
       this.error = 'El precio debe ser mayor o igual a 0';
+      return;
+    }
+
+    if (this.pedido.productoId) {
+      this.pedido.cantidad = 1;
+      if (this.piezaSeleccionada && !this.editando) {
+        this.pedido.producto = this.piezaSeleccionada.nombre;
+      }
+    } else if (Number(this.pedido.cantidad) < 1) {
+      this.error = 'La cantidad debe ser mayor o igual a 1';
       return;
     }
 
     this.cargando = true;
 
     if (this.editando) {
+      const payload: any = {
+        clienteId: this.pedido.clienteId,
+        liveId: this.pedido.liveId || null,
+        precio: Number(this.pedido.precio),
+        estadoPago: this.pedido.estadoPago,
+        estadoEntrega: this.pedido.estadoEntrega,
+        observaciones: this.pedido.observaciones || '',
+      };
+
+      if (this.pedido.productoId) {
+        payload.productoId = this.pedido.productoId;
+        payload.producto = this.pedido.producto;
+        payload.cantidad = 1;
+      } else {
+        payload.producto = this.pedido.producto;
+        payload.cantidad = Number(this.pedido.cantidad || 1);
+      }
+
       this.pedidoService
-        .actualizarPedido(this.pedidoEditandoId, this.pedido)
+        .actualizarPedido(this.pedidoEditandoId, payload)
         .subscribe({
           next: (pedidoActualizado: any) => {
             const index = this.pedidos.findIndex(
@@ -206,25 +299,50 @@ export class Pedidos implements OnInit {
           },
           error: (error) => {
             console.error('Error al actualizar pedido', error);
-            this.error = error.error?.mensaje || 'Error al actualizar pedido';
+            this.error =
+              error.error?.mensaje ||
+              error.error?.error ||
+              'Error al actualizar pedido';
             this.cargando = false;
             this.detectorCambios.detectChanges();
           },
         });
     } else {
-      this.pedidoService.crearPedido(this.pedido).subscribe({
+      const payload: any = {
+        clienteId: this.pedido.clienteId,
+        producto: this.pedido.producto,
+        cantidad: this.pedido.productoId ? 1 : Number(this.pedido.cantidad || 1),
+        precio: Number(this.pedido.precio),
+        estadoPago: this.pedido.estadoPago,
+        estadoEntrega: this.pedido.estadoEntrega,
+        observaciones: this.pedido.observaciones || '',
+      };
+
+      if (this.pedido.productoId) {
+        payload.productoId = this.pedido.productoId;
+      }
+
+      if (this.pedido.liveId) {
+        payload.liveId = this.pedido.liveId;
+      }
+
+      this.pedidoService.crearPedido(payload).subscribe({
         next: (pedidoCreado: any) => {
-          this.pedidos.push(pedidoCreado);
+          this.pedidos.unshift(pedidoCreado);
           this.pedidos = [...this.pedidos];
           this.filtrarPedidos();
           this.limpiarFormulario();
-          this.mensaje = 'Pedido creado correctamente';
+          this.mensaje = 'Pedido registrado correctamente';
           this.cargando = false;
+          this.listarProductos();
           this.detectorCambios.detectChanges();
         },
         error: (error) => {
           console.error('Error al crear pedido', error);
-          this.error = error.error?.mensaje || 'Error al crear pedido';
+          this.error =
+            error.error?.mensaje ||
+            error.error?.error ||
+            'Error al crear pedido';
           this.cargando = false;
           this.detectorCambios.detectChanges();
         },
@@ -233,29 +351,46 @@ export class Pedidos implements OnInit {
   }
 
   editarPedido(pedido: any) {
+    if (this.cargando) return;
     this.editando = true;
     this.pedidoEditandoId = pedido._id;
+    const prodId = this.obtenerId(pedido.productoId) || '';
+
+    this.piezaSeleccionada = prodId
+      ? this.productos.find((p) => String(this.obtenerId(p._id)) === String(prodId)) || null
+      : null;
+
     this.pedido = {
+      productoId: prodId,
       clienteId: this.obtenerId(pedido.clienteId),
-      liveId: this.obtenerId(pedido.liveId),
-      producto: pedido.producto,
-      cantidad: pedido.cantidad,
-      precio: pedido.precio,
-      estadoPago: pedido.estadoPago,
-      estadoEntrega: pedido.estadoEntrega,
-      observaciones: pedido.observaciones,
+      liveId: this.obtenerId(pedido.liveId) || '',
+      producto: pedido.producto || '',
+      cantidad: pedido.cantidad || 1,
+      precio: pedido.precio !== undefined ? pedido.precio : 0,
+      estadoPago: pedido.estadoPago || 'pendiente',
+      estadoEntrega: pedido.estadoEntrega || 'pendiente',
+      observaciones: pedido.observaciones || '',
     };
     this.mensaje = '';
     this.error = '';
+
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    this.detectorCambios.detectChanges();
   }
 
   cancelarEdicion() {
     this.editando = false;
     this.pedidoEditandoId = '';
     this.limpiarFormulario();
+    this.mensaje = '';
+    this.error = '';
+    this.detectorCambios.detectChanges();
   }
 
   eliminarPedido(id: string) {
+    if (this.cargando) return;
     this.mensaje = '';
     this.error = '';
     this.cargando = true;
@@ -264,13 +399,14 @@ export class Pedidos implements OnInit {
       next: () => {
         this.pedidos = this.pedidos.filter((pedidoItem) => pedidoItem._id !== id);
         this.filtrarPedidos();
+        this.listarProductos();
         this.mensaje = 'Pedido eliminado correctamente';
         this.cargando = false;
         this.detectorCambios.detectChanges();
       },
       error: (error) => {
         console.error('Error al eliminar pedido', error);
-        this.error = error.error?.mensaje || 'Error al eliminar pedido';
+        this.error = error.error?.mensaje || error.error?.error || 'Error al eliminar pedido';
         this.cargando = false;
         this.detectorCambios.detectChanges();
       },
@@ -294,6 +430,7 @@ export class Pedidos implements OnInit {
   }
 
   actualizarPago(pedido: any, estadoPago: string) {
+    if (this.cargando) return;
     this.mensaje = '';
     this.error = '';
     this.cargando = true;
@@ -316,7 +453,7 @@ export class Pedidos implements OnInit {
       },
       error: (error) => {
         console.error('Error al cambiar pago', error);
-        this.error = error.error?.mensaje || 'Error al cambiar pago';
+        this.error = error.error?.mensaje || error.error?.error || 'Error al cambiar pago';
         this.cargando = false;
         this.detectorCambios.detectChanges();
       },
@@ -324,6 +461,7 @@ export class Pedidos implements OnInit {
   }
 
   actualizarEntrega(pedido: any, estadoEntrega: string) {
+    if (this.cargando) return;
     this.mensaje = '';
     this.error = '';
     this.cargando = true;
@@ -346,34 +484,34 @@ export class Pedidos implements OnInit {
       },
       error: (error) => {
         console.error('Error al cambiar entrega', error);
-        this.error = error.error?.mensaje || 'Error al cambiar entrega';
+        this.error = error.error?.mensaje || error.error?.error || 'Error al cambiar entrega';
         this.cargando = false;
         this.detectorCambios.detectChanges();
       },
     });
   }
 
-  seleccionarProducto(producto: any) {
-    if (!producto) {
-      return;
-    }
-
-    this.pedido.producto = producto.nombre;
-    this.pedido.precio = producto.precio;
-  }
-
   filtrarPedidos() {
     const textoProducto = this.filtroProducto.trim().toLowerCase();
 
     this.pedidosFiltrados = this.pedidos.filter((pedidoItem) => {
-      const pedidoLiveId = String(this.obtenerId(pedidoItem.liveId));
-      const pedidoClienteId = String(this.obtenerId(pedidoItem.clienteId));
+      const pedidoLiveId = String(this.obtenerId(pedidoItem.liveId) || '');
+      const pedidoClienteId = String(this.obtenerId(pedidoItem.clienteId) || '');
       const producto = String(pedidoItem.producto || '').toLowerCase();
 
-      const coincideLive = !this.filtroLiveId || pedidoLiveId === String(this.filtroLiveId);
+      let coincideLive = true;
+      if (this.filtroLiveId === 'directa') {
+        coincideLive = !pedidoItem.liveId;
+      } else if (this.filtroLiveId) {
+        coincideLive = pedidoLiveId === String(this.filtroLiveId);
+      }
+
       const coincideCliente =
         !this.filtroClienteId || pedidoClienteId === String(this.filtroClienteId);
-      const coincideProducto = !textoProducto || producto.includes(textoProducto);
+
+      const cod = this.obtenerCodigoPieza(pedidoItem).toLowerCase();
+      const coincideProducto =
+        !textoProducto || producto.includes(textoProducto) || cod.includes(textoProducto);
 
       return coincideLive && coincideCliente && coincideProducto;
     });
@@ -392,12 +530,13 @@ export class Pedidos implements OnInit {
     }
 
     const id = this.obtenerId(clienteId);
-    const cliente = this.clientes.find((clienteItem) => clienteItem._id === id);
+    const cliente = this.clientes.find((clienteItem) => String(clienteItem._id) === String(id));
 
-    return cliente ? cliente.nombre : id;
+    return cliente ? cliente.nombre : (id || 'Sin cliente');
   }
 
   obtenerNombreLive(liveId: any) {
+    if (!liveId) return 'Venta directa (sin Live)';
     if (liveId && liveId.nombre) {
       return liveId.nombre;
     }
@@ -418,16 +557,28 @@ export class Pedidos implements OnInit {
     return 'Live no encontrado';
   }
 
+  obtenerCodigoPieza(pedidoItem: any): string {
+    const prodId = this.obtenerId(pedidoItem?.productoId);
+    if (!prodId) return '';
+    const prod = this.productos.find((p) => String(this.obtenerId(p._id)) === String(prodId));
+    return prod?.codigo || '';
+  }
+
   obtenerId(valor: any) {
     return valor && valor._id ? valor._id : valor;
   }
 
   calcularTotal(pedido: any) {
-    return pedido.cantidad * pedido.precio;
+    const cant = Number(pedido?.cantidad) || 0;
+    const prec = Number(pedido?.precio) || 0;
+    return cant * prec;
   }
 
   limpiarFormulario() {
+    this.piezaSeleccionada = null;
+    this.busquedaPieza = '';
     this.pedido = {
+      productoId: '',
       clienteId: '',
       liveId: this.liveActivo ? this.liveActivo._id : '',
       producto: '',

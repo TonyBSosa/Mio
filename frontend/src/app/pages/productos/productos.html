@@ -20,65 +20,80 @@
   <form class="producto-form" (ngSubmit)="guardarProducto()">
     <h3>{{ editando ? 'Editar producto' : 'Nuevo producto' }}</h3>
 
-    <div class="form-group">
-      <label for="nombre">Nombre</label>
-      <input
-        id="nombre"
-        name="nombre"
-        type="text"
-        [(ngModel)]="producto.nombre"
-        required
-      >
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="codigo">Código de la pieza</label>
+        <input id="codigo" name="codigo" type="text" maxlength="30"
+          placeholder="Ejemplo: BLUSA-001 (opcional)" [(ngModel)]="producto.codigo">
+        <small class="field-hint">Se genera al crear si lo dejas vacío. Único en tu tienda.</small>
+      </div>
+
+      <div class="form-group">
+        <label for="nombre">Nombre *</label>
+        <input
+          id="nombre"
+          name="nombre"
+          type="text"
+          placeholder="Nombre de la prenda o pieza"
+          [(ngModel)]="producto.nombre"
+          required
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="categoria">Categoría</label>
+        <input
+          id="categoria"
+          name="categoria"
+          type="text"
+          placeholder="Ej: Blusas, Vestidos, Calzado..."
+          [(ngModel)]="producto.categoria"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="precio">Precio (Lempiras) *</label>
+        <input
+          id="precio"
+          name="precio"
+          type="number"
+          min="0"
+          step="0.01"
+          [(ngModel)]="producto.precio"
+          required
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="estado">Estado</label>
+        <select id="estado" name="estado" [(ngModel)]="producto.estado">
+          <option value="activo">activo</option>
+          <option value="inactivo">inactivo</option>
+          <option value="apartado">apartado</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="foto">URL de Foto</label>
+        <input
+          id="foto"
+          name="foto"
+          type="text"
+          placeholder="https://..."
+          [(ngModel)]="producto.foto"
+        >
+      </div>
     </div>
 
     <div class="form-group">
-      <label for="descripcion">Descripcion</label>
+      <label for="descripcion">Descripción</label>
       <input
         id="descripcion"
         name="descripcion"
         type="text"
+        placeholder="Talla, marca, detalles o condición de la pieza..."
         [(ngModel)]="producto.descripcion"
       >
-    </div>
-
-    <div class="form-group">
-      <label for="categoria">Categoria</label>
-      <input
-        id="categoria"
-        name="categoria"
-        type="text"
-        [(ngModel)]="producto.categoria"
-      >
-    </div>
-
-    <div class="form-group">
-      <label for="foto">Agregar foto</label>
-      <input
-        id="foto"
-        name="foto"
-        type="text"
-        placeholder="URL de la foto del producto"
-        [(ngModel)]="producto.foto"
-      >
-    </div>
-
-    <div class="form-group">
-      <label for="precio">Precio</label>
-      <input
-        id="precio"
-        name="precio"
-        type="number"
-        [(ngModel)]="producto.precio"
-      >
-    </div>
-
-    <div class="form-group">
-      <label for="estado">Estado</label>
-      <select id="estado" name="estado" [(ngModel)]="producto.estado">
-        <option value="activo">activo</option>
-        <option value="inactivo">inactivo</option>
-        <option value="apartado">apartado</option>
-      </select>
     </div>
 
     <button type="submit" class="btn-primary" [disabled]="cargando">
@@ -100,7 +115,7 @@
     <p class="mensaje error">{{ error }}</p>
   }
 
-  <h3 class="section-label">Listado de productos</h3>
+  <h3 id="productos-table-heading" class="section-label">Listado de productos ({{ productosFiltrados.length }})</h3>
 
   <section class="filtros-box">
     <div class="form-group">
@@ -109,7 +124,7 @@
         id="filtroNombre"
         name="filtroNombre"
         type="text"
-        placeholder="Ejemplo: blusa, pantalon"
+        placeholder="Buscar por nombre o código"
         [(ngModel)]="filtroNombre"
         (input)="filtrarProductos()"
       >
@@ -165,63 +180,78 @@
   }
 
   @if (productosFiltrados.length > 0) {
-    <table>
-      <thead>
-        <tr>
-          <th>Nombre</th>
-          <th>Descripcion</th>
-          <th>Categoria</th>
-          <th>Foto</th>
-          <th>Precio</th>
-          <th>Estado</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (productoItem of productosFiltrados; track productoItem._id) {
+    <div tabindex="0" role="region" aria-labelledby="productos-table-heading" class="table-wrapper">
+      <table>
+        <thead>
           <tr>
-            <td>{{ productoItem.nombre }}</td>
-            <td>{{ productoItem.descripcion }}</td>
-            <td>{{ productoItem.categoria }}</td>
-            <td>
-              @if (productoItem.foto) {
-                <img class="producto-thumb" [src]="productoItem.foto" [alt]="productoItem.nombre">
-              } @else {
-                Sin foto
-              }
-            </td>
-            <td>{{ productoItem.precio }}</td>
-            <td>{{ productoItem.estado }}</td>
-            <td>
-              <button type="button" (click)="editarProducto(productoItem)">
-                Editar
-              </button>
-              @if (productoItem.estado !== 'activo') {
-                <button type="button" (click)="cambiarEstado(productoItem, 'activo')">
-                  Activar
-                </button>
-              }
-              @if (productoItem.estado !== 'inactivo') {
-                <button type="button" (click)="cambiarEstado(productoItem, 'inactivo')">
-                  Inactivar
-                </button>
-              }
-              @if (productoItem.estado !== 'apartado') {
-                <button type="button" (click)="cambiarEstado(productoItem, 'apartado')">
-                  Apartar
-                </button>
-              }
-              <button
-                type="button"
-                class="danger"
-                (click)="eliminarProducto(productoItem._id)"
-              >
-                Eliminar
-              </button>
-            </td>
+            <th>Código</th>
+            <th>Nombre</th>
+            <th>Descripción</th>
+            <th>Categoría</th>
+            <th>Foto</th>
+            <th>Precio</th>
+            <th>Estado</th>
+            <th>Acciones</th>
           </tr>
-        }
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          @for (productoItem of productosFiltrados; track productoItem._id) {
+            <tr>
+              <td>
+                <span class="chip-codigo">{{ productoItem.codigo || 'Sin código' }}</span>
+              </td>
+              <td><strong>{{ productoItem.nombre }}</strong></td>
+              <td>{{ productoItem.descripcion || '—' }}</td>
+              <td>{{ productoItem.categoria || '—' }}</td>
+              <td>
+                @if (productoItem.foto) {
+                  <img class="producto-thumb" [src]="productoItem.foto" [alt]="productoItem.nombre">
+                } @else {
+                  <span class="sin-foto-label">Sin foto</span>
+                }
+              </td>
+              <td><strong>L {{ productoItem.precio }}</strong></td>
+              <td>
+                <span
+                  class="estado-badge"
+                  [class.activo]="productoItem.estado === 'activo'"
+                  [class.apartado]="productoItem.estado === 'apartado'"
+                  [class.inactivo]="productoItem.estado === 'inactivo'"
+                >
+                  {{ productoItem.estado }}
+                </span>
+              </td>
+              <td>
+                <button type="button" class="secondary" (click)="editarProducto(productoItem)">
+                  Editar
+                </button>
+                @if (productoItem.estado !== 'activo') {
+                  <button type="button" (click)="cambiarEstado(productoItem, 'activo')">
+                    Activar
+                  </button>
+                }
+                @if (productoItem.estado !== 'inactivo') {
+                  <button type="button" class="secondary" (click)="cambiarEstado(productoItem, 'inactivo')">
+                    Inactivar
+                  </button>
+                }
+                @if (productoItem.estado !== 'apartado') {
+                  <button type="button" class="secondary" (click)="cambiarEstado(productoItem, 'apartado')">
+                    Apartar
+                  </button>
+                }
+                <button
+                  type="button"
+                  class="danger"
+                  (click)="eliminarProducto(productoItem._id)"
+                >
+                  Eliminar
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
   }
 </section>

@@ -1,5 +1,5 @@
 .bienvenida-page {
-  min-height: 100vh;
+  min-height: 100dvh;
   font-family: system-ui, -apple-system, sans-serif;
   color: #1f2933;
   background: linear-gradient(135deg, #eef6fb 0%, #ffffff 48%, #fff5f5 100%);
@@ -25,7 +25,7 @@
 
 h1 {
   margin: 0;
-  font-size: 46px;
+  font-size: clamp(2rem, 1.4rem + 2.5vw, 2.875rem);
   line-height: 1.08;
   max-width: 720px;
 }

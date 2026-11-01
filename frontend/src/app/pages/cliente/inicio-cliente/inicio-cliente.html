@@ -10,12 +10,25 @@
     </div>
 
     <div class="header-actions">
-     
       @if (usuario) {
-        <button type="button" (click)="cerrarSesion()">Cerrar sesion</button>
+        <button type="button" (click)="cerrarSesion()">Cerrar sesión</button>
       }
     </div>
   </header>
+
+  <form class="buscador-explorar" (ngSubmit)="ejecutarBusqueda()">
+    <input
+      type="text"
+      name="textoBusqueda"
+      placeholder="Buscar tiendas o eventos Live por nombre o descripción..."
+      aria-label="Buscar tiendas o eventos Live"
+      [(ngModel)]="textoBusqueda"
+    >
+    <button type="submit">Buscar</button>
+    @if (textoBusqueda) {
+      <button type="button" class="btn-limpiar" (click)="limpiarBusqueda()">Limpiar</button>
+    }
+  </form>
 
   @if (mensaje) {
     <p class="mensaje exito">{{ mensaje }}</p>

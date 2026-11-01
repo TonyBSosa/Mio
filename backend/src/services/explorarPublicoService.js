@@ -1,9 +1,28 @@
 const explorarPublicoRepository = require("../repositories/explorarPublicoRepository");
 
-const formatearPerfil = (perfil) => {
+const crearMapaUsuarios = (usuarios = []) => {
+  const mapa = new Map();
+  for (const u of usuarios) {
+    if (u && u._id) {
+      mapa.set(String(u._id), u);
+    }
+  }
+  return mapa;
+};
+
+const esVendedorVisible = (vendedorId, mapaUsuarios) => {
+  if (!mapaUsuarios || mapaUsuarios.size === 0) {
+    return true;
+  }
+  return mapaUsuarios.has(String(vendedorId));
+};
+
+const formatearPerfil = (perfil, mapaUsuarios) => {
+  const usuario = mapaUsuarios?.get(String(perfil.vendedorId));
+
   return {
     vendedorId: perfil.vendedorId,
-    nombrePublico: perfil.nombrePublico || "",
+    nombrePublico: perfil.nombrePublico || usuario?.nombre || "",
     descripcion: perfil.descripcion || "",
     facebook: perfil.facebook || "",
     instagram: perfil.instagram || "",
@@ -13,11 +32,12 @@ const formatearPerfil = (perfil) => {
   };
 };
 
-const formatearEvento = (live, perfiles) => {
+const formatearEvento = (live, perfiles, mapaUsuarios) => {
   const vendedorId = live.vendedorId ? live.vendedorId.toString() : "";
   const perfil = perfiles.find(
     (perfilItem) => perfilItem.vendedorId.toString() === vendedorId
   );
+  const usuario = mapaUsuarios?.get(vendedorId);
 
   return {
     _id: live._id,
@@ -26,38 +46,65 @@ const formatearEvento = (live, perfiles) => {
     fecha: live.fecha,
     estado: live.estado,
     vendedorId: live.vendedorId,
-    nombrePublico: perfil ? perfil.nombrePublico || "" : ""
+    nombrePublico:
+      (perfil && perfil.nombrePublico) || usuario?.nombre || ""
   };
 };
 
 const listarVendedores = async () => {
-  const perfiles = await explorarPublicoRepository.listarPerfilesActivos();
+  const [perfiles, usuariosActivos] = await Promise.all([
+    explorarPublicoRepository.listarPerfilesActivos(),
+    explorarPublicoRepository.listarVendedoresUsuariosActivos?.() || []
+  ]);
 
-  return perfiles.map(formatearPerfil);
+  const mapaUsuarios = crearMapaUsuarios(usuariosActivos);
+
+  return perfiles
+    .filter((perfil) => esVendedorVisible(perfil.vendedorId, mapaUsuarios))
+    .map((perfil) => formatearPerfil(perfil, mapaUsuarios));
 };
 
 const listarEventos = async () => {
-  const perfiles = await explorarPublicoRepository.listarPerfilesActivos();
-  const eventos = await explorarPublicoRepository.listarEventosPublicos();
+  const [perfiles, eventos, usuariosActivos] = await Promise.all([
+    explorarPublicoRepository.listarPerfilesActivos(),
+    explorarPublicoRepository.listarEventosPublicos(),
+    explorarPublicoRepository.listarVendedoresUsuariosActivos?.() || []
+  ]);
 
-  return eventos.map((evento) => formatearEvento(evento, perfiles));
+  const mapaUsuarios = crearMapaUsuarios(usuariosActivos);
+
+  return eventos
+    .filter((evento) => esVendedorVisible(evento.vendedorId, mapaUsuarios))
+    .map((evento) => formatearEvento(evento, perfiles, mapaUsuarios));
 };
 
 const buscar = async (texto) => {
-  if (!texto) {
+  const textoLimpio = typeof texto === "string" ? texto.trim() : "";
+
+  if (!textoLimpio) {
     return {
       vendedores: [],
       eventos: []
     };
   }
 
-  const perfiles = await explorarPublicoRepository.buscarPerfiles(texto);
-  const eventos = await explorarPublicoRepository.buscarEventos(texto);
-  const perfilesActivos = await explorarPublicoRepository.listarPerfilesActivos();
+  const [perfiles, eventos, perfilesActivos, usuariosActivos] =
+    await Promise.all([
+      explorarPublicoRepository.buscarPerfiles(textoLimpio),
+      explorarPublicoRepository.buscarEventos(textoLimpio),
+      explorarPublicoRepository.listarPerfilesActivos(),
+      explorarPublicoRepository.listarVendedoresUsuariosActivos?.() || []
+    ]);
+
+  const mapaUsuarios = crearMapaUsuarios(usuariosActivos);
 
   return {
-    vendedores: perfiles.map(formatearPerfil),
-    eventos: eventos.map((evento) => formatearEvento(evento, perfilesActivos))
+    vendedores: perfiles
+      .filter((perfil) => esVendedorVisible(perfil.vendedorId, mapaUsuarios))
+      .map((perfil) => formatearPerfil(perfil, mapaUsuarios)),
+    eventos: eventos
+      .filter((evento) => esVendedorVisible(evento.vendedorId, mapaUsuarios))
+      .map((evento) => formatearEvento(evento, perfilesActivos, mapaUsuarios))
   };
 };
 

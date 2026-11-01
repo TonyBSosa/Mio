@@ -37,7 +37,7 @@ const numeroValido = (valor, minimo) => {
 
   const numero = Number(valor);
 
-  return !Number.isNaN(numero) && numero >= minimo;
+  return Number.isFinite(numero) && numero >= minimo;
 };
 
 const validarEstadoPago = (estadoPago) => {
@@ -59,7 +59,7 @@ const validarClienteYLive = async (
   requerirLiveActivo = false
 ) => {
   validarIdCliente(clienteId);
-  validarIdLive(liveId);
+  if (liveId) validarIdLive(liveId);
 
   const cliente = await pedidoRepository.buscarClientePorIdYVendedor(
     clienteId,
@@ -69,6 +69,8 @@ const validarClienteYLive = async (
   if (!cliente) {
     throw crearError(404, "Cliente no encontrado");
   }
+
+  if (!liveId) return;
 
   const live = await pedidoRepository.buscarLivePorIdYVendedor(
     liveId,
@@ -100,11 +102,9 @@ const crearPedido = async (data, vendedorId) => {
     throw crearError(400, "El clienteId es obligatorio");
   }
 
-  if (!liveId) {
-    throw crearError(400, "El liveId es obligatorio");
-  }
+  const productoNombre = typeof producto === "string" ? producto.trim() : "";
 
-  if (!producto) {
+  if (!productoNombre && !data.productoId) {
     throw crearError(400, "El producto es obligatorio");
   }
 
@@ -126,17 +126,47 @@ const crearPedido = async (data, vendedorId) => {
 
   await validarClienteYLive(clienteId, liveId, vendedorId, true);
 
-  return pedidoRepository.crearPedido({
-    clienteId,
-    liveId,
-    vendedorId,
-    producto,
-    cantidad,
-    precio,
-    estadoPago,
-    estadoEntrega,
-    observaciones
-  });
+  let pieza;
+  if (data.productoId) {
+    if (!mongoose.Types.ObjectId.isValid(data.productoId)) {
+      throw crearError(400, "ID de producto invalido");
+    }
+    pieza = await pedidoRepository.buscarProductoPorIdYVendedor(data.productoId, vendedorId);
+    if (!pieza) throw crearError(404, "Producto no encontrado");
+    if (pieza.estado !== "activo") throw crearError(409, "La pieza no esta disponible");
+    if (cantidad !== undefined && Number(cantidad) !== 1) {
+      throw crearError(400, "Una pieza unica debe tener cantidad 1");
+    }
+
+    const piezaApartada = await pedidoRepository.apartarProductoPorIdYVendedor(
+      pieza._id || data.productoId,
+      vendedorId
+    );
+
+    if (!piezaApartada) {
+      throw crearError(409, "La pieza no esta disponible");
+    }
+  }
+
+  try {
+    return await pedidoRepository.crearPedido({
+      clienteId,
+      liveId: liveId || undefined,
+      productoId: pieza?._id,
+      vendedorId,
+      producto: pieza ? pieza.nombre : productoNombre,
+      cantidad: pieza ? 1 : cantidad,
+      precio,
+      estadoPago,
+      estadoEntrega,
+      observaciones
+    });
+  } catch (error) {
+    if (pieza?._id) {
+      await pedidoRepository.liberarProductoPorIdYVendedor(pieza._id, vendedorId);
+    }
+    throw error;
+  }
 };
 
 const listarPedidos = (vendedorId) => {
@@ -194,6 +224,18 @@ const actualizarPedido = async (id, data, vendedorId) => {
     throw crearError(404, "Pedido no encontrado");
   }
 
+  if (data.productoId && String(data.productoId) !== String(pedidoActual.productoId || "")) {
+    throw crearError(400, "No se puede cambiar la pieza de un pedido existente");
+  }
+  if (pedidoActual.productoId) {
+    if ((producto !== undefined && producto !== pedidoActual.producto) ||
+        (cantidad !== undefined && Number(cantidad) !== 1)) {
+      throw crearError(400, "La pieza y su cantidad no se pueden cambiar");
+    }
+  } else if (producto !== undefined && !String(producto).trim()) {
+    throw crearError(400, "El producto es obligatorio");
+  }
+
   const clienteIdFinal =
     clienteId !== undefined ? clienteId : pedidoActual.clienteId;
   const liveIdFinal = liveId !== undefined ? liveId : pedidoActual.liveId;
@@ -203,8 +245,8 @@ const actualizarPedido = async (id, data, vendedorId) => {
   const datosActualizar = {};
 
   if (clienteId !== undefined) datosActualizar.clienteId = clienteId;
-  if (liveId !== undefined) datosActualizar.liveId = liveId;
-  if (producto !== undefined) datosActualizar.producto = producto;
+  if (liveId !== undefined) datosActualizar.liveId = liveId || null;
+  if (producto !== undefined) datosActualizar.producto = String(producto).trim();
   if (cantidad !== undefined) datosActualizar.cantidad = cantidad;
   if (precio !== undefined) datosActualizar.precio = precio;
   if (estadoPago !== undefined) datosActualizar.estadoPago = estadoPago;
@@ -275,6 +317,13 @@ const eliminarPedido = async (id, vendedorId) => {
 
   if (!pedido) {
     throw crearError(404, "Pedido no encontrado");
+  }
+
+  if (pedido.productoId) {
+    await pedidoRepository.liberarProductoPorIdYVendedor(
+      pedido.productoId,
+      vendedorId
+    );
   }
 
   return {

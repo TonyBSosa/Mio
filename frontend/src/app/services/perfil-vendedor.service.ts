@@ -1,3 +1,4 @@
+import { environment } from '../../environments/environment';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 
@@ -7,7 +8,7 @@ import { AuthService } from './auth.service';
   providedIn: 'root',
 })
 export class PerfilVendedorService {
-  private apiUrl = 'http://localhost:3000/api/perfil-vendedor';
+  private apiUrl = `${environment.apiUrl}/perfil-vendedor`;
 
   constructor(
     private http: HttpClient,

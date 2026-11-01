@@ -83,6 +83,7 @@ export class CatalogoPublico implements OnInit {
     const precioMaximo = Number(this.filtroPrecioMaximo);
 
     this.productosFiltrados = this.productos.filter((producto) => {
+      const codigo = String(producto.codigo || '').toLowerCase();
       const nombre = String(producto.nombre || '').toLowerCase();
       const descripcion = String(producto.descripcion || '').toLowerCase();
       const categoria = String(producto.categoria || '');
@@ -90,6 +91,7 @@ export class CatalogoPublico implements OnInit {
 
       const coincideProducto =
         !textoProducto ||
+        codigo.includes(textoProducto) ||
         nombre.includes(textoProducto) ||
         descripcion.includes(textoProducto);
       const coincideCategoria =

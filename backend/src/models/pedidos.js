@@ -10,8 +10,12 @@ const pedidoSchema = new mongoose.Schema(
 
     liveId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Live",
-      required: true
+      ref: "Live"
+    },
+
+    productoId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Producto"
     },
 
     vendedorId: {

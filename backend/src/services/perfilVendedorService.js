@@ -24,7 +24,11 @@ const obtenerMiPerfil = async (vendedorId) => {
   return crearPerfilVacio(vendedorId);
 };
 
-const guardarMiPerfil = (vendedorId, data) => {
+const limpiarTexto = (valor) => {
+  return typeof valor === "string" ? valor.trim() : "";
+};
+
+const guardarMiPerfil = (vendedorId, data = {}) => {
   const {
     nombrePublico,
     descripcion,
@@ -37,13 +41,13 @@ const guardarMiPerfil = (vendedorId, data) => {
 
   return perfilVendedorRepository.actualizarPorVendedor(vendedorId, {
     vendedorId,
-    nombrePublico,
-    descripcion,
-    facebook,
-    instagram,
-    tiktok,
-    whatsapp,
-    enlaceLive,
+    nombrePublico: limpiarTexto(nombrePublico),
+    descripcion: limpiarTexto(descripcion),
+    facebook: limpiarTexto(facebook),
+    instagram: limpiarTexto(instagram),
+    tiktok: limpiarTexto(tiktok),
+    whatsapp: limpiarTexto(whatsapp),
+    enlaceLive: limpiarTexto(enlaceLive),
     activo: true
   });
 };

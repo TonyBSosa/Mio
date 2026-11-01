@@ -206,13 +206,20 @@ button:hover {
   border: none;
 }
 
-.metric-card span {
+.metric-card span,
+.metric-card a {
   display: flex;
   align-items: center;
   gap: 5px;
   font-size: 12px;
   color: #6b7280;
   margin-bottom: 8px;
+  text-decoration: none;
+}
+
+.metric-card a:hover {
+  color: #185fa5;
+  text-decoration: underline;
 }
 
 .metric-card strong {

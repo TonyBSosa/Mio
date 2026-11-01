@@ -20,6 +20,7 @@ export class Productos implements OnInit {
   filtroEstado = '';
 
   producto = {
+    codigo: '',
     nombre: '',
     descripcion: '',
     categoria: '',
@@ -138,6 +139,7 @@ export class Productos implements OnInit {
     this.editando = true;
     this.productoEditandoId = producto._id;
     this.producto = {
+      codigo: producto.codigo || '',
       nombre: producto.nombre,
       descripcion: producto.descripcion,
       categoria: producto.categoria,
@@ -147,6 +149,9 @@ export class Productos implements OnInit {
     };
     this.mensaje = '';
     this.error = '';
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }
 
   cancelarEdicion() {
@@ -213,6 +218,7 @@ export class Productos implements OnInit {
 
   limpiarFormulario() {
     this.producto = {
+      codigo: '',
       nombre: '',
       descripcion: '',
       categoria: '',
@@ -230,7 +236,8 @@ export class Productos implements OnInit {
       const categoria = String(productoItem.categoria || '');
       const estado = String(productoItem.estado || '');
 
-      const coincideNombre = !textoNombre || nombre.includes(textoNombre);
+      const codigo = String(productoItem.codigo || '').toLowerCase();
+      const coincideNombre = !textoNombre || nombre.includes(textoNombre) || codigo.includes(textoNombre);
       const coincideCategoria =
         !this.filtroCategoria || categoria === this.filtroCategoria;
       const coincideEstado = !this.filtroEstado || estado === this.filtroEstado;

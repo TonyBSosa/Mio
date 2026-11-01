@@ -14,6 +14,8 @@ import { ClienteService } from '../../services/cliente.service';
 })
 export class Clientes implements OnInit {
   clientes: any[] = [];
+  clientesFiltrados: any[] = [];
+  filtroBusqueda = '';
 
   cliente = {
     nombre: '',
@@ -46,7 +48,8 @@ export class Clientes implements OnInit {
 
     this.clienteService.listarClientes().subscribe({
       next: (respuesta: any) => {
-        this.clientes = respuesta;
+        this.clientes = Array.isArray(respuesta) ? respuesta : [];
+        this.filtrarClientes();
         this.cargando = false;
         this.detectorCambios.detectChanges();
       },
@@ -56,6 +59,21 @@ export class Clientes implements OnInit {
         this.cargando = false;
         this.detectorCambios.detectChanges();
       },
+    });
+  }
+
+  filtrarClientes() {
+    const texto = this.filtroBusqueda.trim().toLowerCase();
+    if (!texto) {
+      this.clientesFiltrados = [...this.clientes];
+      return;
+    }
+
+    this.clientesFiltrados = this.clientes.filter((c) => {
+      const nom = String(c.nombre || '').toLowerCase();
+      const tel = String(c.telefono || '').toLowerCase();
+      const dir = String(c.direccion || '').toLowerCase();
+      return nom.includes(texto) || tel.includes(texto) || dir.includes(texto);
     });
   }
 
@@ -82,6 +100,7 @@ export class Clientes implements OnInit {
             if (index !== -1) {
               this.clientes[index] = clienteActualizado;
               this.clientes = [...this.clientes];
+              this.filtrarClientes();
             }
 
             this.limpiarFormulario();
@@ -101,8 +120,9 @@ export class Clientes implements OnInit {
     } else {
       this.clienteService.crearCliente(this.cliente).subscribe({
         next: (clienteCreado: any) => {
-          this.clientes.push(clienteCreado);
+          this.clientes.unshift(clienteCreado);
           this.clientes = [...this.clientes];
+          this.filtrarClientes();
           this.limpiarFormulario();
           this.mensaje = 'Cliente creado correctamente';
           this.cargando = false;
@@ -128,6 +148,9 @@ export class Clientes implements OnInit {
     };
     this.mensaje = '';
     this.error = '';
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }
 
   cancelarEdicion() {
@@ -144,6 +167,7 @@ export class Clientes implements OnInit {
     this.clienteService.eliminarCliente(id).subscribe({
       next: () => {
         this.clientes = this.clientes.filter((clienteItem) => clienteItem._id !== id);
+        this.filtrarClientes();
         this.mensaje = 'Cliente eliminado correctamente';
         this.cargando = false;
         this.detectorCambios.detectChanges();

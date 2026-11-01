@@ -1,3 +1,4 @@
+import { environment } from '../../environments/environment';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 
@@ -7,7 +8,7 @@ import { AuthService } from './auth.service';
   providedIn: 'root',
 })
 export class PedidoService {
-  private apiUrl = 'http://localhost:3000/api/pedidos';
+  private apiUrl = `${environment.apiUrl}/pedidos`;
 
   constructor(
     private http: HttpClient,

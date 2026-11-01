@@ -1,6 +1,12 @@
 const explorarPublicoService = require("../services/explorarPublicoService");
 
 const responderError = (res, error, mensajeDefault) => {
+  if (error.status) {
+    return res.status(error.status).json({
+      mensaje: error.mensaje
+    });
+  }
+
   return res.status(500).json({
     mensaje: mensajeDefault,
     error: error.message

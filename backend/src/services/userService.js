@@ -32,9 +32,12 @@ const validarEstadoUsuario = (estado) => {
 };
 
 const crearUsuario = async (data) => {
-  const { nombre, email, password, rol } = data;
+  const { nombre, email, password, rol, estado } = data;
+  const nombreLimpio = typeof nombre === "string" ? nombre.trim() : "";
+  const emailNormalizado =
+    typeof email === "string" ? email.trim().toLowerCase() : "";
 
-  if (!nombre || !email || !password) {
+  if (!nombreLimpio || !emailNormalizado || !password) {
     throw crearError(400, "Nombre, email y password son obligatorios");
   }
 
@@ -42,7 +45,11 @@ const crearUsuario = async (data) => {
     validarRolUsuario(rol);
   }
 
-  const usuarioExiste = await userRepository.buscarPorEmail(email);
+  if (estado !== undefined) {
+    validarEstadoUsuario(estado);
+  }
+
+  const usuarioExiste = await userRepository.buscarPorEmail(emailNormalizado);
 
   if (usuarioExiste) {
     throw crearError(400, "Ya existe un usuario con ese email");
@@ -50,10 +57,11 @@ const crearUsuario = async (data) => {
 
   const passwordHasheado = await bcrypt.hash(password, 10);
   const usuario = await userRepository.crearUsuario({
-    nombre,
-    email,
+    nombre: nombreLimpio,
+    email: emailNormalizado,
     password: passwordHasheado,
-    rol
+    rol,
+    estado
   });
 
   return {
@@ -81,24 +89,47 @@ const obtenerUsuarioPorId = async (id) => {
   return usuario;
 };
 
-const actualizarUsuario = async (id, data) => {
+const actualizarUsuario = async (id, data, adminId) => {
   validarIdUsuario(id);
 
   const { nombre, email, password, rol, estado } = data;
   const datosActualizar = {};
 
+  if (nombre !== undefined && !String(nombre).trim()) {
+    throw crearError(400, "El nombre es obligatorio");
+  }
+
+  if (email !== undefined && !String(email).trim()) {
+    throw crearError(400, "El email es obligatorio");
+  }
+
   if (rol) {
     validarRolUsuario(rol);
+    if (adminId && String(id) === String(adminId) && rol !== "admin") {
+      throw crearError(400, "No puedes quitarte el rol de administrador");
+    }
     datosActualizar.rol = rol;
   }
 
   if (estado) {
     validarEstadoUsuario(estado);
+    if (adminId && String(id) === String(adminId) && estado !== "activo") {
+      throw crearError(400, "No puedes inactivar tu propio usuario");
+    }
     datosActualizar.estado = estado;
   }
 
-  if (nombre) datosActualizar.nombre = nombre;
-  if (email) datosActualizar.email = email;
+  if (nombre !== undefined) datosActualizar.nombre = String(nombre).trim();
+
+  if (email !== undefined) {
+    const emailNormalizado = String(email).trim().toLowerCase();
+    const existente = await userRepository.buscarPorEmail(emailNormalizado);
+    if (existente && String(existente._id) !== String(id)) {
+      throw crearError(409, "Ya existe un usuario con ese email");
+    }
+    datosActualizar.email = emailNormalizado;
+  }
+
   if (password) datosActualizar.password = await bcrypt.hash(password, 10);
 
   const usuario = await userRepository.actualizarPorId(id, datosActualizar);
@@ -107,10 +138,17 @@ const actualizarUsuario = async (id, data) => {
     throw crearError(404, "Usuario no encontrado");
   }
 
+  if (datosActualizar.estado !== undefined) {
+    await userRepository.sincronizarEstadoPerfilVendedor?.(
+      id,
+      datosActualizar.estado === "activo"
+    );
+  }
+
   return usuario;
 };
 
-const actualizarEstadoUsuario = async (id, estado) => {
+const actualizarEstadoUsuario = async (id, estado, adminId) => {
   validarIdUsuario(id);
 
   if (!estado) {
@@ -119,23 +157,47 @@ const actualizarEstadoUsuario = async (id, estado) => {
 
   validarEstadoUsuario(estado);
 
+  if (adminId && String(id) === String(adminId) && estado !== "activo") {
+    throw crearError(400, "No puedes inactivar tu propio usuario");
+  }
+
   const usuario = await userRepository.actualizarPorId(id, { estado });
 
   if (!usuario) {
     throw crearError(404, "Usuario no encontrado");
   }
 
+  await userRepository.sincronizarEstadoPerfilVendedor?.(
+    id,
+    estado === "activo"
+  );
+
   return usuario;
 };
 
-const eliminarUsuario = async (id) => {
+const eliminarUsuario = async (id, adminId) => {
   validarIdUsuario(id);
+
+  if (adminId && String(id) === String(adminId)) {
+    throw crearError(400, "No puedes eliminar tu propio usuario");
+  }
+
+  const tieneDatos = await userRepository.tieneDatosDeTienda?.(id);
+
+  if (tieneDatos) {
+    throw crearError(
+      409,
+      "No se puede eliminar un vendedor con registros asociados. Inactívalo en su lugar."
+    );
+  }
 
   const usuario = await userRepository.eliminarPorId(id);
 
   if (!usuario) {
     throw crearError(404, "Usuario no encontrado");
   }
+
+  await userRepository.eliminarPerfilPorVendedor?.(id);
 
   return {
     mensaje: "Usuario eliminado correctamente"

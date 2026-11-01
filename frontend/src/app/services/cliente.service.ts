@@ -1,3 +1,4 @@
+import { environment } from '../../environments/environment';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 
@@ -7,7 +8,7 @@ import { AuthService } from './auth.service';
   providedIn: 'root',
 })
 export class ClienteService {
-  private apiUrl = 'http://localhost:3000/api/clientes';
+  private apiUrl = `${environment.apiUrl}/clientes`;
 
   constructor(
     private http: HttpClient,

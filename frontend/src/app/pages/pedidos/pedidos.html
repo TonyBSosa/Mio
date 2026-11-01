@@ -1,136 +1,264 @@
 <section class="pedidos-page">
   <header class="page-header">
-    <div>
-      <h2>Pedidos</h2>
-      <p>Consulta y actualiza pedidos, pagos y entregas del vendedor.</p>
+    <div class="header-titles">
+      <h2>Pedidos y Apartados</h2>
+      <p>Registra ventas en vivo o directas, consulta estados de pago y gestiona entregas.</p>
     </div>
 
-    <button type="button" class="btn-secondary" (click)="cerrarSesion()">Cerrar sesion</button>
+    <button type="button" class="btn-secondary" (click)="cerrarSesion()">Cerrar sesión</button>
   </header>
 
   <nav class="page-nav">
-      <a routerLink="/dashboard">Ir a Dashboard</a>
-      <a routerLink="/clientes">Ir a Clientes</a>
-      <a routerLink="/lives">Ir a Lives</a>
-      <a routerLink="/productos">Ir a Productos</a>
-      <a routerLink="/live-activo">Ir al Live activo</a>
-      <a routerLink="/resumen">Ir a Resumen</a>
-      <a routerLink="/perfil-vendedor">Ir a Perfil publico</a>
+    <a routerLink="/dashboard">Dashboard</a>
+    <a routerLink="/clientes">Clientes</a>
+    <a routerLink="/lives">Lives</a>
+    <a routerLink="/productos">Productos</a>
+    <a routerLink="/live-activo">Live activo</a>
+    <a routerLink="/resumen">Resumen</a>
+    <a routerLink="/perfil-vendedor">Perfil público</a>
   </nav>
 
-  @if (!liveActivo && !editando) {
-    <section class="post-live-box">
-      <h3>Gestion de pedidos despues del Live</h3>
-      <p>
-        No hay un Live activo. Puedes buscar pedidos existentes y actualizar pagos o entregas.
-        Para registrar pedidos nuevos, activa un Live desde el Dashboard o desde Live activo.
-      </p>
-      <a routerLink="/dashboard">Ir a Dashboard</a>
-      <a routerLink="/live-activo">Ir al Live activo</a>
-    </section>
+  @if (mensaje) {
+    <div class="mensaje exito" role="status">
+      {{ mensaje }}
+    </div>
   }
 
-  @if (liveActivo || editando) {
+  @if (error) {
+    <div class="mensaje error" role="alert">
+      {{ error }}
+    </div>
+  }
+
+  <!-- Formulario de Pedido -->
   <form class="pedido-form" (ngSubmit)="guardarPedido()">
-    <h3>{{ editando ? 'Editar pedido' : 'Nuevo pedido' }}</h3>
+    <div class="form-header">
+      <h3>{{ editando ? 'Editar pedido' : 'Registrar nuevo pedido' }}</h3>
+      @if (editando) {
+        <span class="badge-editando">Modo edición</span>
+      }
+    </div>
 
-    <p class="mensaje aviso">
-      Los pedidos nuevos se registran en el Live activo. Los pedidos ya creados pueden actualizarse despues del evento.
-      <a routerLink="/live-activo">Ir al Live activo</a>
-    </p>
+    <div class="form-grid">
+      <!-- Selector de Cliente -->
+      <div class="form-group">
+        <label for="clienteId">Cliente *</label>
+        <select id="clienteId" name="clienteId" [(ngModel)]="pedido.clienteId" required>
+          <option value="">Seleccione un cliente</option>
+          @for (clienteItem of clientes; track clienteItem._id) {
+            <option [value]="clienteItem._id">{{ clienteItem.nombre }}</option>
+          }
+        </select>
+      </div>
 
-    @if (liveActivo && !editando) {
-      <p>Live activo seleccionado: <strong>{{ liveActivo.nombre }}</strong></p>
-    }
+      <!-- Selector de Modalidad / Live -->
+      <div class="form-group">
+        <label for="liveId">Modalidad de venta</label>
+        <select id="liveId" name="liveId" [(ngModel)]="pedido.liveId">
+          <option value="">Venta directa (sin Live)</option>
+          @for (liveItem of livesDisponibles; track liveItem._id) {
+            <option [value]="liveItem._id">
+              {{ liveItem.nombre }} ({{ liveItem.estado }})
+            </option>
+          }
+        </select>
+        <span class="input-ayuda">
+          Puedes asociar la venta a un Live activo o dejarlo como venta directa.
+        </span>
+      </div>
+    </div>
 
-    <div class="form-group">
-      <label for="clienteId">Cliente</label>
-      <select id="clienteId" name="clienteId" [(ngModel)]="pedido.clienteId">
-        <option value="">Seleccione un cliente</option>
-        @for (clienteItem of clientes; track clienteItem._id) {
-          <option [value]="clienteItem._id">{{ clienteItem.nombre }}</option>
+    <!-- SECCIÓN DE PIEZA (CATÁLOGO) -->
+    <fieldset class="seccion-pieza">
+      <legend>Pieza o Producto</legend>
+
+      @if (!editando) {
+        <!-- Modo creación: Selección de pieza de catálogo -->
+        @if (!pedido.productoId) {
+          <div class="buscador-pieza-wrapper">
+            <div class="form-group">
+              <label for="busquedaPieza">Buscar pieza por código o nombre</label>
+              <div class="input-con-accion">
+                <input
+                  id="busquedaPieza"
+                  name="busquedaPieza"
+                  type="text"
+                  placeholder="Ej: BLUSA-01, Pantalón, Vestido..."
+                  [(ngModel)]="busquedaPieza"
+                  autocomplete="off"
+                >
+                @if (busquedaPieza) {
+                  <button type="button" class="btn-limpiar-busqueda" (click)="busquedaPieza = ''" title="Limpiar búsqueda">
+                    ✕
+                  </button>
+                }
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="selectorPieza">Elegir de piezas activas ({{ piezasDisponibles.length }} disponibles)</label>
+              <select
+                id="selectorPieza"
+                name="selectorPieza"
+                (change)="onSelectorPiezaChange($event)"
+              >
+                <option value="">-- Seleccionar pieza activa del catálogo --</option>
+                @for (p of piezasDisponibles; track p._id) {
+                  <option [value]="p._id">
+                    {{ p.codigo ? '[' + p.codigo + ']' : '[Sin código]' }} {{ p.nombre }} · L {{ p.precio }}
+                  </option>
+                }
+              </select>
+            </div>
+
+            <!-- Sugerencias rápidas cuando escribe en el buscador -->
+            @if (busquedaPieza.trim().length > 0) {
+              <div class="sugerencias-box">
+                <span class="sugerencias-titulo">Resultados coincidentes:</span>
+                @if (piezasDisponibles.length === 0) {
+                  <p class="sin-resultados-texto">No se encontraron piezas activas para "{{ busquedaPieza }}".</p>
+                } @else {
+                  <div class="sugerencias-grid">
+                    @for (p of piezasDisponibles.slice(0, 4); track p._id) {
+                      <button type="button" class="btn-sugerencia-item" (click)="seleccionarProducto(p)">
+                        <span class="sugerencia-codigo">{{ p.codigo || 'SIN CÓDIGO' }}</span>
+                        <span class="sugerencia-nombre">{{ p.nombre }}</span>
+                        <strong class="sugerencia-precio">L {{ p.precio }}</strong>
+                      </button>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        } @else {
+          <!-- Ficha de pieza seleccionada -->
+          <div class="tarjeta-pieza-seleccionada">
+            <div class="tarjeta-pieza-header">
+              <span class="chip-estado-activo">Pieza de catálogo seleccionada</span>
+              <button type="button" class="btn-quitar-pieza" (click)="deseleccionarProducto()">
+                ✕ Cambiar / Quitar pieza
+              </button>
+            </div>
+            <div class="tarjeta-pieza-cuerpo">
+              <div class="dato-bloque">
+                <span class="dato-etiqueta">Código:</span>
+                <strong class="dato-valor-codigo">{{ piezaSeleccionada?.codigo || 'Sin código' }}</strong>
+              </div>
+              <div class="dato-bloque">
+                <span class="dato-etiqueta">Nombre:</span>
+                <span class="dato-valor">{{ pedido.producto }}</span>
+              </div>
+              <div class="dato-bloque">
+                <span class="dato-etiqueta">Precio base:</span>
+                <span class="dato-valor">L {{ piezaSeleccionada?.precio }}</span>
+              </div>
+              <div class="dato-bloque">
+                <span class="dato-etiqueta">Cantidad:</span>
+                <span class="dato-valor">1 (pieza única)</span>
+              </div>
+            </div>
+          </div>
         }
-      </select>
-    </div>
-
-    @if (editando) {
-    <div class="form-group">
-      <label for="liveId">Live</label>
-      <select id="liveId" name="liveId" [(ngModel)]="pedido.liveId">
-        <option value="">Seleccione un Live</option>
-        @for (liveItem of lives; track liveItem._id) {
-          <option [value]="liveItem._id">{{ liveItem.nombre }}</option>
+      } @else {
+        <!-- Modo edición -->
+        @if (pedido.productoId) {
+          <div class="tarjeta-pieza-seleccionada bloqueada">
+            <div class="tarjeta-pieza-header">
+              <span class="chip-estado-activo">Pieza vinculada al pedido</span>
+              <span class="chip-bloqueado">No reemplazable</span>
+            </div>
+            <div class="tarjeta-pieza-cuerpo">
+              <div class="dato-bloque">
+                <span class="dato-etiqueta">Código:</span>
+                <strong class="dato-valor-codigo">{{ piezaSeleccionada?.codigo || 'Sin código' }}</strong>
+              </div>
+              <div class="dato-bloque">
+                <span class="dato-etiqueta">Nombre:</span>
+                <span class="dato-valor">{{ pedido.producto }}</span>
+              </div>
+              <div class="dato-bloque">
+                <span class="dato-etiqueta">Cantidad fija:</span>
+                <span class="dato-valor">1</span>
+              </div>
+            </div>
+            <p class="nota-bloqueo">
+              Por consistencia de inventario, la pieza vinculada y su cantidad no pueden ser reemplazadas en este pedido.
+            </p>
+          </div>
+        } @else {
+          <div class="aviso-pedido-historico">
+            <strong>Pedido histórico:</strong> Este pedido no tiene una pieza vinculada en el catálogo. Puedes editar libremente el nombre y la cantidad.
+          </div>
         }
-      </select>
-    </div>
-    }
+      }
 
-    <div class="form-group">
-      <label for="productoLista">Tomar producto registrado</label>
-      <select
-        id="productoLista"
-        name="productoLista"
-        #productoSeleccionado
-        (change)="seleccionarProducto(productos[productoSeleccionado.selectedIndex - 1])"
-      >
-        <option value="">Seleccione un producto</option>
-        @for (productoItem of productos; track productoItem._id) {
-          <option [value]="productoItem._id">
-            {{ productoItem.nombre }} - {{ productoItem.precio }}
-          </option>
-        }
-      </select>
-    </div>
+      <!-- Campos del Producto: bloqueados si hay pieza de catálogo vinculada -->
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="producto">Nombre descriptivo del producto *</label>
+          <input
+            id="producto"
+            name="producto"
+            type="text"
+            [(ngModel)]="pedido.producto"
+            [readonly]="!!pedido.productoId"
+            placeholder="Nombre de la prenda o pieza"
+            required
+          >
+          @if (pedido.productoId) {
+            <span class="input-ayuda">Nombre bloqueado para coincidir con la pieza del catálogo.</span>
+          }
+        </div>
 
-    <div class="form-group">
-      <label for="producto">Producto</label>
-      <input
-        id="producto"
-        name="producto"
-        type="text"
-        [(ngModel)]="pedido.producto"
-        required
-      >
-    </div>
+        <div class="form-group">
+          <label for="cantidad">Cantidad *</label>
+          <input
+            id="cantidad"
+            name="cantidad"
+            type="number"
+            min="1"
+            [(ngModel)]="pedido.cantidad"
+            [readonly]="!!pedido.productoId"
+            required
+          >
+          @if (pedido.productoId) {
+            <span class="input-ayuda">Las piezas únicas exigen estrictamente cantidad 1.</span>
+          }
+        </div>
+      </div>
+    </fieldset>
 
-    <div class="form-group">
-      <label for="cantidad">Cantidad</label>
-      <input
-        id="cantidad"
-        name="cantidad"
-        type="number"
-        [(ngModel)]="pedido.cantidad"
-      >
-    </div>
+    <!-- Precios y Estados -->
+    <div class="form-grid tres-columnas">
+      <div class="form-group">
+        <label for="precio">Precio acordado (Lempiras) *</label>
+        <input
+          id="precio"
+          name="precio"
+          type="number"
+          min="0"
+          step="0.01"
+          [(ngModel)]="pedido.precio"
+          required
+        >
+      </div>
 
-    <div class="form-group">
-      <label for="precio">Precio</label>
-      <input
-        id="precio"
-        name="precio"
-        type="number"
-        [(ngModel)]="pedido.precio"
-      >
-    </div>
+      <div class="form-group">
+        <label for="estadoPago">Estado de pago</label>
+        <select id="estadoPago" name="estadoPago" [(ngModel)]="pedido.estadoPago">
+          <option value="pendiente">Pendiente</option>
+          <option value="pagado">Pagado</option>
+        </select>
+      </div>
 
-    <div class="form-group">
-      <label for="estadoPago">Estado pago</label>
-      <select id="estadoPago" name="estadoPago" [(ngModel)]="pedido.estadoPago">
-        <option value="pendiente">pendiente</option>
-        <option value="pagado">pagado</option>
-      </select>
-    </div>
-
-    <div class="form-group">
-      <label for="estadoEntrega">Estado entrega</label>
-      <select
-        id="estadoEntrega"
-        name="estadoEntrega"
-        [(ngModel)]="pedido.estadoEntrega"
-      >
-        <option value="pendiente">pendiente</option>
-        <option value="entregado">entregado</option>
-      </select>
+      <div class="form-group">
+        <label for="estadoEntrega">Estado de entrega</label>
+        <select id="estadoEntrega" name="estadoEntrega" [(ngModel)]="pedido.estadoEntrega">
+          <option value="pendiente">Pendiente</option>
+          <option value="entregado">Entregado</option>
+        </select>
+      </div>
     </div>
 
     <div class="form-group">
@@ -138,42 +266,44 @@
       <textarea
         id="observaciones"
         name="observaciones"
+        rows="2"
+        placeholder="Detalles de apartado, cliente o punto de entrega..."
         [(ngModel)]="pedido.observaciones"
       ></textarea>
     </div>
 
-    <button type="submit" class="btn-primary" [disabled]="cargando">
-      {{ editando ? 'Actualizar' : 'Guardar' }}
-    </button>
-
-    @if (editando) {
-      <button type="button" class="secondary" (click)="cancelarEdicion()">
-        Cancelar edicion
+    <!-- Acciones del Formulario -->
+    <div class="form-acciones">
+      <button type="submit" class="btn-primary" [disabled]="cargando">
+        @if (cargando) {
+          Guardando...
+        } @else {
+          {{ editando ? 'Actualizar pedido' : 'Guardar pedido' }}
+        }
       </button>
-    }
+
+      @if (editando) {
+        <button type="button" class="btn-secondary" (click)="cancelarEdicion()" [disabled]="cargando">
+          Cancelar edición
+        </button>
+      }
+    </div>
   </form>
-  }
 
-  @if (mensaje) {
-    <p class="mensaje exito">{{ mensaje }}</p>
-  }
-
-  @if (error) {
-    <p class="mensaje error">{{ error }}</p>
-  }
-
-  <h3 class="section-label">Listado de pedidos</h3>
+  <!-- Filtros del Listado -->
+  <h3 id="pedidos-table-heading" class="section-label">Listado de pedidos registrados</h3>
 
   <section class="filtros-box">
     <div class="form-group">
-      <label for="filtroLiveId">Filtrar por Live</label>
+      <label for="filtroLiveId">Filtrar por Live / Origen</label>
       <select
         id="filtroLiveId"
         name="filtroLiveId"
         [(ngModel)]="filtroLiveId"
         (change)="filtrarPedidos()"
       >
-        <option value="">Todos los Lives</option>
+        <option value="">Todos los orígenes</option>
+        <option value="directa">Solo Ventas directas (sin Live)</option>
         @for (liveItem of lives; track liveItem._id) {
           <option [value]="liveItem._id">{{ liveItem.nombre }}</option>
         }
@@ -196,108 +326,133 @@
     </div>
 
     <div class="form-group">
-      <label for="filtroProducto">Buscar producto</label>
+      <label for="filtroProducto">Buscar producto o código</label>
       <input
         id="filtroProducto"
         name="filtroProducto"
         type="text"
-        placeholder="Ejemplo: blusa, pantalon"
+        placeholder="Ej: BLUSA-01, blusa..."
         [(ngModel)]="filtroProducto"
         (input)="filtrarPedidos()"
       >
     </div>
 
     <div class="filtros-actions">
-      <button type="button" class="secondary" (click)="limpiarFiltros()">
+      <button type="button" class="btn-secondary btn-full-mobile" (click)="limpiarFiltros()">
         Limpiar filtros
       </button>
     </div>
   </section>
 
-  @if (cargando) {
-    <p>Cargando...</p>
+  <!-- Estado de Carga y Resultados -->
+  @if (cargando && pedidos.length === 0) {
+    <p class="estado-mensaje">Cargando pedidos...</p>
   }
 
   @if (!cargando && pedidos.length === 0) {
-    <p>No hay pedidos registrados.</p>
+    <p class="estado-mensaje">No hay pedidos registrados.</p>
   }
 
   @if (!cargando && pedidos.length > 0 && pedidosFiltrados.length === 0) {
-    <p>No hay pedidos que coincidan con los filtros.</p>
+    <p class="estado-mensaje">No hay pedidos que coincidan con los filtros aplicados.</p>
   }
 
+  <!-- Tabla Adaptable -->
   @if (pedidosFiltrados.length > 0) {
-    <table>
-      <thead>
-        <tr>
-          <th>Cliente</th>
-          <th>Live</th>
-          <th>Producto</th>
-          <th>Cantidad</th>
-          <th>Precio</th>
-          <th>Total</th>
-          <th>Pago</th>
-          <th>Entrega</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (pedidoItem of pedidosFiltrados; track pedidoItem._id) {
+    <div tabindex="0" role="region" aria-labelledby="pedidos-table-heading" class="tabla-contenedor">
+      <table class="tabla-pedidos">
+        <thead>
           <tr>
-            <td>{{ obtenerNombreCliente(pedidoItem.clienteId) }}</td>
-            <td>{{ obtenerNombreLive(pedidoItem.liveId) }}</td>
-            <td>{{ pedidoItem.producto }}</td>
-            <td>{{ pedidoItem.cantidad }}</td>
-            <td>{{ pedidoItem.precio }}</td>
-            <td>{{ calcularTotal(pedidoItem) }}</td>
-            <td>
-              <span class="estado-badge" [class.estado-ok]="pedidoItem.estadoPago === 'pagado'">
-                {{ pedidoItem.estadoPago }}
-              </span>
-            </td>
-            <td>
-              <span class="estado-badge" [class.estado-ok]="pedidoItem.estadoEntrega === 'entregado'">
-                {{ pedidoItem.estadoEntrega }}
-              </span>
-            </td>
-            <td>
-              <div class="acciones-tabla">
-                <button type="button" class="btn-small" (click)="editarPedido(pedidoItem)">
-                  Editar
-                </button>
-
-                @if (pedidoItem.estadoPago === 'pendiente') {
-                  <button type="button" class="btn-small" (click)="marcarPagado(pedidoItem)">
-                    Pagado
-                  </button>
-                } @else {
-                  <button type="button" class="btn-small secondary" (click)="marcarPendientePago(pedidoItem)">
-                    Pago pendiente
-                  </button>
-                }
-
-                @if (pedidoItem.estadoEntrega === 'pendiente') {
-                  <button type="button" class="btn-small" (click)="marcarEntregado(pedidoItem)">
-                    Entregado
-                  </button>
-                } @else {
-                  <button type="button" class="btn-small secondary" (click)="marcarPendienteEntrega(pedidoItem)">
-                    Entrega pendiente
-                  </button>
-                }
-
-                <button
-                  type="button"
-                  class="btn-small danger"
-                  (click)="eliminarPedido(pedidoItem._id)"
-                >
-                  Eliminar
-                </button>
-              </div>
-            </td>
+            <th>Cliente</th>
+            <th>Modalidad / Live</th>
+            <th>Producto / Pieza</th>
+            <th>Cant.</th>
+            <th>Precio</th>
+            <th>Total</th>
+            <th>Pago</th>
+            <th>Entrega</th>
+            <th>Acciones</th>
           </tr>
-        }
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          @for (pedidoItem of pedidosFiltrados; track pedidoItem._id) {
+            <tr>
+              <td class="col-cliente">
+                <strong>{{ obtenerNombreCliente(pedidoItem.clienteId) }}</strong>
+              </td>
+
+              <td class="col-live">
+                <span class="live-tag" [class.directa]="!pedidoItem.liveId">
+                  {{ obtenerNombreLive(pedidoItem.liveId) }}
+                </span>
+              </td>
+
+              <td class="col-producto">
+                <div class="producto-celda-info">
+                  <span class="producto-nombre">{{ pedidoItem.producto }}</span>
+                  @if (obtenerCodigoPieza(pedidoItem)) {
+                    <span class="chip-codigo-pieza">{{ obtenerCodigoPieza(pedidoItem) }}</span>
+                  } @else if (pedidoItem.productoId) {
+                    <span class="chip-codigo-pieza">Catálogo</span>
+                  }
+                </div>
+              </td>
+
+              <td class="col-cantidad">{{ pedidoItem.cantidad }}</td>
+              <td class="col-precio">L {{ pedidoItem.precio }}</td>
+              <td class="col-total"><strong>L {{ calcularTotal(pedidoItem) }}</strong></td>
+
+              <td class="col-pago">
+                <span class="estado-badge" [class.estado-ok]="pedidoItem.estadoPago === 'pagado'">
+                  {{ pedidoItem.estadoPago }}
+                </span>
+              </td>
+
+              <td class="col-entrega">
+                <span class="estado-badge" [class.estado-ok]="pedidoItem.estadoEntrega === 'entregado'">
+                  {{ pedidoItem.estadoEntrega }}
+                </span>
+              </td>
+
+              <td class="col-acciones">
+                <div class="acciones-tabla">
+                  <button type="button" class="btn-small" (click)="editarPedido(pedidoItem)" [disabled]="cargando">
+                    Editar
+                  </button>
+
+                  @if (pedidoItem.estadoPago === 'pendiente') {
+                    <button type="button" class="btn-small btn-accion-pago" (click)="marcarPagado(pedidoItem)" [disabled]="cargando">
+                      Pagado
+                    </button>
+                  } @else {
+                    <button type="button" class="btn-small secondary" (click)="marcarPendientePago(pedidoItem)" [disabled]="cargando">
+                      Pendiente
+                    </button>
+                  }
+
+                  @if (pedidoItem.estadoEntrega === 'pendiente') {
+                    <button type="button" class="btn-small btn-accion-entrega" (click)="marcarEntregado(pedidoItem)" [disabled]="cargando">
+                      Entregado
+                    </button>
+                  } @else {
+                    <button type="button" class="btn-small secondary" (click)="marcarPendienteEntrega(pedidoItem)" [disabled]="cargando">
+                      Por entregar
+                    </button>
+                  }
+
+                  <button
+                    type="button"
+                    class="btn-small danger"
+                    (click)="eliminarPedido(pedidoItem._id)" [disabled]="cargando"
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
   }
 </section>

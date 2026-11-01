@@ -17,15 +17,16 @@ const validarIdCliente = (id) => {
 
 const crearCliente = async (data, vendedorId) => {
   const { nombre, telefono, direccion } = data;
+  const nombreLimpio = typeof nombre === "string" ? nombre.trim() : "";
 
-  if (!nombre) {
+  if (!nombreLimpio) {
     throw crearError(400, "El nombre del cliente es obligatorio");
   }
 
   return clienteRepository.crearCliente({
-    nombre,
-    telefono,
-    direccion,
+    nombre: nombreLimpio,
+    telefono: typeof telefono === "string" ? telefono.trim() : telefono,
+    direccion: typeof direccion === "string" ? direccion.trim() : direccion,
     vendedorId
   });
 };
@@ -51,15 +52,21 @@ const actualizarCliente = async (id, data, vendedorId) => {
 
   const { nombre, telefono, direccion } = data;
 
-  if (nombre !== undefined && !nombre) {
+  if (nombre !== undefined && !String(nombre).trim()) {
     throw crearError(400, "El nombre del cliente es obligatorio");
   }
 
   const datosActualizar = {};
 
-  if (nombre !== undefined) datosActualizar.nombre = nombre;
-  if (telefono !== undefined) datosActualizar.telefono = telefono;
-  if (direccion !== undefined) datosActualizar.direccion = direccion;
+  if (nombre !== undefined) datosActualizar.nombre = String(nombre).trim();
+  if (telefono !== undefined) {
+    datosActualizar.telefono =
+      typeof telefono === "string" ? telefono.trim() : telefono;
+  }
+  if (direccion !== undefined) {
+    datosActualizar.direccion =
+      typeof direccion === "string" ? direccion.trim() : direccion;
+  }
 
   const cliente = await clienteRepository.actualizarPorIdYVendedor(
     id,
@@ -76,6 +83,18 @@ const actualizarCliente = async (id, data, vendedorId) => {
 
 const eliminarCliente = async (id, vendedorId) => {
   validarIdCliente(id);
+
+  const tienePedidos = await clienteRepository.tienePedidosAsociados?.(
+    id,
+    vendedorId
+  );
+
+  if (tienePedidos) {
+    throw crearError(
+      409,
+      "No se puede eliminar un cliente que tiene pedidos registrados"
+    );
+  }
 
   const cliente = await clienteRepository.eliminarPorIdYVendedor(id, vendedorId);
 

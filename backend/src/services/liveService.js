@@ -75,14 +75,31 @@ const validarNoExisteLiveActivo = async (vendedorId) => {
   }
 };
 
+const normalizarFechaLive = (fecha) => {
+  if (fecha === undefined || fecha === null || fecha === "") {
+    return null;
+  }
+
+  const fechaObj = new Date(fecha);
+  if (Number.isNaN(fechaObj.getTime())) {
+    throw crearError(400, "La fecha del Live no es valida");
+  }
+
+  return fechaObj;
+};
+
 const crearLive = async (data, vendedorId) => {
   const { nombre, descripcion, fecha, estado } = data;
+  const nombreLimpio = typeof nombre === "string" ? nombre.trim() : "";
   const estadoNormalizado =
-    estado !== undefined ? normalizarEstadoLive(estado) : undefined;
+    estado !== undefined && estado !== "" ? normalizarEstadoLive(estado) : undefined;
 
-  if (!nombre) {
+  if (!nombreLimpio) {
     throw crearError(400, "El nombre del Live es obligatorio");
   }
+
+  const fechaNormalizada =
+    fecha !== undefined ? normalizarFechaLive(fecha) : undefined;
 
   if (estadoNormalizado !== undefined) {
     validarEstadoLive(estadoNormalizado);
@@ -93,9 +110,9 @@ const crearLive = async (data, vendedorId) => {
   }
 
   return liveRepository.crearLive({
-    nombre,
-    descripcion,
-    fecha,
+    nombre: nombreLimpio,
+    descripcion: typeof descripcion === "string" ? descripcion.trim() : descripcion,
+    fecha: fechaNormalizada || undefined,
     estado: estadoNormalizado,
     vendedorId
   });
@@ -122,11 +139,14 @@ const actualizarLive = async (id, data, vendedorId) => {
 
   const { nombre, descripcion, fecha, estado } = data;
   const estadoNormalizado =
-    estado !== undefined ? normalizarEstadoLive(estado) : undefined;
+    estado !== undefined && estado !== "" ? normalizarEstadoLive(estado) : undefined;
 
-  if (nombre !== undefined && !nombre) {
+  if (nombre !== undefined && !String(nombre).trim()) {
     throw crearError(400, "El nombre del Live es obligatorio");
   }
+
+  const fechaNormalizada =
+    fecha !== undefined ? normalizarFechaLive(fecha) : undefined;
 
   if (estadoNormalizado !== undefined) {
     validarEstadoLive(estadoNormalizado);
@@ -148,9 +168,12 @@ const actualizarLive = async (id, data, vendedorId) => {
 
   const datosActualizar = {};
 
-  if (nombre !== undefined) datosActualizar.nombre = nombre;
-  if (descripcion !== undefined) datosActualizar.descripcion = descripcion;
-  if (fecha !== undefined) datosActualizar.fecha = fecha;
+  if (nombre !== undefined) datosActualizar.nombre = String(nombre).trim();
+  if (descripcion !== undefined) {
+    datosActualizar.descripcion =
+      typeof descripcion === "string" ? descripcion.trim() : descripcion;
+  }
+  if (fecha !== undefined) datosActualizar.fecha = fechaNormalizada;
   if (estadoNormalizado !== undefined) datosActualizar.estado = estadoNormalizado;
 
   const live = await liveRepository.actualizarPorIdYVendedor(
@@ -208,6 +231,31 @@ const obtenerLiveActivoActual = (vendedorId) => {
 
 const eliminarLive = async (id, vendedorId) => {
   validarIdLive(id);
+
+  const liveActual = await liveRepository.buscarPorIdYVendedor(id, vendedorId);
+
+  if (!liveActual) {
+    throw crearError(404, "Live no encontrado");
+  }
+
+  if (liveActual.estado === "activo") {
+    throw crearError(
+      409,
+      "No se puede eliminar un Live activo. Finalízalo o cancélalo primero."
+    );
+  }
+
+  const tienePedidos = await liveRepository.tienePedidosAsociados?.(
+    id,
+    vendedorId
+  );
+
+  if (tienePedidos) {
+    throw crearError(
+      409,
+      "No se puede eliminar un Live que tiene pedidos registrados"
+    );
+  }
 
   const live = await liveRepository.eliminarPorIdYVendedor(id, vendedorId);
 

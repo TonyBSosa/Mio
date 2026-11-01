@@ -14,7 +14,7 @@ import { ResumenService } from '../../services/resumen.service';
 })
 export class Resumen implements OnInit {
   lives: any[] = [];
-  liveId = '';
+  liveId = 'todos';
   resumen: any = null;
   mensaje = '';
   error = '';
@@ -30,34 +30,32 @@ export class Resumen implements OnInit {
 
   ngOnInit() {
     this.listarLives();
+    this.consultarResumen(true);
   }
 
   listarLives() {
-    this.cargando = true;
     this.error = '';
 
     this.liveService.listarLives().subscribe({
       next: (respuesta: any) => {
-        this.lives = respuesta;
-        this.cargando = false;
+        this.lives = Array.isArray(respuesta) ? respuesta : [];
         this.detectorCambios.detectChanges();
       },
       error: (error) => {
         console.error('Error al listar Lives', error);
         this.error = error.error?.mensaje || 'Error al listar Lives';
-        this.cargando = false;
         this.detectorCambios.detectChanges();
       },
     });
   }
 
-  consultarResumen() {
+  consultarResumen(silencioso = false) {
     this.mensaje = '';
     this.error = '';
     this.resumen = null;
 
     if (!this.liveId) {
-      this.error = 'Debe seleccionar un Live';
+      this.error = 'Debe seleccionar una modalidad o Live';
       return;
     }
 
@@ -66,7 +64,9 @@ export class Resumen implements OnInit {
     this.resumenService.obtenerResumenPorLive(this.liveId).subscribe({
       next: (respuesta: any) => {
         this.resumen = respuesta;
-        this.mensaje = 'Resumen consultado correctamente';
+        if (!silencioso) {
+          this.mensaje = 'Resumen consultado correctamente';
+        }
         this.cargando = false;
         this.detectorCambios.detectChanges();
       },
@@ -80,10 +80,10 @@ export class Resumen implements OnInit {
   }
 
   limpiarResumen() {
-    this.liveId = '';
-    this.resumen = null;
+    this.liveId = 'todos';
     this.mensaje = '';
     this.error = '';
+    this.consultarResumen(true);
   }
 
   cerrarSesion() {

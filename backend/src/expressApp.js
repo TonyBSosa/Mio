@@ -14,7 +14,9 @@ const explorarPublicoRoutes = require("./routes/explorarPublicoRoutes");
 
 const expressApp = expressFramework();
 
-expressApp.use(cors());
+const allowedOrigins = (process.env.CORS_ORIGINS || (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:4200'))
+  .split(',').map((origin) => origin.trim()).filter(Boolean);
+expressApp.use(cors({ origin: allowedOrigins }));
 expressApp.use(expressFramework.json());
 
 expressApp.get("/", (req, res) => {

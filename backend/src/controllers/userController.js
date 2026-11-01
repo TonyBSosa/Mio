@@ -43,11 +43,14 @@ const obtenerUsuarioPorId = async (req, res) => {
   }
 };
 
+const obtenerAdminId = (req) => req.usuario?._id || req.usuario?.id;
+
 const actualizarUsuario = async (req, res) => {
   try {
     const usuario = await userService.actualizarUsuario(
       req.params.id,
-      req.body
+      req.body,
+      obtenerAdminId(req)
     );
 
     res.json(usuario);
@@ -61,7 +64,8 @@ const actualizarEstadoUsuario = async (req, res) => {
     const { estado } = req.body;
     const usuario = await userService.actualizarEstadoUsuario(
       req.params.id,
-      estado
+      estado,
+      obtenerAdminId(req)
     );
 
     res.json(usuario);
@@ -72,7 +76,10 @@ const actualizarEstadoUsuario = async (req, res) => {
 
 const eliminarUsuario = async (req, res) => {
   try {
-    const respuesta = await userService.eliminarUsuario(req.params.id);
+    const respuesta = await userService.eliminarUsuario(
+      req.params.id,
+      obtenerAdminId(req)
+    );
 
     res.json(respuesta);
   } catch (error) {

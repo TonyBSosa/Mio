@@ -269,6 +269,11 @@ tbody tr:last-child td {
   color: #6d28d9;
 }
 
+.badge-cliente {
+  background-color: #f0fdf4;
+  color: #15803d;
+}
+
 .badge-activo {
   background-color: #ecfdf5;
   color: #15803d;

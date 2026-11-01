@@ -124,35 +124,61 @@
       }
 
       <div class="form-group">
-        <label for="productoLista">Tomar producto registrado</label>
+        <label for="productoLista">Tomar pieza activa del catálogo ({{ productos.length }} disponibles)</label>
         <select
           id="productoLista"
           name="productoLista"
           [(ngModel)]="productoSeleccionadoId"
           (change)="seleccionarProductoPorId()"
         >
-          <option value="">Seleccione un producto</option>
+          <option value="">-- Captura manual o seleccione pieza del catálogo --</option>
           @for (producto of productos; track producto._id) {
             <option [value]="producto._id">
-              {{ producto.nombre }} - {{ producto.precio }}
+              {{ producto.codigo ? '[' + producto.codigo + '] ' : '' }}{{ producto.nombre }} · L {{ producto.precio }}
             </option>
           }
         </select>
       </div>
 
-      <div class="form-group">
-        <label for="producto">Producto</label>
-        <input id="producto" name="producto" type="text" [(ngModel)]="pedido.producto">
-      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="producto">Producto *</label>
+          <input
+            id="producto"
+            name="producto"
+            type="text"
+            [(ngModel)]="pedido.producto"
+            [readonly]="!!productoSeleccionadoId"
+            placeholder="Nombre de la pieza o producto"
+            required
+          >
+        </div>
 
-      <div class="form-group">
-        <label for="cantidad">Cantidad</label>
-        <input id="cantidad" name="cantidad" type="number" [(ngModel)]="pedido.cantidad">
-      </div>
+        <div class="form-group">
+          <label for="cantidad">Cantidad *</label>
+          <input
+            id="cantidad"
+            name="cantidad"
+            type="number"
+            min="1"
+            [(ngModel)]="pedido.cantidad"
+            [readonly]="!!productoSeleccionadoId"
+            required
+          >
+        </div>
 
-      <div class="form-group">
-        <label for="precio">Precio</label>
-        <input id="precio" name="precio" type="number" [(ngModel)]="pedido.precio">
+        <div class="form-group">
+          <label for="precio">Precio (Lempiras) *</label>
+          <input
+            id="precio"
+            name="precio"
+            type="number"
+            min="0"
+            step="0.01"
+            [(ngModel)]="pedido.precio"
+            required
+          >
+        </div>
       </div>
 
       <div class="form-group">
@@ -160,6 +186,7 @@
         <textarea
           id="observaciones"
           name="observaciones"
+          placeholder="Notas de entrega o apartado..."
           [(ngModel)]="pedido.observaciones"
         ></textarea>
       </div>
@@ -180,15 +207,15 @@
           </article>
           <article>
             <span>Total vendido</span>
-            <strong>{{ resumen.totalVendido }}</strong>
+            <strong>L {{ resumen.totalVendido }}</strong>
           </article>
           <article>
             <span>Total pagado</span>
-            <strong>{{ resumen.totalPagado }}</strong>
+            <strong>L {{ resumen.totalPagado }}</strong>
           </article>
           <article>
             <span>Pendiente pago</span>
-            <strong>{{ resumen.totalPendientePago }}</strong>
+            <strong>L {{ resumen.totalPendientePago }}</strong>
           </article>
           <article>
             <span>Entregados</span>
@@ -201,53 +228,76 @@
         </div>
       }
 
-      <a routerLink="/resumen">Ver pantalla de resumen</a>
+      <a class="link-resumen" routerLink="/resumen">Ver pantalla de resumen →</a>
     </section>
 
-    <h3 class="section-label">Pedidos de este Live</h3>
+    <h3 id="live-orders-caption" class="section-label">Pedidos de este Live</h3>
 
     @if (pedidosDelLive.length === 0) {
-      <p>No hay pedidos registrados en este Live.</p>
+      <p class="empty-msg">No hay pedidos registrados en este Live.</p>
     }
 
     @if (pedidosDelLive.length > 0) {
-      <table>
-        <thead>
-          <tr>
-            <th>Cliente</th>
-            <th>Producto</th>
-            <th>Cantidad</th>
-            <th>Precio</th>
-            <th>Total</th>
-            <th>Pago</th>
-            <th>Entrega</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (pedidoItem of pedidosDelLive; track pedidoItem._id) {
+      <div tabindex="0" role="region" aria-labelledby="live-orders-caption" class="table-wrapper">
+        <table>
+          <thead>
             <tr>
-              <td>{{ obtenerNombreCliente(pedidoItem.clienteId) }}</td>
-              <td>{{ pedidoItem.producto }}</td>
-              <td>{{ pedidoItem.cantidad }}</td>
-              <td>{{ pedidoItem.precio }}</td>
-              <td>{{ calcularTotal(pedidoItem) }}</td>
-              <td>{{ pedidoItem.estadoPago }}</td>
-              <td>{{ pedidoItem.estadoEntrega }}</td>
-              <td>
-                <button type="button" (click)="marcarPagado(pedidoItem)">Marcar pagado</button>
-                <button type="button" (click)="marcarPendientePago(pedidoItem)">
-                  Marcar pendiente pago
-                </button>
-                <button type="button" (click)="marcarEntregado(pedidoItem)">Marcar entregado</button>
-                <button type="button" (click)="marcarPendienteEntrega(pedidoItem)">
-                  Marcar pendiente entrega
-                </button>
-              </td>
+              <th>Cliente</th>
+              <th>Producto</th>
+              <th>Cant.</th>
+              <th>Precio</th>
+              <th>Total</th>
+              <th>Pago</th>
+              <th>Entrega</th>
+              <th>Acciones</th>
             </tr>
-          }
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            @for (pedidoItem of pedidosDelLive; track pedidoItem._id) {
+              <tr>
+                <td><strong>{{ obtenerNombreCliente(pedidoItem.clienteId) }}</strong></td>
+                <td>{{ pedidoItem.producto }}</td>
+                <td>{{ pedidoItem.cantidad }}</td>
+                <td>L {{ pedidoItem.precio }}</td>
+                <td><strong>L {{ calcularTotal(pedidoItem) }}</strong></td>
+                <td>
+                  <span class="estado-badge" [class.estado-ok]="pedidoItem.estadoPago === 'pagado'">
+                    {{ pedidoItem.estadoPago }}
+                  </span>
+                </td>
+                <td>
+                  <span class="estado-badge" [class.estado-ok]="pedidoItem.estadoEntrega === 'entregado'">
+                    {{ pedidoItem.estadoEntrega }}
+                  </span>
+                </td>
+                <td>
+                  <div class="acciones-fila">
+                    @if (pedidoItem.estadoPago === 'pendiente') {
+                      <button type="button" class="btn-small btn-pago" (click)="marcarPagado(pedidoItem)">
+                        Pagado
+                      </button>
+                    } @else {
+                      <button type="button" class="btn-small secondary" (click)="marcarPendientePago(pedidoItem)">
+                        Pendiente pago
+                      </button>
+                    }
+
+                    @if (pedidoItem.estadoEntrega === 'pendiente') {
+                      <button type="button" class="btn-small btn-entrega" (click)="marcarEntregado(pedidoItem)">
+                        Entregado
+                      </button>
+                    } @else {
+                      <button type="button" class="btn-small secondary" (click)="marcarPendienteEntrega(pedidoItem)">
+                        Por entregar
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
     }
   }
 </section>

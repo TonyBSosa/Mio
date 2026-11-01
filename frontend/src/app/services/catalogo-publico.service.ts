@@ -1,3 +1,4 @@
+import { environment } from '../../environments/environment';
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 
@@ -5,7 +6,7 @@ import { HttpClient } from '@angular/common/http';
   providedIn: 'root',
 })
 export class CatalogoPublicoService {
-  private apiUrl = 'http://localhost:3000/api/public/catalogo';
+  private apiUrl = `${environment.apiUrl}/public/catalogo`;
 
   constructor(private http: HttpClient) {}
 

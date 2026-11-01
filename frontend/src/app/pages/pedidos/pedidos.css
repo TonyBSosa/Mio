@@ -1,253 +1,74 @@
-/* === Layout principal === */
-.pedidos-page {
-  max-width: 1100px;
-  margin: 40px auto;
-  padding: 24px;
-  font-family: system-ui, -apple-system, sans-serif;
-  color: #1f2933;
+.pedidos-page{max-width:1100px;margin:16px auto;padding:12px;font-family:system-ui,-apple-system,sans-serif;color:#1f2933}
+.page-header,.form-header,.tarjeta-pieza-header{display:flex;justify-content:space-between;align-items:center}
+.page-header{margin-bottom:12px}
+.header-titles h2{font-size:20px;font-weight:600;margin:0 0 2px}
+.header-titles p{margin:0;font-size:13px;color:#64748b}
+.page-nav{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;padding:6px;border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc}
+.page-nav a{font-size:12px;padding:4px 8px;border-radius:6px;color:#475569;text-decoration:none;background:#fff;border:1px solid #e2e8f0}
+.mensaje{padding:8px 12px;border-radius:6px;font-size:13px;margin-bottom:12px}
+.exito{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}
+.error{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
+.pedido-form,.filtros-box{padding:14px;margin-bottom:14px;border:1px solid #e2e8f0;border-radius:8px;background:#fff}
+.badge-editando{padding:2px 8px;border-radius:999px;background:#fef3c7;color:#92400e;font-size:11px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-grid.tres-columnas{grid-template-columns:repeat(3,1fr)}
+.form-group{margin-bottom:8px}
+label{display:block;margin-bottom:3px;font-size:11px;font-weight:600;color:#475569;text-transform:uppercase}
+input,select,textarea{width:100%;padding:7px 9px;border:1px solid #cbd5e1;border-radius:6px;box-sizing:border-box;font-size:13px}
+input[readonly]{background:#f8fafc;color:#64748b}
+textarea{min-height:48px}
+.input-ayuda{font-size:11px;color:#64748b}
+.input-con-accion{position:relative;display:flex;align-items:center}
+.btn-limpiar-busqueda{position:absolute;right:4px;background:none;border:none;color:#94a3b8;cursor:pointer}
+.seccion-pieza{border:1px solid #cbd5e1;border-radius:8px;padding:10px;margin:8px 0;background:#f8fafc}
+.sugerencias-box{margin-top:6px;padding:6px;background:#fff;border:1px solid #e2e8f0;border-radius:6px}
+.sugerencias-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+.btn-sugerencia-item{display:flex;flex-direction:column;align-items:flex-start;padding:4px 6px;border:1px solid #cbd5e1;border-radius:6px;background:#f8fafc;cursor:pointer;width:100%}
+.sugerencia-codigo{font-size:10px;font-weight:700;color:#1d4ed8;background:#dbeafe;padding:1px 4px;border-radius:3px}
+.sugerencia-nombre{font-size:12px;margin:2px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.sugerencia-precio{font-size:11px;color:#059669}
+.tarjeta-pieza-seleccionada{padding:8px;border:1px solid #93c5fd;border-radius:6px;background:#eff6ff;margin-bottom:8px}
+.tarjeta-pieza-seleccionada.bloqueada{border-color:#cbd5e1;background:#f1f5f9}
+.chip-estado-activo{font-size:10px;font-weight:600;color:#1e40af;background:#dbeafe;padding:2px 6px;border-radius:4px}
+.chip-bloqueado{font-size:10px;color:#475569;background:#e2e8f0;padding:2px 6px;border-radius:4px}
+.btn-quitar-pieza{background:none;border:1px solid #f87171;color:#dc2626;font-size:11px;padding:2px 6px;border-radius:4px;cursor:pointer}
+.tarjeta-pieza-cuerpo{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:6px}
+.dato-bloque{display:flex;flex-direction:column;font-size:12px}
+.dato-etiqueta{font-size:10px;color:#64748b;text-transform:uppercase}
+.dato-valor-codigo{color:#1d4ed8;font-family:monospace}
+.nota-bloqueo{font-size:11px;color:#475569;margin-top:6px;padding-top:4px;border-top:1px dashed #cbd5e1}
+.aviso-pedido-historico{padding:6px 8px;border-radius:6px;background:#fef3c7;border:1px solid #fde68a;color:#92400e;font-size:12px}
+.form-acciones{display:flex;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid #f1f5f9}
+button{display:inline-flex;align-items:center;justify-content:center;font-size:13px;padding:6px 12px;border:none;border-radius:6px;cursor:pointer}
+button[disabled]{opacity:.6;cursor:not-allowed}
+.btn-primary{background:#1e40af;color:#fff}
+.btn-secondary{background:#fff;color:#334155;border:1px solid #cbd5e1}
+.btn-small{font-size:11px;padding:3px 6px;border-radius:4px;background:#e2e8f0;color:#1e293b}
+.btn-small.secondary{background:#f1f5f9;color:#475569;border:1px solid #cbd5e1}
+.btn-small.danger{background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5}
+.btn-accion-pago{background:#dcfce7;color:#166534;border:1px solid #86efac}
+.btn-accion-entrega{background:#e0f2fe;color:#0369a1;border:1px solid #7dd3fc}
+.section-label{font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b;margin:12px 0 6px}
+.filtros-box{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;align-items:end}
+.filtros-actions button{width:100%}
+.estado-mensaje{text-align:center;padding:12px;color:#64748b;font-size:13px}
+.tabla-contenedor{width:100%;overflow:auto;max-inline-size:100%;max-block-size:min(560px,78dvh);container-type:inline-size;border:1px solid #e2e8f0;border-radius:10px;background:#fff;box-shadow:0 2px 8px rgba(15,23,42,.04)}
+.tabla-pedidos{width:100%;border-collapse:separate;border-spacing:0;font-size:13px;min-width:680px}
+.tabla-pedidos thead{position:sticky;inset-block-start:0;z-index:1;background:#f8fafc}
+.tabla-pedidos th,.tabla-pedidos td{padding:10px 12px;text-align:left;border-bottom:1px solid #e2e8f0}
+.tabla-pedidos th{font-size:10px;font-weight:600;text-transform:uppercase;color:#64748b}
+.chip-codigo-pieza{font-size:10px;font-weight:600;color:#1e40af;background:#dbeafe;padding:1px 3px;border-radius:3px;font-family:monospace}
+.live-tag{font-size:10px;color:#475569;background:#f1f5f9;padding:2px 5px;border-radius:4px}
+.live-tag.directa{background:#fef3c7;color:#92400e}
+.estado-badge{display:inline-flex;border-radius:999px;padding:2px 5px;background:#fef3c7;color:#92400e;font-size:10px;font-weight:600}
+.estado-ok{background:#dcfce7;color:#15803d}
+.acciones-tabla{display:flex;flex-wrap:wrap;gap:2px}
+@media(max-width:768px){
+.page-header,.form-grid,.form-grid.tres-columnas,.filtros-box,.form-acciones{grid-template-columns:1fr;flex-direction:column}
+.page-header button,.form-acciones button,.btn-full-mobile{width:100%}
+.tarjeta-pieza-header{flex-direction:column;align-items:flex-start;gap:4px}
+.tarjeta-pieza-cuerpo{grid-template-columns:1fr 1fr}
 }
-
-/* === Header y navegacion === */
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 18px;
-}
-
-.page-header h2 {
-  font-size: 20px;
-  font-weight: 500;
-  margin: 0 0 4px;
-}
-
-.page-header p {
-  margin: 0;
-  font-size: 14px;
-  color: #6b7280;
-}
-
-.page-nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-bottom: 24px;
-  padding: 6px;
-  border: 0.5px solid #e5e7eb;
-  border-radius: 12px;
-  background: #f9fafb;
-}
-
-.page-nav a {
-  font-size: 13px;
-  padding: 6px 14px;
-  border-radius: 8px;
-  color: #6b7280;
-  text-decoration: none;
-}
-
-/* === Formularios y filtros === */
-.pedido-form,
-.filtros-box,
-.post-live-box {
-  padding: 18px 22px;
-  margin-bottom: 22px;
-  border: 0.5px solid #e5e7eb;
-  border-radius: 12px;
-  background: #ffffff;
-}
-
-.post-live-box {
-  border-color: #b7d5ef;
-  background: #e6f1fb;
-  color: #185fa5;
-}
-
-.post-live-box h3,
-.pedido-form h3 {
-  font-size: 15px;
-  font-weight: 500;
-  margin: 0 0 14px;
-  color: #1f2933;
-}
-
-.post-live-box p {
-  margin: 0 0 12px;
-  font-size: 14px;
-}
-
-.post-live-box a {
-  display: inline-flex;
-  margin-right: 8px;
-  padding: 6px 12px;
-  border-radius: 8px;
-  background: #ffffff;
-  color: #185fa5;
-  text-decoration: none;
-  font-size: 13px;
-}
-
-.filtros-box {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 12px;
-  align-items: end;
-}
-
-.form-group {
-  margin-bottom: 12px;
-}
-
-label {
-  display: block;
-  margin-bottom: 5px;
-  font-size: 12px;
-  font-weight: 500;
-  color: #6b7280;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-input,
-select,
-textarea {
-  width: 100%;
-  padding: 9px 12px;
-  border: 0.5px solid #d1d5db;
-  border-radius: 8px;
-  box-sizing: border-box;
-  font-size: 14px;
-  background: #f9fafb;
-}
-
-textarea {
-  min-height: 88px;
-  resize: vertical;
-}
-
-/* === Botones y estados === */
-button {
-  display: inline-flex;
-  align-items: center;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 8px 16px;
-  margin: 0 8px 8px 0;
-  border: 0;
-  border-radius: 8px;
-  background: #185fa5;
-  color: #e6f1fb;
-  cursor: pointer;
-}
-
-.secondary {
-  background: #f3f4f6;
-  color: #1f2933;
-  border: 0.5px solid #d1d5db;
-}
-
-.danger {
-  background: #fcebeb;
-  color: #a32d2d;
-  border: 0.5px solid #f7c1c1;
-}
-
-.acciones-tabla {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  min-width: 230px;
-}
-
-.btn-small {
-  font-size: 12px;
-  padding: 6px 10px;
-  margin: 0;
-}
-
-.estado-badge {
-  display: inline-flex;
-  border-radius: 999px;
-  padding: 4px 10px;
-  background: #faeeda;
-  color: #854f0b;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.estado-ok {
-  background: #eaf3de;
-  color: #3b6d11;
-}
-
-/* === Mensajes === */
-.mensaje {
-  padding: 10px 14px;
-  border-radius: 8px;
-  font-size: 13px;
-  margin: 0 0 16px;
-}
-
-.exito {
-  background: #eaf3de;
-  color: #3b6d11;
-}
-
-.error {
-  background: #fcebeb;
-  color: #a32d2d;
-}
-
-.aviso {
-  background: #e6f1fb;
-  color: #185fa5;
-}
-
-.section-label {
-  font-size: 11px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #9ca3af;
-  margin: 0 0 12px;
-}
-
-/* === Tabla === */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
-  margin-top: 12px;
-  border: 0.5px solid #e5e7eb;
-}
-
-thead {
-  background: #f9fafb;
-}
-
-th {
-  padding: 10px 14px;
-  text-align: left;
-  font-size: 11px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #9ca3af;
-  border-bottom: 0.5px solid #e5e7eb;
-}
-
-td {
-  padding: 12px 14px;
-  border-bottom: 0.5px solid #f3f4f6;
-}
-
-@media (max-width: 700px) {
-  .page-header {
-    flex-direction: column;
-  }
-
-  table {
-    display: block;
-    overflow-x: auto;
-  }
+@media(max-width:480px){
+.tarjeta-pieza-cuerpo{grid-template-columns:1fr}
 }

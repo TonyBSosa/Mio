@@ -1,4 +1,6 @@
+const mongoose = require("mongoose");
 const Live = require("../models/lives");
+const Pedido = require("../models/pedidos");
 
 const crearLive = (data) => {
   return Live.create(data);
@@ -7,7 +9,7 @@ const crearLive = (data) => {
 const listarPorVendedor = (vendedorId) => {
   return Live.find({
     vendedorId
-  });
+  }).sort({ createdAt: -1 });
 };
 
 const buscarPorIdYVendedor = (id, vendedorId) => {
@@ -50,6 +52,19 @@ const eliminarPorIdYVendedor = (id, vendedorId) => {
   });
 };
 
+const tienePedidosAsociados = async (liveId, vendedorId) => {
+  if (mongoose.connection.readyState !== 1) {
+    return false;
+  }
+
+  const pedido = await Pedido.exists({
+    liveId,
+    vendedorId
+  });
+
+  return Boolean(pedido);
+};
+
 module.exports = {
   crearLive,
   listarPorVendedor,
@@ -57,5 +72,6 @@ module.exports = {
   buscarActivoPorVendedor,
   buscarOtroActivoPorVendedor,
   actualizarPorIdYVendedor,
-  eliminarPorIdYVendedor
+  eliminarPorIdYVendedor,
+  tienePedidosAsociados
 };

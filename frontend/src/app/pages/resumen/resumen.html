@@ -1,41 +1,42 @@
 <section class="resumen-page">
   <header class="page-header">
     <div>
-      <h2>Resumen por Live</h2>
-      <p>Consulta ventas, pagos y entregas agrupadas por evento Live.</p>
+      <h2>Resumen de ventas y entregas</h2>
+      <p>Consulta ventas, cobros y entregas globales, directas o por evento Live.</p>
     </div>
 
-    <button type="button" class="btn-secondary" (click)="cerrarSesion()">Cerrar sesion</button>
+    <button type="button" class="btn-secondary" (click)="cerrarSesion()">Cerrar sesión</button>
   </header>
 
   <nav class="page-nav">
-      <a routerLink="/dashboard">Ir a Dashboard</a>
-      <a routerLink="/clientes">Ir a Clientes</a>
-      <a routerLink="/lives">Ir a Lives</a>
-      <a routerLink="/productos">Ir a Productos</a>
-      <a routerLink="/pedidos">Ir a Pedidos</a>
-      <a routerLink="/perfil-vendedor">Ir a Perfil publico</a>
+    <a routerLink="/dashboard">Ir a Dashboard</a>
+    <a routerLink="/clientes">Ir a Clientes</a>
+    <a routerLink="/lives">Ir a Lives</a>
+    <a routerLink="/productos">Ir a Productos</a>
+    <a routerLink="/pedidos">Ir a Pedidos</a>
+    <a routerLink="/perfil-vendedor">Ir a Perfil público</a>
   </nav>
 
   <form class="resumen-form" (ngSubmit)="consultarResumen()">
-    <h3>Consultar resumen</h3>
+    <h3>Filtrar resumen</h3>
 
     <div class="form-group">
-      <label for="liveId">Live</label>
-      <select id="liveId" name="liveId" [(ngModel)]="liveId">
-        <option value="">Seleccione un Live</option>
+      <label for="liveId">Origen / Evento Live</label>
+      <select id="liveId" name="liveId" [(ngModel)]="liveId" (change)="consultarResumen()">
+        <option value="todos">Resumen general de la tienda (Todos los pedidos)</option>
+        <option value="directa">Solo Ventas directas (sin Live)</option>
         @for (liveItem of lives; track liveItem._id) {
-          <option [value]="liveItem._id">{{ liveItem.nombre }}</option>
+          <option [value]="liveItem._id">Live: {{ liveItem.nombre }} ({{ liveItem.estado }})</option>
         }
       </select>
     </div>
 
     <button type="submit" class="btn-primary" [disabled]="cargando">
-      Consultar resumen
+      Actualizar resumen
     </button>
 
     <button type="button" class="secondary" (click)="limpiarResumen()">
-      Limpiar
+      Ver resumen general
     </button>
   </form>
 
@@ -51,13 +52,36 @@
     <p>Cargando...</p>
   }
 
-  @if (!cargando && lives.length === 0) {
-    <p>No hay Lives registrados.</p>
-  }
-
   @if (resumen) {
     <section class="resumen-box">
       <h3>{{ resumen.nombreLive }}</h3>
+
+      <div class="resumen-kpis">
+        <article class="kpi-card">
+          <span>Total pedidos</span>
+          <strong>{{ resumen.totalPedidos }}</strong>
+        </article>
+        <article class="kpi-card">
+          <span>Total vendido</span>
+          <strong>L {{ resumen.totalVendido }}</strong>
+        </article>
+        <article class="kpi-card ok">
+          <span>Total pagado</span>
+          <strong>L {{ resumen.totalPagado }}</strong>
+        </article>
+        <article class="kpi-card warn">
+          <span>Pendiente de pago</span>
+          <strong>L {{ resumen.totalPendientePago }}</strong>
+        </article>
+        <article class="kpi-card ok">
+          <span>Total entregados</span>
+          <strong>{{ resumen.totalEntregados }}</strong>
+        </article>
+        <article class="kpi-card warn">
+          <span>Pendientes de entrega</span>
+          <strong>{{ resumen.totalPendienteEntrega }}</strong>
+        </article>
+      </div>
 
       <table>
         <tbody>
@@ -67,15 +91,15 @@
           </tr>
           <tr>
             <th>Total vendido</th>
-            <td>{{ resumen.totalVendido }}</td>
+            <td><strong>L {{ resumen.totalVendido }}</strong></td>
           </tr>
           <tr>
             <th>Total pagado</th>
-            <td>{{ resumen.totalPagado }}</td>
+            <td>L {{ resumen.totalPagado }}</td>
           </tr>
           <tr>
-            <th>Total pendiente pago</th>
-            <td>{{ resumen.totalPendientePago }}</td>
+            <th>Total pendiente de pago</th>
+            <td>L {{ resumen.totalPendientePago }}</td>
           </tr>
           <tr>
             <th>Total entregados</th>

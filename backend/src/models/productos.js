@@ -8,6 +8,13 @@ const productoSchema = new mongoose.Schema(
       required: true
     },
 
+    codigo: {
+      type: String,
+      trim: true,
+      uppercase: true,
+      maxlength: 30
+    },
+
     nombre: {
       type: String,
       required: true,
@@ -45,6 +52,11 @@ const productoSchema = new mongoose.Schema(
     timestamps: true,
     collection: "productos"
   }
+);
+
+productoSchema.index(
+  { vendedorId: 1, codigo: 1 },
+  { unique: true, partialFilterExpression: { codigo: { $type: "string" } } }
 );
 
 const Producto = mongoose.model("Producto", productoSchema);

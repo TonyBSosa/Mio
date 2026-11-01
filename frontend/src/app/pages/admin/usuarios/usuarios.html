@@ -49,6 +49,7 @@
         <label for="rol">Rol</label>
         <select id="rol" name="rol" [(ngModel)]="usuario.rol">
           <option value="vendedor">Vendedor</option>
+          <option value="cliente">Cliente</option>
           <option value="admin">Admin</option>
         </select>
       </div>
@@ -119,6 +120,7 @@
                   class="badge"
                   [class.badge-admin]="usuarioItem.rol === 'admin'"
                   [class.badge-vendedor]="usuarioItem.rol === 'vendedor'"
+                  [class.badge-cliente]="usuarioItem.rol === 'cliente'"
                 >
                   {{ usuarioItem.rol }}
                 </span>

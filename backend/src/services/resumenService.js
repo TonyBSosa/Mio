@@ -22,23 +22,7 @@ const calcularTotalPedido = (pedido) => {
   return cantidad * precio;
 };
 
-const obtenerResumenPorLive = async (liveId, vendedorId) => {
-  validarIdLive(liveId);
-
-  const live = await resumenRepository.buscarLivePorIdYVendedor(
-    liveId,
-    vendedorId
-  );
-
-  if (!live) {
-    throw crearError(404, "Live no encontrado");
-  }
-
-  const pedidos = await resumenRepository.listarPedidosPorLiveYVendedor(
-    liveId,
-    vendedorId
-  );
-
+const construirResumen = (liveId, nombreLive, pedidos) => {
   return pedidos.reduce(
     (acumulador, pedido) => {
       const totalPedido = calcularTotalPedido(pedido);
@@ -65,8 +49,8 @@ const obtenerResumenPorLive = async (liveId, vendedorId) => {
       return acumulador;
     },
     {
-      liveId: live._id,
-      nombreLive: live.nombre,
+      liveId,
+      nombreLive,
       totalPedidos: 0,
       totalVendido: 0,
       totalPagado: 0,
@@ -75,6 +59,48 @@ const obtenerResumenPorLive = async (liveId, vendedorId) => {
       totalPendienteEntrega: 0
     }
   );
+};
+
+const obtenerResumenPorLive = async (liveId, vendedorId) => {
+  if (liveId === "directa") {
+    const pedidos =
+      await resumenRepository.listarPedidosDirectosPorVendedor(vendedorId);
+
+    return construirResumen(
+      "directa",
+      "Ventas directas (sin Live)",
+      pedidos
+    );
+  }
+
+  if (liveId === "todos") {
+    const pedidos =
+      await resumenRepository.listarTodosPedidosPorVendedor(vendedorId);
+
+    return construirResumen(
+      "todos",
+      "Resumen general de la tienda",
+      pedidos
+    );
+  }
+
+  validarIdLive(liveId);
+
+  const live = await resumenRepository.buscarLivePorIdYVendedor(
+    liveId,
+    vendedorId
+  );
+
+  if (!live) {
+    throw crearError(404, "Live no encontrado");
+  }
+
+  const pedidos = await resumenRepository.listarPedidosPorLiveYVendedor(
+    liveId,
+    vendedorId
+  );
+
+  return construirResumen(live._id, live.nombre, pedidos);
 };
 
 module.exports = {

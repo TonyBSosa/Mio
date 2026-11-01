@@ -147,10 +147,15 @@
               }
 
               <div class="producto-info">
+                @if (producto.codigo) {
+                  <span class="producto-codigo">{{ producto.codigo }}</span>
+                }
                 <h3>{{ producto.nombre }}</h3>
                 <p>{{ producto.descripcion }}</p>
-                <p>{{ producto.categoria }}</p>
-                <strong>{{ producto.precio }}</strong>
+                @if (producto.categoria) {
+                  <p class="producto-cat">{{ producto.categoria }}</p>
+                }
+                <strong>L {{ producto.precio }}</strong>
               </div>
             </div>
           </article>

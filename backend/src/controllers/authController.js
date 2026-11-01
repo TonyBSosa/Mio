@@ -12,14 +12,17 @@ const generarToken = (usuarioId) => {
 const registrar = async (req, res) => {
   try {
     const { nombre, email, password, rol } = req.body;
+    const nombreLimpio = typeof nombre === "string" ? nombre.trim() : "";
+    const emailNormalizado =
+      typeof email === "string" ? email.trim().toLowerCase() : "";
 
-    if (!nombre || !email || !password) {
+    if (!nombreLimpio || !emailNormalizado || !password) {
       return res.status(400).json({
         mensaje: "Nombre, email y password son obligatorios"
       });
     }
 
-    const usuarioExiste = await User.findOne({ email });
+    const usuarioExiste = await User.findOne({ email: emailNormalizado });
 
     if (usuarioExiste) {
       return res.status(400).json({
@@ -43,8 +46,8 @@ const registrar = async (req, res) => {
     }
 
     const usuario = await User.create({
-      nombre,
-      email,
+      nombre: nombreLimpio,
+      email: emailNormalizado,
       password: passwordHasheado,
       rol: rolRegistro
     });
@@ -68,14 +71,18 @@ const registrar = async (req, res) => {
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    const emailNormalizado =
+      typeof email === "string" ? email.trim().toLowerCase() : "";
 
-    if (!email || !password) {
+    if (!emailNormalizado || !password) {
       return res.status(400).json({
         mensaje: "Email y password son obligatorios"
       });
     }
 
-    const usuario = await User.findOne({ email }).select("+password");
+    const usuario = await User.findOne({ email: emailNormalizado }).select(
+      "+password"
+    );
 
     if (!usuario) {
       return res.status(401).json({

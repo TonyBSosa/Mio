@@ -15,9 +15,9 @@ const validarVendedorId = (vendedorId) => {
   }
 };
 
-const formatearPerfil = (perfil) => {
+const formatearPerfil = (perfil, vendedor) => {
   return {
-    nombrePublico: perfil?.nombrePublico || "",
+    nombrePublico: perfil?.nombrePublico || vendedor?.nombre || "",
     descripcion: perfil?.descripcion || "",
     facebook: perfil?.facebook || "",
     instagram: perfil?.instagram || "",
@@ -32,6 +32,7 @@ const formatearProducto = (producto) => {
 
   return {
     _id: productoPlano._id,
+    codigo: productoPlano.codigo || "",
     nombre: productoPlano.nombre || "",
     descripcion: productoPlano.descripcion || "",
     categoria: productoPlano.categoria || "",
@@ -49,6 +50,13 @@ const formatearProducto = (producto) => {
 const obtenerCatalogo = async (vendedorId) => {
   validarVendedorId(vendedorId);
 
+  const vendedor =
+    await catalogoPublicoRepository.buscarVendedorPorId?.(vendedorId);
+
+  if (vendedor && (vendedor.estado !== "activo" || vendedor.rol !== "vendedor")) {
+    throw crearError(404, "Catalogo no disponible");
+  }
+
   const perfil = await catalogoPublicoRepository.buscarPerfilPorVendedor(
     vendedorId
   );
@@ -57,8 +65,12 @@ const obtenerCatalogo = async (vendedorId) => {
   const lives =
     await catalogoPublicoRepository.listarLivesPublicosPorVendedor(vendedorId);
 
+  if (!vendedor && !perfil && productos.length === 0 && lives.length === 0) {
+    throw crearError(404, "Catalogo no encontrado");
+  }
+
   return {
-    perfil: formatearPerfil(perfil),
+    perfil: formatearPerfil(perfil, vendedor),
     productos: productos.map((producto) => formatearProducto(producto)),
     lives
   };

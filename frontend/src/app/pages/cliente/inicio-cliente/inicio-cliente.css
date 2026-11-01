@@ -30,6 +30,30 @@
   flex-wrap: wrap;
 }
 
+.buscador-explorar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  padding: 12px;
+  background: #ffffff;
+  border: 0.5px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.buscador-explorar input {
+  flex: 1;
+  padding: 9px 12px;
+  border: 0.5px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.btn-limpiar {
+  background: #f3f4f6;
+  color: #1f2933;
+  border: 0.5px solid #d1d5db;
+}
+
 a,
 button {
   display: inline-flex;

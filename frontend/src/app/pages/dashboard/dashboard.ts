@@ -203,10 +203,14 @@ export class Dashboard implements OnInit {
         this.totalPendienteEntrega += 1;
       }
 
-      ventasPorLive[liveId] = (ventasPorLive[liveId] || 0) + totalPedido;
-      pedidosPorLive[liveId] = (pedidosPorLive[liveId] || 0) + 1;
+      if (liveId) {
+        ventasPorLive[liveId] = (ventasPorLive[liveId] || 0) + totalPedido;
+        pedidosPorLive[liveId] = (pedidosPorLive[liveId] || 0) + 1;
+      }
       ventasPorArticulo[producto] = (ventasPorArticulo[producto] || 0) + cantidad;
-      pedidosPorCliente[clienteId] = (pedidosPorCliente[clienteId] || 0) + 1;
+      if (clienteId) {
+        pedidosPorCliente[clienteId] = (pedidosPorCliente[clienteId] || 0) + 1;
+      }
     }
 
     this.topLive = this.obtenerTopLive(ventasPorLive, pedidosPorLive);

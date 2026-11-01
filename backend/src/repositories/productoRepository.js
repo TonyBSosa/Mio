@@ -1,3 +1,5 @@
+const mongoose = require("mongoose");
+const Pedido = require("../models/pedidos");
 const Producto = require("../models/productos");
 
 const crearProducto = (data) => {
@@ -7,7 +9,7 @@ const crearProducto = (data) => {
 const listarPorVendedor = (vendedorId) => {
   return Producto.find({
     vendedorId
-  });
+  }).sort({ createdAt: -1 });
 };
 
 const buscarPorIdYVendedor = (id, vendedorId) => {
@@ -35,10 +37,24 @@ const eliminarPorIdYVendedor = (id, vendedorId) => {
   });
 };
 
+const tienePedidosAsociados = async (productoId, vendedorId) => {
+  if (mongoose.connection.readyState !== 1) {
+    return false;
+  }
+
+  const pedido = await Pedido.exists({
+    productoId,
+    vendedorId
+  });
+
+  return Boolean(pedido);
+};
+
 module.exports = {
   crearProducto,
   listarPorVendedor,
   buscarPorIdYVendedor,
   actualizarPorIdYVendedor,
-  eliminarPorIdYVendedor
+  eliminarPorIdYVendedor,
+  tienePedidosAsociados
 };
