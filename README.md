@@ -13,7 +13,19 @@ Token de propiedad del curso: `LEARN-CAP-D03DECFA`
 - [Bitácora de la semana 1](docs/bitacora/semana-1.md).
 - Versión requerida por el curso: etiqueta o release `semana-1` (pendiente de publicar).
 
-## Estado actual
+## Preparación de la semana 2
+
+- [Mapa de historias por rol y cortes](docs/mapa-historias.md).
+- [Backlog: 18 historias y criterios de aceptación](docs/backlog.md).
+- [MVP y plan de diez semanas](docs/plan.md).
+- [Definición de Hecho](docs/definicion-de-hecho.md).
+- [Lista de entrega y aceptación de la primera historia](docs/ENTREGA_SEMANA_2.md).
+- [Bitácora de semana 2](docs/bitacora/semana-2.md).
+- [Estudio previo al reto del módulo 2](docs/academico/PREPARACION_RETO_MODULO_2.md).
+
+El [backlog ya está publicado en GitHub Issues](https://github.com/TonyBSosa/Mio/issues). La aceptación de HU-01 en producción y el release `semana-2` están pendientes; la documentación no acredita todavía una entrega cerrada.
+
+## Estado del prototipo
 
 Prototipo publicado con registro/inicio de sesión, clientes, catálogo de productos, eventos live, pedidos con o sin live y resúmenes. Los pedidos se capturan manualmente; MIO no transmite video ni lee comentarios de redes sociales automáticamente. Los pagos actuales se clasifican como pendientes o pagados; no hay registro de abonos parciales.
 
