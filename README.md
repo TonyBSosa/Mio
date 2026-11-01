@@ -25,6 +25,15 @@ Token de propiedad del curso: `LEARN-CAP-D03DECFA`
 
 El [backlog está publicado en GitHub Issues](https://github.com/TonyBSosa/Mio/issues): 18 historias, 11 del MVP. HU-01 fue [verificada en producción](docs/evidencias/HU-01-produccion.md), incluyendo códigos por tienda y vista móvil. Versión de entrega: [semana-2](https://github.com/TonyBSosa/Mio/releases/tag/semana-2).
 
+## Entrega de la semana 3
+
+- [Modelo de datos completo en Mermaid y diccionario](docs/modelo-datos.md).
+- [Bitácora y flujo central con persistencia real](docs/bitacora/semana-3.md).
+- [Repaso del módulo 3 con ejemplos de MIO](docs/academico/PREPARACION_RETO_MODULO_3.md).
+- Versión de entrega: [semana-3](https://github.com/TonyBSosa/Mio/releases/tag/semana-3).
+
+El modelo distingue las seis colecciones implementadas del diseño futuro. Continúa MongoDB; no se ejecutó una migración ni se implementaron abonos como parte de esta entrega.
+
 ## Estado del prototipo
 
 Prototipo publicado con registro/inicio de sesión, clientes, catálogo de productos, eventos live, pedidos con o sin live y resúmenes. Los pedidos se capturan manualmente; MIO no transmite video ni lee comentarios de redes sociales automáticamente. Los pagos actuales se clasifican como pendientes o pagados; no hay registro de abonos parciales.

@@ -18,8 +18,8 @@ La migración a PostgreSQL está recomendada para evaluar antes de abonos, pero 
 | 2 | Primera historia identificable en línea | HU-01; mapa, ≥15 Issues, MVP etiquetado, este plan | Prueba de código/búsqueda/duplicado en producción y teléfono, commit que cierre issue, release semana-2, bitácora |
 | 3 | Preparar datos y acceso aislado | HU-02, HU-03, HU-10; decisión de persistencia | Registro/login, dos tiendas aisladas; decisión documentada; si se migra, respaldo, restauración y regresión |
 | 4 | Registrar una venta directa coherente | HU-04, HU-05 | Dos intentos simultáneos sobre una pieza: solo uno crea pedido; fallo intermedio no deja reserva huérfana; precio histórico |
-| 5 | Completar recorrido MVP | HU-06 a HU-09, HU-11 | Pedido con/sin live, pago total, entrega, resumen conciliado y administración de acceso |
-| 6 | Validar MVP con una tienda y corregir | Todas las MVP; observar cinco registros | Tiempo y errores reales, uso móvil, entrevistas y cambios sustentados; confirmar reglas del corte 2 |
+| 5 | Completar recorrido MVP y ponerlo en manos de una tienda | HU-06 a HU-09, HU-11; piloto inicial del corte 1 | Pedido con/sin live, pago total, entrega, resumen conciliado, administración de acceso y observación de cinco registros con usuario real |
+| 6 | Corregir según el piloto y confirmar siguiente corte | Todas las MVP; seguimiento de resultados reales | Tiempos y errores documentados, correcciones de uso móvil; acordar reglas de abonos y cancelación |
 | 7 | Registrar abonos trazables | HU-12 y HU-14 | L500 − L200 = L300, rechazo de exceso, consolidado conciliado; condicionado a regla validada |
 | 8 | Resolver cancelación y entrega con historial | HU-13 y HU-15 | Cancelación conserva dinero/historial y libera pieza; regla de entrega probada |
 | 9 | Facilitar revisión y recuperación | HU-16 y HU-18 según capacidad; seguridad, copia/restauración | CSV conciliado, acceso restringido, restauración demostrada; aplazar auditoría ampliada si compite con MVP |
