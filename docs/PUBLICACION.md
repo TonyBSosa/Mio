@@ -66,3 +66,15 @@ Render Free suspende la API tras inactividad; abrirla antes de la demostracion. 
 - Mantener bases y secretos distintos por ambiente. Cambiar la configuracion no migra datos automaticamente.
 
 Documentacion oficial consultada: https://render.com/docs/your-first-deploy y https://render.com/docs/redirects-rewrites.
+
+## Configuración adicional de semana 4
+
+En el backend de Render configurar:
+
+- `APP_URL=https://mio-web.onrender.com` (origen utilizado en enlaces de recuperación).
+- `SMTP_HOST`, `SMTP_PORT` (587 STARTTLS o 465 TLS), `SMTP_USER`, `SMTP_PASSWORD` y `MAIL_FROM` con un proveedor de correo autorizado. No guardar estos valores en GitHub.
+- `TRUST_PROXY_HOPS=1` para un único proxy de confianza; confirmar la topología de Render antes de ajustarlo. En local se conserva 0. Evitar `true` indiscriminado porque el limitador depende de la IP.
+
+La nueva versión añade `sesiones` y `recuperaciones` en MongoDB, con índices TTL. Confirmar que el usuario de base tiene permisos para crear sus índices. La comprobación de expiración se hace también en las consultas, aunque el limpiador TTL aún no haya borrado el registro. No necesita migrar usuarios; los tokens anteriores se rechazan y hay que iniciar sesión nuevamente.
+
+Después del despliegue seguir el recorrido de `docs/permisos.md`, incluyendo correo recibido, enlace vencido/repetido, cuenta por rol, ID ajeno y reutilización del token tras logout. No incluir contraseñas ni enlaces de recuperación en capturas o bitácoras públicas.

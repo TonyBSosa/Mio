@@ -59,3 +59,12 @@ La configuración local de Angular utiliza http://localhost:3000/api. En Render,
 - Prueba manual de entrega: registrar un vendedor de prueba, iniciar sesión, crear cliente y producto, registrar pedido y recargar una ruta interna. Documentar el resultado antes de afirmar que todo el flujo está verificado.
 
 En el plan gratuito la API puede suspenderse por inactividad; abrirla antes de una demostración.
+
+## Entrega de la semana 4 — Login y roles
+
+- [Matriz de permisos, roles y propiedad del dato](docs/permisos.md).
+- [Bitácora de implementación, pruebas y pendientes de producción](docs/bitacora/semana-4.md).
+- Versión: [semana-4](https://github.com/TonyBSosa/Mio/releases/tag/semana-4).
+- Recuperación de contraseña en `/recuperar`; requiere configurar SMTP en el backend. Ver [configuración de publicación](docs/PUBLICACION.md).
+
+La sesión vence en 30 minutos y se revoca en servidor al cerrar sesión. Tras desplegar esta versión hay que volver a iniciar sesión. Los tres roles se validan contra MongoDB en cada petición y cada vendedor opera sobre su propia tienda. Las cuentas de demostración y sus credenciales se comparten por el canal privado del curso.
