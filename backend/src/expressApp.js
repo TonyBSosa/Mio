@@ -13,6 +13,8 @@ const catalogoPublicoRoutes = require("./routes/catalogoPublicoRoutes");
 const explorarPublicoRoutes = require("./routes/explorarPublicoRoutes");
 
 const expressApp = expressFramework();
+// Render termina TLS en su proxy. Configurar el numero de saltos del despliegue.
+expressApp.set('trust proxy', Number(process.env.TRUST_PROXY_HOPS || 0));
 
 const allowedOrigins = (process.env.CORS_ORIGINS || (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:4200'))
   .split(',').map((origin) => origin.trim()).filter(Boolean);

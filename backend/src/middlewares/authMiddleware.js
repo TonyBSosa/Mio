@@ -1,3 +1,4 @@
+const Sesion = require('../models/sesion');
 const jwt = require("jsonwebtoken");
 
 const User = require("../models/users");
@@ -14,6 +15,8 @@ const protegerRuta = async (req, res, next) => {
 
     const token = authorization.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (!decoded.sid || !await Sesion.exists({ _id: decoded.sid, usuarioId: decoded.id, expiresAt: { $gt: new Date() } })) return res.status(401).json({ mensaje: 'Sesion vencida o revocada' });
+    req.sesionId = decoded.sid;
     const usuario = await User.findById(decoded.id);
 
     if (!usuario) {

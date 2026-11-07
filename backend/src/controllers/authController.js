@@ -3,9 +3,14 @@ const jwt = require("jsonwebtoken");
 
 const User = require("../models/users");
 
-const generarToken = (usuarioId) => {
-  return jwt.sign({ id: usuarioId }, process.env.JWT_SECRET, {
-    expiresIn: "1d"
+const Sesion = require('../models/sesion');
+const Recuperacion = require('../models/recuperacion');
+const crypto = require('node:crypto');
+const correo = require('../services/correoService');
+const generarToken = async (usuarioId) => {
+  const sesion = await Sesion.create({ usuarioId, expiresAt: new Date(Date.now() + 1800000) });
+  return jwt.sign({ id: usuarioId, sid: String(sesion._id) }, process.env.JWT_SECRET, {
+    expiresIn: "30m"
   });
 };
 
@@ -16,9 +21,9 @@ const registrar = async (req, res) => {
     const emailNormalizado =
       typeof email === "string" ? email.trim().toLowerCase() : "";
 
-    if (!nombreLimpio || !emailNormalizado || !password) {
+    if (!nombreLimpio || !emailNormalizado || typeof password !== "string" || password.length < 10 || password.length > 128) {
       return res.status(400).json({
-        mensaje: "Nombre, email y password son obligatorios"
+        mensaje: "Nombre y email son obligatorios; password debe tener entre 10 y 128 caracteres"
       });
     }
 
@@ -58,7 +63,7 @@ const registrar = async (req, res) => {
       email: usuario.email,
       rol: usuario.rol,
       estado: usuario.estado,
-      token: generarToken(usuario._id)
+      token: await generarToken(usuario._id)
     });
   } catch (error) {
     res.status(500).json({
@@ -74,7 +79,7 @@ const login = async (req, res) => {
     const emailNormalizado =
       typeof email === "string" ? email.trim().toLowerCase() : "";
 
-    if (!emailNormalizado || !password) {
+    if (!emailNormalizado || typeof password !== "string" || !password) {
       return res.status(400).json({
         mensaje: "Email y password son obligatorios"
       });
@@ -110,7 +115,7 @@ const login = async (req, res) => {
       email: usuario.email,
       rol: usuario.rol,
       estado: usuario.estado,
-      token: generarToken(usuario._id)
+      token: await generarToken(usuario._id)
     });
   } catch (error) {
     res.status(500).json({
@@ -124,7 +129,34 @@ const obtenerPerfil = async (req, res) => {
   res.json(req.usuario);
 };
 
+const logout = async (req, res) => {
+  await Sesion.deleteOne({ _id: req.sesionId, usuarioId: req.usuario._id });
+  res.json({ mensaje: 'Sesion cerrada' });
+};
+const solicitarRecuperacion = async (req, res) => {
+  const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+  try {
+    const usuario = await User.findOne({ email, estado: 'activo' });
+    if (usuario) {
+      const token = crypto.randomBytes(32).toString('hex');
+      await Recuperacion.create({ usuarioId: usuario._id, tokenHash: Recuperacion.hashToken(token), expiresAt: new Date(Date.now() + 900000) });
+      await correo.enviarRecuperacion(usuario.email, token);
+    }
+  } catch { console.error('No se pudo procesar el correo de recuperacion'); }
+  res.json({ mensaje: 'Si la cuenta existe, recibiras un enlace de recuperacion.' });
+};
+const restablecerPassword = async (req, res) => {
+  const { token, password } = req.body;
+  if (typeof token !== 'string' || !/^[a-f0-9]{64}$/.test(token) || typeof password !== 'string' || password.length < 10 || password.length > 128) return res.status(400).json({ mensaje: 'Enlace invalido o contraseña fuera de 10 a 128 caracteres' });
+  const hash = await bcrypt.hash(password, 12);
+  const recuperacion = await Recuperacion.findOneAndDelete({ tokenHash: Recuperacion.hashToken(token), expiresAt: { $gt: new Date() } });
+  if (!recuperacion) return res.status(400).json({ mensaje: 'Enlace invalido o vencido' });
+  await User.updateOne({ _id: recuperacion.usuarioId, estado: 'activo' }, { $set: { password: hash } });
+  await Promise.all([Sesion.deleteMany({ usuarioId: recuperacion.usuarioId }), Recuperacion.deleteMany({ usuarioId: recuperacion.usuarioId })]);
+  res.json({ mensaje: 'Contraseña actualizada. Inicia sesion de nuevo.' });
+};
 module.exports = {
+  logout, solicitarRecuperacion, restablecerPassword,
   registrar,
   login,
   obtenerPerfil
