@@ -29,7 +29,7 @@ Se analizaron las quince capturas del módulo 4 aportadas por el responsable. La
 
 La publicación del código no configura por sí sola el correo. En Render se deben establecer `APP_URL=https://mio-web.onrender.com`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM` y `TRUST_PROXY_HOPS` según el proxy. Los valores secretos se guardan únicamente en Render.
 
-No se dispone de una verificación de entrega real del correo ni de una cuenta administradora durante esta preparación. No se presentan esos puntos como aprobados. Crear/confirmar cuentas de demostración por rol y compartir sus credenciales solo con el docente fuera del repo. Ejecutar el recorrido completo de `docs/permisos.md` con base y SMTP reales antes de dar por terminada la entrega funcional.
+No se dispone de una verificación de entrega real del correo ni de una cuenta administradora durante esta preparación. No se presentan esos puntos como aprobados. Se crearon dos cuentas vendedoras y una cliente con autorización explícita del responsable. Queda pendiente confirmar una cuenta administradora. Las credenciales se guardaron en un archivo privado temporal fuera del repo y deben compartirse solo con el docente. Ejecutar el recorrido completo de `docs/permisos.md` con base y SMTP reales antes de dar por terminada la entrega funcional.
 
 ## Lecciones aplicadas del caso HealthCare.gov
 
@@ -47,3 +47,29 @@ Aplicación: https://mio-web.onrender.com
 API: https://mio-api-ahq2.onrender.com
 
 Versión de esta entrega: `semana-4`. Comprobar que GitHub muestra la etiqueta y que el despliegue termina antes de introducir las URLs en fase 0. El control automático de fase 0 no sustituye las pruebas funcionales de cuentas, permisos y recuperación.
+
+
+## Verificación posterior al despliegue
+
+Fecha: 6 de noviembre de 2026, Honduras. Se ejecutaron peticiones HTTPS contra la API pública con autorización explícita para crear tres cuentas ficticias y una pieza temporal. Diecinueve comprobaciones aprobadas:
+
+| Comprobación real | Resultado |
+|---|---|
+| Registro de vendedores A y B y cuenta cliente | 201 para las tres cuentas |
+| Consultar productos sin sesión | 401 |
+| Cliente consulta su propio perfil | 200 |
+| Cliente intenta consultar productos privados | 403 |
+| Vendedor intenta administrar usuarios | 403 |
+| Vendedor A crea pieza enviando el ID de B en el body | 201; el servidor conserva a A como propietario |
+| Vendedor A consulta su pieza | 200 |
+| Vendedor B intenta leer, editar y borrar la pieza de A | 404 en las tres operaciones |
+| Eliminación de la pieza temporal por A | 200; no se modificaron datos preexistentes |
+| Cierre de sesión de A y reutilización de su token | 200 al salir; 401 al reutilizar el token |
+| Nuevo login de A con contraseña correcta y cierre posterior | 200 en ambas operaciones |
+| Cierre de sesiones de B y cliente | 200 en ambas operaciones |
+
+El frontend público y la ruta de recuperación respondieron HTTPS 200. El nuevo endpoint de reset rechazó una petición sin token ni contraseña con 400. Esto confirma disponibilidad y validación inicial; no demuestra recepción del correo.
+
+Las tres cuentas quedan para demostración con emails ficticios del dominio reservado example.invalid; no reciben correo. Sus contraseñas aleatorias no se incluyeron en commits, evidencias ni release. Para probar recuperación real se necesita una cuenta con buzón accesible y SMTP configurado.
+
+No se probó una cuenta administradora en producción ni entrega/consumo real del enlace por correo. La prueba HTTP local sí cubre consumo único y revocación tras reset con modelos simulados. El release semana-4 conserva el commit original; esta evidencia se añade después sin mover la etiqueta publicada.
