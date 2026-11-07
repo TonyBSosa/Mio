@@ -67,9 +67,20 @@ export class AuthService {
   }
 
   logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('usuario');
-    this.router.navigate(['/bienvenida']);
+    const token = this.getToken();
+    const limpiar = () => {
+      localStorage.removeItem('token');
+      localStorage.removeItem('usuario');
+      this.router.navigate(['/bienvenida']);
+    };
+    if (!token) { limpiar(); return; }
+    this.http.post(this.apiUrl + '/logout', {}, { headers: { Authorization: 'Bearer ' + token } }).subscribe({
+      next: limpiar,
+      error: e => {
+        if (e.status === 401) limpiar();
+        else window.alert('No se pudo cerrar la sesión en el servidor. Revisa tu conexión e intenta de nuevo.');
+      }
+    });
   }
 
   estaAutenticado() {

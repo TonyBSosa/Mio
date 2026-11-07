@@ -1,3 +1,5 @@
+import { accesoRol } from './acceso-rol';
+import { Recuperar } from './pages/login/recuperar';
 import { Routes } from '@angular/router';
 
 import { UsuariosAdmin } from './pages/admin/usuarios/usuarios';
@@ -16,21 +18,22 @@ import { Register } from './pages/register/register';
 import { Resumen } from './pages/resumen/resumen';
 
 export const routes: Routes = [
+  { path: 'recuperar', component: Recuperar },
   { path: 'bienvenida', component: Bienvenida },
   { path: 'login', component: Login },
   { path: 'register', component: Register },
   { path: 'register-vendedor', component: Register },
   { path: 'register-cliente', component: Register },
-  { path: 'cliente/inicio', component: InicioCliente },
-  { path: 'dashboard', component: Dashboard },
-  { path: 'live-activo', component: LiveActivo },
-  { path: 'perfil-vendedor', component: PerfilVendedor },
-  { path: 'clientes', component: Clientes },
-  { path: 'lives', component: Lives },
-  { path: 'productos', component: Productos },
-  { path: 'pedidos', component: Pedidos },
-  { path: 'resumen', component: Resumen },
-  { path: 'admin/usuarios', component: UsuariosAdmin },
+  { path: 'cliente/inicio', component: InicioCliente, canActivate: [accesoRol], data: { roles: ['cliente'] } },
+  { path: 'dashboard', component: Dashboard, canActivate: [accesoRol], data: { roles: ['vendedor'] } },
+  { path: 'live-activo', component: LiveActivo, canActivate: [accesoRol], data: { roles: ['vendedor'] } },
+  { path: 'perfil-vendedor', component: PerfilVendedor, canActivate: [accesoRol], data: { roles: ['vendedor'] } },
+  { path: 'clientes', component: Clientes, canActivate: [accesoRol], data: { roles: ['vendedor'] } },
+  { path: 'lives', component: Lives, canActivate: [accesoRol], data: { roles: ['vendedor'] } },
+  { path: 'productos', component: Productos, canActivate: [accesoRol], data: { roles: ['vendedor'] } },
+  { path: 'pedidos', component: Pedidos, canActivate: [accesoRol], data: { roles: ['vendedor'] } },
+  { path: 'resumen', component: Resumen, canActivate: [accesoRol], data: { roles: ['vendedor'] } },
+  { path: 'admin/usuarios', component: UsuariosAdmin, canActivate: [accesoRol], data: { roles: ['admin'] } },
   { path: 'catalogo/:vendedorId', component: CatalogoPublico },
   { path: '', redirectTo: 'bienvenida', pathMatch: 'full' },
   { path: '**', redirectTo: 'bienvenida' },
