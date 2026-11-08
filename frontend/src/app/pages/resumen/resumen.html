@@ -9,11 +9,11 @@
   </header>
 
   <nav class="page-nav">
-    <a routerLink="/dashboard">Ir a Dashboard</a>
-    <a routerLink="/clientes">Ir a Clientes</a>
-    <a routerLink="/lives">Ir a Lives</a>
-    <a routerLink="/productos">Ir a Productos</a>
-    <a routerLink="/pedidos">Ir a Pedidos</a>
+    <a routerLink="/dashboard">Mi tienda</a>
+    <a routerLink="/clientes">Clientes</a>
+    <a routerLink="/lives">Eventos live</a>
+    <a routerLink="/productos">Productos</a>
+    <a routerLink="/pedidos">Pedidos</a>
     <a routerLink="/perfil-vendedor">Ir a Perfil público</a>
   </nav>
 
@@ -41,15 +41,15 @@
   </form>
 
   @if (mensaje) {
-    <p class="mensaje exito">{{ mensaje }}</p>
+    <p class="mensaje exito" role="status">{{ mensaje }}</p>
   }
 
   @if (error) {
-    <p class="mensaje error">{{ error }}</p>
+    <p class="mensaje error" role="alert">{{ error }}</p>
   }
 
   @if (cargando) {
-    <p>Cargando...</p>
+    <p role="status" aria-live="polite">Cargando…</p>
   }
 
   @if (resumen) {

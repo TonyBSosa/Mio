@@ -1,7 +1,7 @@
 <section class="cliente-page">
   <header class="cliente-header">
     <div>
-      <h2>Explorar eventos y vendedores</h2>
+      <h2>Encuentra tu próxima tienda favorita</h2>
       @if (usuario) {
         <p>Bienvenido, {{ usuario.nombre }}</p>
       } @else {
@@ -18,9 +18,9 @@
 
   <form class="buscador-explorar" (ngSubmit)="ejecutarBusqueda()">
     <input
-      type="text"
+      type="search"
       name="textoBusqueda"
-      placeholder="Buscar tiendas o eventos Live por nombre o descripción..."
+      placeholder="Buscar tiendas o eventos…"
       aria-label="Buscar tiendas o eventos Live"
       [(ngModel)]="textoBusqueda"
     >
@@ -31,15 +31,15 @@
   </form>
 
   @if (mensaje) {
-    <p class="mensaje exito">{{ mensaje }}</p>
+    <p class="mensaje exito" role="status">{{ mensaje }}</p>
   }
 
   @if (error) {
-    <p class="mensaje error">{{ error }}</p>
+    <p class="mensaje error" role="alert">{{ error }}</p>
   }
 
   @if (cargando) {
-    <p>Cargando...</p>
+    <p role="status" aria-live="polite">Cargando…</p>
   }
 
   <section class="seccion">
@@ -58,9 +58,9 @@
           <p>{{ mostrarFecha(evento.fecha) }}</p>
           <small>{{ evento.nombrePublico }}</small>
           <div>
-            <a [routerLink]="'/catalogo/' + evento.vendedorId">Ver catalogo</a>
-            <button type="button" (click)="mostrarMensajeFaseSiguiente()">
-              Seguir vendedor
+            <a [routerLink]="'/catalogo/' + evento.vendedorId">Ver catálogo</a>
+            <button type="button" disabled title="Disponible en una próxima versión">
+              Seguimiento · Próximamente
             </button>
           </div>
         </article>
@@ -69,7 +69,7 @@
   </section>
 
   <section class="seccion">
-    <p class="section-label">Proximos eventos</p>
+    <p class="section-label">Próximos eventos</p>
 
     @if (eventosProgramados.length === 0 && !cargando) {
       <p>No hay eventos programados.</p>
@@ -83,9 +83,9 @@
           <p>{{ mostrarFecha(evento.fecha) }}</p>
           <small>{{ evento.nombrePublico }}</small>
           <div>
-            <a [routerLink]="'/catalogo/' + evento.vendedorId">Ver catalogo</a>
-            <button type="button" (click)="mostrarMensajeFaseSiguiente()">
-              Seguir vendedor
+            <a [routerLink]="'/catalogo/' + evento.vendedorId">Ver catálogo</a>
+            <button type="button" disabled title="Disponible en una próxima versión">
+              Seguimiento · Próximamente
             </button>
           </div>
         </article>
@@ -106,9 +106,9 @@
           <h3>{{ vendedor.nombrePublico || 'Vendedor' }}</h3>
           <p>{{ vendedor.descripcion }}</p>
           <div>
-            <a [routerLink]="'/catalogo/' + vendedor.vendedorId">Ver catalogo</a>
-            <button type="button" (click)="mostrarMensajeFaseSiguiente()">
-              Seguir vendedor
+            <a [routerLink]="'/catalogo/' + vendedor.vendedorId">Ver catálogo</a>
+            <button type="button" disabled title="Disponible en una próxima versión">
+              Seguimiento · Próximamente
             </button>
           </div>
         </article>

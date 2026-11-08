@@ -3,8 +3,8 @@
   max-width: 1100px;
   margin: 40px auto;
   padding: 24px;
-  font-family: system-ui, -apple-system, sans-serif;
-  color: #1f2933;
+  font-family: inherit;
+  color: var(--ink);
 }
 
 /* === Header y navegacion === */
@@ -24,7 +24,7 @@
 .page-header p {
   margin: 0;
   font-size: 14px;
-  color: #6b7280;
+  color: var(--muted);
 }
 
 .page-nav {
@@ -33,7 +33,7 @@
   gap: 4px;
   margin-bottom: 24px;
   padding: 6px;
-  border: 0.5px solid #e5e7eb;
+  border: 0.5px solid var(--border);
   border-radius: 12px;
   background: #f9fafb;
 }
@@ -42,7 +42,7 @@
   font-size: 13px;
   padding: 6px 14px;
   border-radius: 8px;
-  color: #6b7280;
+  color: var(--muted);
   text-decoration: none;
 }
 
@@ -51,7 +51,7 @@
 .filtros-box {
   padding: 18px 22px;
   margin-bottom: 22px;
-  border: 0.5px solid #e5e7eb;
+  border: 0.5px solid var(--border);
   border-radius: 12px;
   background: #ffffff;
 }
@@ -78,7 +78,7 @@ label {
   margin-bottom: 5px;
   font-size: 12px;
   font-weight: 500;
-  color: #6b7280;
+  color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -104,7 +104,7 @@ button {
   margin: 0 8px 8px 0;
   border: 0;
   border-radius: 8px;
-  background: #185fa5;
+  background: var(--brand);
   color: #e6f1fb;
   cursor: pointer;
 }
@@ -112,7 +112,7 @@ button {
 .btn-secondary,
 .secondary {
   background: #f3f4f6;
-  color: #1f2933;
+  color: var(--ink);
   border: 0.5px solid #d1d5db;
 }
 
@@ -144,7 +144,7 @@ button {
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #9ca3af;
+  color: var(--muted);
   margin: 0 0 12px;
 }
 
@@ -158,7 +158,7 @@ button {
   display: block;
   margin-top: 4px;
   font-size: 11px;
-  color: #6b7280;
+  color: var(--muted);
 }
 
 /* === Tabla === */
@@ -167,7 +167,7 @@ button {
   max-inline-size: 100%;
   max-block-size: min(560px, 78dvh);
   container-type: inline-size;
-  border: 0.5px solid #e5e7eb;
+  border: 0.5px solid var(--border);
   border-radius: 12px;
   background: #ffffff;
   margin-top: 12px;
@@ -194,8 +194,8 @@ th {
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #9ca3af;
-  border-bottom: 0.5px solid #e5e7eb;
+  color: var(--muted);
+  border-bottom: 0.5px solid var(--border);
 }
 
 td {
@@ -242,7 +242,7 @@ td {
 
 .sin-foto-label {
   font-size: 12px;
-  color: #9ca3af;
+  color: var(--muted);
 }
 
 .producto-thumb {
@@ -251,7 +251,7 @@ td {
   aspect-ratio: 4 / 3;
   object-fit: cover;
   border-radius: 8px;
-  border: 0.5px solid #e5e7eb;
+  border: 0.5px solid var(--border);
   background: #f9fafb;
 }
 

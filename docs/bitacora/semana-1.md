@@ -46,4 +46,12 @@ Estos resultados corresponden a la sesión de preparación, no a una nueva ejecu
 
 ## Próximo incremento
 
+## Actualización de prueba manual — 1 de noviembre de 2026
+
+El responsable confirmó haber completado la secuencia solicitada en https://mio-web.onrender.com: iniciar sesión, crear el cliente de prueba de semana 1, crear el producto con código DEMO-S1-001, registrar un pedido asociado y recargar para comprobar su permanencia. Se registra como prueba manual reportada por el responsable; no fue ejecutada ni observada directamente por el asistente y no se adjuntaron capturas de cada paso.
+
+La revisión posterior del historial local muestra los commits 313a363, bd5ac89 y 3b72bf0, además de una etiqueta local semana-1. Esto actualiza el pendiente histórico de cantidad de commits indicado arriba. Antes de validar la entrega, confirmar que los commits y la etiqueta estén publicados en GitHub. Esta comprobación no certifica concurrencia, seguridad ni integridad transaccional.
+
+## Trabajo siguiente
+
 Validar el problema con la tienda familiar, actualizar hipótesis según respuestas reales y formalizar historias priorizadas con criterios de aceptación. Mantener los abonos y la cancelación trazable como trabajo futuro, sin anunciarlos como terminados.

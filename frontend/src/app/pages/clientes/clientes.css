@@ -3,8 +3,8 @@
   max-width: 1100px;
   margin: 40px auto;
   padding: 24px;
-  font-family: system-ui, -apple-system, sans-serif;
-  color: #1f2933;
+  font-family: inherit;
+  color: var(--ink);
 }
 
 /* === Header y Navegacion === */
@@ -25,7 +25,7 @@
 .page-header p {
   margin: 0;
   font-size: 14px;
-  color: #6b7280;
+  color: var(--muted);
 }
 
 .page-nav {
@@ -34,7 +34,7 @@
   gap: 4px;
   margin-bottom: 24px;
   padding: 6px;
-  border: 0.5px solid #e5e7eb;
+  border: 0.5px solid var(--border);
   border-radius: 12px;
   background-color: #f9fafb;
 }
@@ -43,7 +43,7 @@
   font-size: 13px;
   padding: 6px 14px;
   border-radius: 8px;
-  color: #6b7280;
+  color: var(--muted);
   font-weight: 400;
   text-decoration: none;
   transition: background 0.15s, color 0.15s;
@@ -51,7 +51,7 @@
 
 .page-nav a:hover {
   background: #ffffff;
-  color: #1f2933;
+  color: var(--ink);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
@@ -67,7 +67,7 @@ button {
   border: none;
   cursor: pointer;
   transition: opacity 0.15s;
-  background: #185fa5;
+  background: var(--brand);
   color: #e6f1fb;
 }
 
@@ -82,7 +82,7 @@ button:disabled {
 
 .secondary {
   background: #f3f4f6;
-  color: #1f2933;
+  color: var(--ink);
   border: 0.5px solid #d1d5db;
 }
 
@@ -97,7 +97,7 @@ button:disabled {
   border-radius: 10px;
   padding: 18px;
   margin-bottom: 20px;
-  border: 0.5px solid #e5e7eb;
+  border: 0.5px solid var(--border);
   background: #ffffff;
 }
 
@@ -106,7 +106,7 @@ button:disabled {
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #9ca3af;
+  color: var(--muted);
   margin: 0 0 14px;
 }
 
@@ -131,7 +131,7 @@ button:disabled {
 
 .form-group input:focus {
   outline: none;
-  border-color: #185fa5;
+  border-color: var(--brand);
   box-shadow: 0 0 0 2px rgba(24, 95, 165, 0.12);
 }
 
@@ -202,7 +202,7 @@ button:disabled {
   max-inline-size: 100%;
   max-block-size: min(520px, 75dvh);
   container-type: inline-size;
-  border: 0.5px solid #e5e7eb;
+  border: 0.5px solid var(--border);
   border-radius: 12px;
   background: #ffffff;
 }
@@ -229,14 +229,14 @@ th {
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #9ca3af;
-  border-bottom: 0.5px solid #e5e7eb;
+  color: var(--muted);
+  border-bottom: 0.5px solid var(--border);
 }
 
 td {
   padding: 12px 14px;
   border-bottom: 0.5px solid #f3f4f6;
-  color: #1f2933;
+  color: var(--ink);
   vertical-align: middle;
 }
 

@@ -1,17 +1,325 @@
-<main class="app-shell">
-  <header class="app-header">
-    <a class="brand" routerLink="/bienvenida">
-      <span class="brand-mark">M</span>
-      <span>MIO</span>
-    </a>
+<div
+  class="app-shell"
+  [class.app-shell--workspace]="esModoWorkspace()"
+  [class.app-shell--seller]="esWorkspaceVendedor()"
+>
+  <a class="skip-link" href="#contenido">Saltar al contenido</a>
 
-    <nav class="app-nav">
-      <a routerLink="/bienvenida">Inicio</a>
-      <a routerLink="/cliente/inicio">Explorar</a>
-     </nav>
-  </header>
+  @if (esWorkspaceVendedor()) {
+    <!-- SIDEBAR LATERAL (Escritorio >= 1024px) -->
+    <aside class="workspace-sidebar" aria-label="Navegación de tienda">
+      <div class="sidebar-top">
+        <a class="brand brand--inverse" routerLink="/dashboard" aria-label="MIO, panel de tienda">
+          <span class="brand-mark" aria-hidden="true">m</span>
+          <span class="brand-text">
+            <strong>MIO</strong>
+            <small>Estudio de ventas</small>
+          </span>
+        </a>
 
-  <section class="app-content">
-    <router-outlet></router-outlet>
-  </section>
-</main>
+        <a
+          class="live-cabin-cta"
+          routerLink="/live-activo"
+          routerLinkActive="is-active"
+          ariaCurrentWhenActive="page"
+        >
+          <span class="live-dot" aria-hidden="true"></span>
+          <span class="live-cabin-cta__copy">
+            <strong>Cabina Live</strong>
+            <small>Operar transmisión en vivo</small>
+          </span>
+        </a>
+      </div>
+
+      <nav class="sidebar-nav" aria-label="Secciones del vendedor">
+        <div class="nav-group">
+          <span class="nav-group__label">Operación diaria</span>
+          <a routerLink="/dashboard" routerLinkActive="active" ariaCurrentWhenActive="page">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+              <rect x="2.5" y="2.5" width="6.5" height="6.5" rx="1.5" />
+              <rect x="11" y="2.5" width="6.5" height="6.5" rx="1.5" />
+              <rect x="2.5" y="11" width="6.5" height="6.5" rx="1.5" />
+              <rect x="11" y="11" width="6.5" height="6.5" rx="1.5" />
+            </svg>
+            <span>Mi tienda</span>
+          </a>
+          <a routerLink="/pedidos" routerLinkActive="active" ariaCurrentWhenActive="page">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+              <path d="M5 3.5h10A1.5 1.5 0 0 1 16.5 5v11.5l-2.5-1.5-2 1.5-2-1.5-2 1.5-2-1.5-2.5 1.5V5A1.5 1.5 0 0 1 5 3.5Z" />
+              <path d="M7 8h6M7 11.5h4" stroke-linecap="round" />
+            </svg>
+            <span>Pedidos y apartados</span>
+          </a>
+          <a routerLink="/lives" routerLinkActive="active" ariaCurrentWhenActive="page">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+              <circle cx="10" cy="10" r="2.25" />
+              <path d="M6.2 6.2a5.4 5.4 0 0 0 0 7.6M13.8 6.2a5.4 5.4 0 0 1 0 7.6M3.5 3.8a9 9 0 0 0 0 12.4M16.5 3.8a9 9 0 0 1 0 12.4" stroke-linecap="round" />
+            </svg>
+            <span>Eventos Live</span>
+          </a>
+        </div>
+
+        <div class="nav-group">
+          <span class="nav-group__label">Catálogo y clientes</span>
+          <a routerLink="/productos" routerLinkActive="active" ariaCurrentWhenActive="page">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+              <path d="M10 2.25 17 6v8l-7 3.75L3 14V6l7-3.75Z" stroke-linejoin="round" />
+              <path d="M3 6l7 3.75L17 6M10 9.75v8" stroke-linejoin="round" />
+            </svg>
+            <span>Productos</span>
+          </a>
+          <a routerLink="/clientes" routerLinkActive="active" ariaCurrentWhenActive="page">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+              <circle cx="7.5" cy="6.5" r="2.75" />
+              <path d="M2.5 16c0-2.6 2.2-4.5 5-4.5s5 1.9 5 4.5" stroke-linecap="round" />
+              <circle cx="14" cy="7.25" r="2" />
+              <path d="M14.5 11.75c1.8.25 3 1.55 3 3.75" stroke-linecap="round" />
+            </svg>
+            <span>Clientes</span>
+          </a>
+        </div>
+
+        <div class="nav-group">
+          <span class="nav-group__label">Análisis y vitrina</span>
+          <a routerLink="/resumen" routerLinkActive="active" ariaCurrentWhenActive="page">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+              <path d="M3.5 16.5h13M6 13.5V9.5M10 13.5V5.5M14 13.5v-6" stroke-linecap="round" />
+            </svg>
+            <span>Resumen</span>
+          </a>
+          <a routerLink="/perfil-vendedor" routerLinkActive="active" ariaCurrentWhenActive="page">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+              <path d="M3 7.5 4.5 3.5h11L17 7.5a2.5 2.5 0 0 1-4.5 1.5 2.5 2.5 0 0 1-5 0A2.5 2.5 0 0 1 3 7.5Z" stroke-linejoin="round" />
+              <path d="M4.5 9.8v6.7h11V9.8" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <span>Perfil público</span>
+          </a>
+          @if (enlaceCatalogoPublico()) {
+            <a [routerLink]="enlaceCatalogoPublico()" class="sidebar-external-link">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                <path d="M11.5 3.5h5v5M16.25 3.75l-7 7M8.5 5H4.75A1.25 1.25 0 0 0 3.5 6.25v9A1.25 1.25 0 0 0 4.75 16.5h9A1.25 1.25 0 0 0 15 15.25V11.5" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              <span>Ver catálogo público</span>
+            </a>
+          }
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-Badge">
+          <span class="user-avatar" aria-hidden="true">{{ inicialesUsuario() }}</span>
+          <div class="user-meta">
+            <strong>{{ usuario()?.nombre || 'Mi tienda' }}</strong>
+            <small>Cuenta de vendedor</small>
+          </div>
+        </div>
+        <button type="button" class="sidebar-logout" (click)="cerrarSesion()">
+          Cerrar sesión
+        </button>
+      </div>
+    </aside>
+
+    <!-- CONTENEDOR PRINCIPAL DEL WORKSPACE -->
+    <div class="workspace-stage">
+      <header class="workspace-topbar">
+        <div class="workspace-topbar__start">
+          <button
+            type="button"
+            class="mobile-menu-trigger"
+            [attr.aria-expanded]="menuMovilAbierto()"
+            aria-controls="seller-mobile-drawer"
+            aria-label="Abrir menú de secciones"
+            (click)="alternarMenuMovil()"
+          >
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              @if (menuMovilAbierto()) {
+                <path d="M5 5l10 10M15 5 5 15" stroke-linecap="round" />
+              } @else {
+                <path d="M3 5.5h14M3 10h14M3 14.5h10" stroke-linecap="round" />
+              }
+            </svg>
+          </button>
+
+          <a class="mobile-brand-compact" routerLink="/dashboard" aria-label="MIO, inicio de tienda">
+            <span class="brand-mark brand-mark--sm" aria-hidden="true">m</span>
+          </a>
+
+          <div class="workspace-breadcrumb">
+            <span class="workspace-breadcrumb__root">Tienda</span>
+            <span class="workspace-breadcrumb__sep" aria-hidden="true">/</span>
+            <span class="workspace-breadcrumb__current">{{ tituloSeccionActual() }}</span>
+          </div>
+        </div>
+
+        <div class="workspace-topbar__end">
+          @if (enlaceCatalogoPublico()) {
+            <a class="topbar-action topbar-action--ghost" [routerLink]="enlaceCatalogoPublico()">
+              Ver vitrina
+            </a>
+          }
+          <a class="topbar-action topbar-action--live" routerLink="/live-activo" routerLinkActive="is-active">
+            <span class="live-dot" aria-hidden="true"></span>
+            <span>Live activo</span>
+          </a>
+        </div>
+      </header>
+
+      <!-- DRAWER DESLIZABLE MÓVIL (< 1024px) -->
+      @if (menuMovilAbierto()) {
+        <div class="drawer-backdrop" (click)="cerrarMenuMovil()" aria-hidden="true"></div>
+        <aside id="seller-mobile-drawer" class="mobile-drawer" aria-label="Menú completo del vendedor">
+          <div class="mobile-drawer__header">
+            <a class="brand brand--inverse" routerLink="/dashboard" (click)="cerrarMenuMovil()">
+              <span class="brand-mark brand-mark--sm" aria-hidden="true">m</span>
+              <span class="brand-text">
+                <strong>MIO</strong>
+                <small>{{ usuario()?.nombre || 'Panel de vendedor' }}</small>
+              </span>
+            </a>
+            <button type="button" class="drawer-close-btn" (click)="cerrarMenuMovil()" aria-label="Cerrar menú">
+              ✕
+            </button>
+          </div>
+
+          <nav class="mobile-drawer__nav" aria-label="Todas las secciones">
+            <a routerLink="/dashboard" routerLinkActive="active" (click)="cerrarMenuMovil()">Mi tienda (Dashboard)</a>
+            <a routerLink="/live-activo" routerLinkActive="active" (click)="cerrarMenuMovil()">Cabina Live activo</a>
+            <a routerLink="/pedidos" routerLinkActive="active" (click)="cerrarMenuMovil()">Pedidos y apartados</a>
+            <a routerLink="/productos" routerLinkActive="active" (click)="cerrarMenuMovil()">Catálogo de productos</a>
+            <a routerLink="/clientes" routerLinkActive="active" (click)="cerrarMenuMovil()">Directorio de clientes</a>
+            <a routerLink="/lives" routerLinkActive="active" (click)="cerrarMenuMovil()">Eventos Live</a>
+            <a routerLink="/resumen" routerLinkActive="active" (click)="cerrarMenuMovil()">Resumen de ventas</a>
+            <a routerLink="/perfil-vendedor" routerLinkActive="active" (click)="cerrarMenuMovil()">Perfil público</a>
+            @if (enlaceCatalogoPublico()) {
+              <a [routerLink]="enlaceCatalogoPublico()" (click)="cerrarMenuMovil()">Ver mi catálogo público →</a>
+            }
+          </nav>
+
+          <div class="mobile-drawer__footer">
+            <button type="button" class="sidebar-logout" (click)="cerrarSesion()">
+              Cerrar sesión
+            </button>
+          </div>
+        </aside>
+      }
+
+      <main id="contenido" class="app-content" tabindex="-1">
+        <router-outlet></router-outlet>
+      </main>
+
+      <!-- BARRA INFERIOR MOBILE-FIRST (< 1024px) -->
+      <nav class="mobile-bottom-nav" aria-label="Navegación rápida móvil">
+        <a routerLink="/dashboard" routerLinkActive="active" ariaCurrentWhenActive="page">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+            <rect x="2.5" y="2.5" width="6.5" height="6.5" rx="1.5" />
+            <rect x="11" y="2.5" width="6.5" height="6.5" rx="1.5" />
+            <rect x="2.5" y="11" width="6.5" height="6.5" rx="1.5" />
+            <rect x="11" y="11" width="6.5" height="6.5" rx="1.5" />
+          </svg>
+          <span>Tienda</span>
+        </a>
+        <a routerLink="/pedidos" routerLinkActive="active" ariaCurrentWhenActive="page">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+            <path d="M5 3.5h10A1.5 1.5 0 0 1 16.5 5v11.5l-2.5-1.5-2 1.5-2-1.5-2 1.5-2-1.5-2.5 1.5V5A1.5 1.5 0 0 1 5 3.5Z" />
+            <path d="M7 8h6M7 11.5h4" stroke-linecap="round" />
+          </svg>
+          <span>Pedidos</span>
+        </a>
+        <a class="bottom-nav-live" routerLink="/live-activo" routerLinkActive="active" ariaCurrentWhenActive="page">
+          <span class="bottom-nav-live__pill">
+            <span class="live-dot" aria-hidden="true"></span>
+            <span>Live</span>
+          </span>
+        </a>
+        <a routerLink="/productos" routerLinkActive="active" ariaCurrentWhenActive="page">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+            <path d="M10 2.25 17 6v8l-7 3.75L3 14V6l7-3.75Z" stroke-linejoin="round" />
+            <path d="M3 6l7 3.75L17 6M10 9.75v8" stroke-linejoin="round" />
+          </svg>
+          <span>Productos</span>
+        </a>
+        <a routerLink="/clientes" routerLinkActive="active" ariaCurrentWhenActive="page">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+            <circle cx="8" cy="6.5" r="2.75" />
+            <path d="M3 16c0-2.6 2.2-4.5 5-4.5s5 1.9 5 4.5" stroke-linecap="round" />
+          </svg>
+          <span>Clientes</span>
+        </a>
+      </nav>
+    </div>
+  } @else if (esModoWorkspace()) {
+    <!-- SHELL OPERATIVO PARA ADMIN / CLIENTE AUTENTICADO -->
+    <div class="workspace-stage">
+      <header class="workspace-topbar workspace-topbar--standalone">
+        <div class="workspace-topbar__start">
+          <a class="brand" routerLink="/bienvenida" aria-label="MIO, inicio">
+            <span class="brand-mark brand-mark--sm" aria-hidden="true">m</span>
+            <span class="brand-text">
+              <strong>MIO</strong>
+              <small>{{ tituloSeccionActual() }}</small>
+            </span>
+          </a>
+        </div>
+        <div class="workspace-topbar__end">
+          <a class="topbar-action topbar-action--ghost" routerLink="/bienvenida">Inicio público</a>
+          @if (usuario()) {
+            <span class="topbar-user-chip">{{ usuario()?.nombre }}</span>
+            <button type="button" class="topbar-logout-btn" (click)="cerrarSesion()">
+              Cerrar sesión
+            </button>
+          } @else {
+            <a class="topbar-action topbar-action--brand" routerLink="/login">Iniciar sesión</a>
+          }
+        </div>
+      </header>
+
+      <main id="contenido" class="app-content" tabindex="-1">
+        <router-outlet></router-outlet>
+      </main>
+    </div>
+  } @else {
+    <!-- SHELL PÚBLICO / STOREFRONT / AUTENTICACIÓN -->
+    <header class="app-header">
+      <div class="app-header__inner">
+        <a class="brand" routerLink="/bienvenida" aria-label="MIO, inicio">
+          <span class="brand-mark" aria-hidden="true">m</span>
+          <span class="brand-text">
+            <strong>MIO</strong>
+            <small>Tiendas y ventas en vivo</small>
+          </span>
+        </a>
+
+        <nav class="app-nav" aria-label="Navegación principal">
+          <a routerLink="/bienvenida" routerLinkActive="active" ariaCurrentWhenActive="page">Inicio</a>
+          <a routerLink="/cliente/inicio" routerLinkActive="active" ariaCurrentWhenActive="page">Explorar tiendas</a>
+          @if (estaAutenticado()) {
+            <button type="button" class="account-link account-link--primary" (click)="irAMiEspacio()">
+              Ir a mi espacio
+            </button>
+          } @else {
+            <a routerLink="/register-vendedor" routerLinkActive="active">Abrir mi tienda</a>
+            <a class="account-link" routerLink="/login" routerLinkActive="active">Mi cuenta</a>
+          }
+        </nav>
+      </div>
+    </header>
+
+    <main id="contenido" class="app-content" tabindex="-1">
+      <router-outlet></router-outlet>
+    </main>
+
+    <footer class="app-footer">
+      <div class="app-footer__inner">
+        <div class="app-footer__brand">
+          <a class="brand-footer-link" routerLink="/bienvenida">MIO</a>
+          <p>Comercio en vivo y gestión de piezas únicas para tiendas independientes.</p>
+        </div>
+        <div class="app-footer__links">
+          <a routerLink="/cliente/inicio">Explorar catálogos</a>
+          <a routerLink="/register-vendedor">Abre tu cuenta de vendedor</a>
+          <a routerLink="/login">Iniciar sesión</a>
+        </div>
+      </div>
+    </footer>
+  }
+</div>

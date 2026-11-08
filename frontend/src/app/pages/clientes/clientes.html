@@ -14,12 +14,12 @@
   </header>
 
   <nav class="page-nav">
-    <a routerLink="/dashboard">Ir a Dashboard</a>
-    <a routerLink="/lives">Ir a Lives</a>
-    <a routerLink="/productos">Ir a Productos</a>
-    <a routerLink="/pedidos">Ir a Pedidos</a>
+    <a routerLink="/dashboard">Mi tienda</a>
+    <a routerLink="/lives">Eventos live</a>
+    <a routerLink="/productos">Productos</a>
+    <a routerLink="/pedidos">Pedidos</a>
     <a routerLink="/live-activo">Ir a Live activo</a>
-    <a routerLink="/resumen">Ir a Resumen</a>
+    <a routerLink="/resumen">Resumen</a>
     <a routerLink="/perfil-vendedor">Ir a Perfil público</a>
   </nav>
 
@@ -102,7 +102,7 @@
   </div>
 
   @if (cargando) {
-    <p>Cargando...</p>
+    <p role="status" aria-live="polite">Cargando…</p>
   }
 
   @if (!cargando && clientes.length === 0) {

@@ -3,8 +3,8 @@
   max-width: 1100px;
   margin: 40px auto;
   padding: 24px;
-  font-family: system-ui, -apple-system, sans-serif;
-  color: #1f2933;
+  font-family: inherit;
+  color: var(--ink);
 }
 
 /* === Header === */
@@ -25,7 +25,7 @@
 .dashboard-header p {
   margin: 0;
   font-size: 14px;
-  color: #6b7280;
+  color: var(--muted);
 }
 
 .dashboard-header-actions {
@@ -54,13 +54,13 @@ button:hover {
 }
 
 .btn-primary {
-  background: #185fa5;
+  background: var(--brand);
   color: #e6f1fb;
 }
 
 .btn-secondary {
   background: #f3f4f6;
-  color: #1f2933;
+  color: var(--ink);
   border: 0.5px solid #d1d5db;
 }
 
@@ -71,7 +71,7 @@ button:hover {
   gap: 4px;
   margin-bottom: 24px;
   padding: 6px;
-  border: 0.5px solid #e5e7eb;
+  border: 0.5px solid var(--border);
   border-radius: 12px;
   background-color: #f9fafb;
 }
@@ -80,7 +80,7 @@ button:hover {
   font-size: 13px;
   padding: 6px 14px;
   border-radius: 8px;
-  color: #6b7280;
+  color: var(--muted);
   font-weight: 400;
   text-decoration: none;
   transition: background 0.15s, color 0.15s;
@@ -89,7 +89,7 @@ button:hover {
 .dashboard-nav a:hover,
 .dashboard-nav a.active {
   background: #ffffff;
-  color: #1f2933;
+  color: var(--ink);
   font-weight: 500;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
@@ -103,7 +103,7 @@ button:hover {
 .live-active-card {
   border-radius: 10px;
   padding: 18px;
-  border: 0.5px solid #e5e7eb;
+  border: 0.5px solid var(--border);
   background: #ffffff;
 }
 
@@ -112,7 +112,7 @@ button:hover {
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-  border-left: 5px solid #dc2626;
+  border-left: 5px solid var(--live);
   background: #fff5f5;
 }
 
@@ -123,7 +123,7 @@ button:hover {
 
 .live-active-card p {
   margin: 0;
-  color: #6b7280;
+  color: var(--muted);
 }
 
 .live-actions {
@@ -137,7 +137,7 @@ button:hover {
   align-items: center;
   border-radius: 999px;
   padding: 5px 12px;
-  background: #dc2626;
+  background: var(--live);
   color: #ffffff;
   font-size: 12px;
   font-weight: 700;
@@ -149,7 +149,7 @@ button:hover {
 
 .btn-live,
 .btn-go-live {
-  background: #dc2626;
+  background: var(--live);
   color: #ffffff;
   text-decoration: none;
 }
@@ -187,7 +187,7 @@ button:hover {
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #9ca3af;
+  color: var(--muted);
   margin: 0 0 12px;
 }
 
@@ -212,13 +212,13 @@ button:hover {
   align-items: center;
   gap: 5px;
   font-size: 12px;
-  color: #6b7280;
+  color: var(--muted);
   margin-bottom: 8px;
   text-decoration: none;
 }
 
 .metric-card a:hover {
-  color: #185fa5;
+  color: var(--brand);
   text-decoration: underline;
 }
 
@@ -226,7 +226,7 @@ button:hover {
   display: block;
   font-size: 26px;
   font-weight: 500;
-  color: #1f2933;
+  color: var(--ink);
   line-height: 1;
   margin-bottom: 6px;
 }
@@ -241,7 +241,7 @@ button:hover {
 
 .destacados article {
   background: #ffffff;
-  border: 0.5px solid #e5e7eb;
+  border: 0.5px solid var(--border);
   border-radius: 12px;
   padding: 16px 18px;
   box-shadow: none;
@@ -250,7 +250,7 @@ button:hover {
 .destacados span {
   display: block;
   font-size: 12px;
-  color: #6b7280;
+  color: var(--muted);
   margin-bottom: 4px;
 }
 
@@ -258,13 +258,13 @@ button:hover {
   display: block;
   font-size: 22px;
   font-weight: 500;
-  color: #1f2933;
+  color: var(--ink);
   margin-bottom: 2px;
 }
 
 .destacados small {
   font-size: 12px;
-  color: #9ca3af;
+  color: var(--muted);
 }
 
 /* === Mensajes === */
@@ -303,3 +303,6 @@ button:hover {
     justify-content: center;
   }
 }
+
+/* Workspace hierarchy */
+.metric-card{background:white;border:1px solid var(--border);padding:22px;border-radius:10px}.metric-card strong{font-size:30px;font-weight:700;letter-spacing:-.04em;font-variant-numeric:tabular-nums}.metric-card:nth-child(5){background:var(--brand);border-color:var(--brand)}.metric-card:nth-child(5) span,.metric-card:nth-child(5) strong{color:white}.go-live-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-items:end;padding:24px}.btn-go-live{min-height:46px;margin:0;padding:12px 24px}.destacados strong{font-size:22px;font-weight:650}.live-active-card{flex-wrap:wrap}

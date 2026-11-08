@@ -5,16 +5,16 @@
       <p>Administra el catalogo de productos disponibles para tus Lives.</p>
     </div>
 
-    <button type="button" class="btn-secondary" (click)="cerrarSesion()">Cerrar sesion</button>
+    <button type="button" class="btn-secondary" (click)="cerrarSesion()">Cerrar sesión</button>
   </header>
 
   <nav class="page-nav">
-      <a routerLink="/dashboard">Ir a Dashboard</a>
-      <a routerLink="/clientes">Ir a Clientes</a>
-      <a routerLink="/lives">Ir a Lives</a>
-      <a routerLink="/pedidos">Ir a Pedidos</a>
-      <a routerLink="/resumen">Ir a Resumen</a>
-      <a routerLink="/perfil-vendedor">Ir a Perfil publico</a>
+      <a routerLink="/dashboard">Mi tienda</a>
+      <a routerLink="/clientes">Clientes</a>
+      <a routerLink="/lives">Eventos live</a>
+      <a routerLink="/pedidos">Pedidos</a>
+      <a routerLink="/resumen">Resumen</a>
+      <a routerLink="/perfil-vendedor">Perfil público</a>
   </nav>
 
   <form class="producto-form" (ngSubmit)="guardarProducto()">
@@ -108,11 +108,11 @@
   </form>
 
   @if (mensaje) {
-    <p class="mensaje exito">{{ mensaje }}</p>
+    <p class="mensaje exito" role="status">{{ mensaje }}</p>
   }
 
   @if (error) {
-    <p class="mensaje error">{{ error }}</p>
+    <p class="mensaje error" role="alert">{{ error }}</p>
   }
 
   <h3 id="productos-table-heading" class="section-label">Listado de productos ({{ productosFiltrados.length }})</h3>
@@ -168,7 +168,7 @@
   </section>
 
   @if (cargando) {
-    <p>Cargando...</p>
+    <p role="status" aria-live="polite">Cargando…</p>
   }
 
   @if (!cargando && productos.length === 0) {

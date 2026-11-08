@@ -77,11 +77,11 @@
   </form>
 
   @if (mensaje) {
-    <p class="mensaje exito">{{ mensaje }}</p>
+    <p class="mensaje exito" role="status">{{ mensaje }}</p>
   }
 
   @if (error) {
-    <p class="mensaje error">{{ error }}</p>
+    <p class="mensaje error" role="alert">{{ error }}</p>
   }
 
   <div class="listado-header">

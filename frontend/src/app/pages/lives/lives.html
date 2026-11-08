@@ -5,17 +5,17 @@
       <p>Programa, activa y administra los eventos Live del vendedor.</p>
     </div>
 
-    <button type="button" class="btn-secondary" (click)="cerrarSesion()">Cerrar sesion</button>
+    <button type="button" class="btn-secondary" (click)="cerrarSesion()">Cerrar sesión</button>
   </header>
 
   <nav class="page-nav">
-      <a routerLink="/dashboard">Ir a Dashboard</a>
+      <a routerLink="/dashboard">Mi tienda</a>
       <a routerLink="/clientes">Volver a Clientes</a>
-      <a routerLink="/productos">Ir a Productos</a>
-      <a routerLink="/pedidos">Ir a Pedidos</a>
+      <a routerLink="/productos">Productos</a>
+      <a routerLink="/pedidos">Pedidos</a>
       <a routerLink="/live-activo">Ir al Live activo</a>
-      <a routerLink="/resumen">Ir a Resumen</a>
-      <a routerLink="/perfil-vendedor">Ir a Perfil publico</a>
+      <a routerLink="/resumen">Resumen</a>
+      <a routerLink="/perfil-vendedor">Perfil público</a>
   </nav>
 
   <form class="live-form" (ngSubmit)="guardarLive()">
@@ -75,17 +75,17 @@
   </form>
 
   @if (mensaje) {
-    <p class="mensaje exito">{{ mensaje }}</p>
+    <p class="mensaje exito" role="status">{{ mensaje }}</p>
   }
 
   @if (error) {
-    <p class="mensaje error">{{ error }}</p>
+    <p class="mensaje error" role="alert">{{ error }}</p>
   }
 
   <h3 class="section-label">Listado de Lives</h3>
 
   @if (cargando) {
-    <p>Cargando...</p>
+    <p role="status" aria-live="polite">Cargando…</p>
   }
 
   @if (!cargando && lives.length === 0) {
