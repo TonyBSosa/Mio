@@ -378,7 +378,7 @@
   }
 
   /* Sistema unificado de botones */
-  .app-content :is(button, .btn, .btn-primary, .btn-secondary, .secondary, .danger, .btn-go-live, .btn-live) {
+  .app-content :is(button, .btn, .btn-primary, .btn-secondary, .secondary, .danger, .btn-go-live, .btn-live, .btn-warning, .btn-finish, .btn-ghost, .btn-danger-ghost) {
     min-block-size: 44px;
     padding: 0.55rem 1.1rem;
     border-radius: var(--radius-sm);
@@ -396,13 +396,13 @@
                 transform var(--duration-fast) var(--ease-out);
   }
 
-  .app-content :is(button:not(.secondary):not(.btn-secondary):not(.danger):not(.btn-go-live):not(.btn-live):not(.btn-limpiar-busqueda):not(.btn-sugerencia-item):not(.btn-quitar-pieza), .btn-primary) {
+  .app-content :is(button:not(.secondary):not(.btn-secondary):not(.danger):not(.btn-go-live):not(.btn-live):not(.btn-warning):not(.btn-finish):not(.btn-ghost):not(.btn-danger-ghost):not(.btn-limpiar-busqueda):not(.btn-sugerencia-item):not(.btn-quitar-pieza):not(.seg-btn), .btn-primary) {
     background-color: var(--brand);
     color: var(--ink-on-brand);
     border: 1px solid var(--brand);
   }
 
-  .app-content :is(button:not(.secondary):not(.btn-secondary):not(.danger):not(.btn-go-live):not(.btn-live):not(.btn-limpiar-busqueda):not(.btn-sugerencia-item):not(.btn-quitar-pieza), .btn-primary):hover:not(:disabled) {
+  .app-content :is(button:not(.secondary):not(.btn-secondary):not(.danger):not(.btn-go-live):not(.btn-live):not(.btn-warning):not(.btn-finish):not(.btn-ghost):not(.btn-danger-ghost):not(.btn-limpiar-busqueda):not(.btn-sugerencia-item):not(.btn-quitar-pieza):not(.seg-btn), .btn-primary):hover:not(:disabled) {
     background-color: var(--brand-hover);
     border-color: var(--brand-hover);
   }
@@ -416,6 +416,48 @@
   .app-content :is(.btn-secondary, .secondary, .btn-limpiar):hover:not(:disabled) {
     background-color: var(--surface-subtle);
     border-color: var(--ink-secondary);
+  }
+
+  .app-content .btn-warning {
+    background-color: var(--warning-soft);
+    color: var(--warning);
+    border: 1px solid var(--warning-border);
+  }
+
+  .app-content .btn-warning:hover:not(:disabled) {
+    background-color: #fde68a;
+  }
+
+  .app-content .btn-finish {
+    background-color: var(--surface);
+    color: var(--ink);
+    border: 1px solid var(--ink-secondary);
+  }
+
+  .app-content .btn-finish:hover:not(:disabled) {
+    background-color: var(--ink);
+    color: #ffffff;
+  }
+
+  .app-content .btn-ghost {
+    background-color: transparent;
+    color: var(--ink-secondary);
+    border: 1px solid var(--border);
+  }
+
+  .app-content .btn-ghost:hover:not(:disabled) {
+    background-color: var(--surface-subtle);
+    color: var(--ink);
+  }
+
+  .app-content .btn-danger-ghost {
+    background-color: transparent;
+    color: var(--danger);
+    border: 1px solid var(--danger-border);
+  }
+
+  .app-content .btn-danger-ghost:hover:not(:disabled) {
+    background-color: var(--danger-soft);
   }
 
   .app-content .danger {
@@ -443,12 +485,33 @@
     transform: scale(0.98);
   }
 
-  /* Botones compactos dentro de tablas */
+  /* Botones compactos dentro de tablas y tarjetas operativas */
   .app-content :is(td button, .btn-small) {
     min-block-size: 36px;
     padding: 0.35rem 0.75rem;
     font-size: var(--text-xs);
     border-radius: var(--radius-xs);
+  }
+
+  /* Confirmación inline en dos pasos para proteger acciones destructivas */
+  .app-content .confirm-inline {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    background-color: var(--danger-soft);
+    border: 1px solid var(--danger-border);
+    font-size: var(--text-xs);
+    font-weight: 650;
+    color: var(--danger);
+  }
+
+  .app-content .confirm-inline button {
+    min-block-size: 32px;
+    padding: 0.25rem 0.65rem;
+    font-size: var(--text-xs);
   }
 
   /* Tablas operativas */
@@ -475,12 +538,14 @@
     font-weight: 700;
     padding: 0.85rem 1rem;
     border-block-end: 1px solid var(--border);
+    text-align: start;
   }
 
   .app-content td {
     padding: 0.85rem 1rem;
     font-variant-numeric: tabular-nums;
     color: var(--ink);
+    vertical-align: middle;
   }
 
   .app-content tbody tr:not(:last-child) td {
@@ -493,6 +558,75 @@
 
   .app-content td strong {
     font-weight: 650;
+  }
+
+  /* Sistema adaptativo Tabla (Desktop) <-> Tarjetas Operativas (Móvil) */
+  .app-content .mobile-cards-view {
+    display: none;
+  }
+
+  .app-content .op-card {
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    box-shadow: var(--shadow-xs);
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .app-content .op-card--pending {
+    border-inline-start: 4px solid var(--warning);
+  }
+
+  .app-content .op-card__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-3);
+  }
+
+  .app-content .op-card__title {
+    margin: 0;
+    font-size: var(--text-base);
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .app-content .op-card__sub {
+    margin: 2px 0 0;
+    font-size: var(--text-xs);
+    color: var(--muted);
+  }
+
+  .app-content .op-card__amount {
+    font-size: var(--text-md);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  .app-content .op-card__badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .app-content .op-card__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-block-start: var(--space-2);
+    border-block-start: 1px solid var(--border-subtle);
+  }
+
+  .app-content .op-card__actions button {
+    flex: 1 1 auto;
+    min-block-size: 40px;
+    padding: 0.4rem 0.75rem;
+    font-size: var(--text-xs);
   }
 
   /* Códigos y chips técnicos */
@@ -538,11 +672,18 @@
     box-shadow: var(--shadow-xs);
   }
 
-  /* Tarjeta de transmisión activa */
-  .app-content :is(.live-active-card, .live-header, .catalogo-live-activo) {
+  /* Tarjeta / Franja de transmisión activa */
+  .app-content :is(.live-active-card, .live-header, .catalogo-live-activo, .live-control-strip--active) {
     border: 1px solid var(--live-border);
     border-inline-start: 4px solid var(--live);
     background-color: var(--live-soft);
+    border-radius: var(--radius-md);
+  }
+
+  .app-content .live-control-strip--paused {
+    border: 1px solid var(--warning-border);
+    border-inline-start: 4px solid var(--warning);
+    background-color: var(--warning-soft);
     border-radius: var(--radius-md);
   }
 
@@ -560,6 +701,7 @@
     inset-inline-start: 0;
     z-index: 90;
     inline-size: min(86vw, 310px);
+    max-block-size: 100dvh;
     background-color: var(--surface-inverse);
     color: var(--ink-on-inverse);
     padding: 18px 16px;
@@ -567,7 +709,7 @@
     flex-direction: column;
     justify-content: space-between;
     box-shadow: var(--shadow-lg);
-    overflow-y: auto;
+    overflow: hidden;
   }
 
   .mobile-drawer__header {
@@ -576,6 +718,7 @@
     justify-content: space-between;
     padding-block-end: 14px;
     border-block-end: 1px solid var(--border-inverse);
+    flex-shrink: 0;
   }
 
   .drawer-close-btn {
@@ -590,10 +733,14 @@
 
   .mobile-drawer__nav {
     flex: 1;
+    min-block-size: 0;
     display: flex;
     flex-direction: column;
     gap: 4px;
-    padding-block: 16px;
+    padding-block: 14px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
   }
 
   .mobile-drawer__nav a {
@@ -606,17 +753,34 @@
     text-decoration: none;
     font-size: 14px;
     font-weight: 550;
+    flex-shrink: 0;
+    transition: background-color var(--duration-fast) var(--ease-out),
+                color var(--duration-fast) var(--ease-out);
+  }
+
+  .mobile-drawer__nav a:hover:not(.active) {
+    background-color: var(--surface-inverse-soft);
+    color: #ffffff;
+  }
+
+  .mobile-drawer__nav a:focus-visible,
+  .workspace-sidebar a:focus-visible,
+  .drawer-close-btn:focus-visible {
+    outline: 2px solid #6ee7b7;
+    outline-offset: -2px;
   }
 
   .mobile-drawer__nav a.active {
     background-color: var(--brand);
     color: #ffffff;
-    font-weight: 650;
+    font-weight: 700;
+    box-shadow: inset 3px 0 0 #6ee7b7;
   }
 
   .mobile-drawer__footer {
     padding-block-start: 12px;
     border-block-start: 1px solid var(--border-inverse);
+    flex-shrink: 0;
   }
 
   .mobile-bottom-nav {
@@ -896,6 +1060,15 @@
     .app-content .go-live-card {
       display: grid;
       grid-template-columns: minmax(0, 1fr);
+    }
+
+    .app-content .desktop-table-view {
+      display: none !important;
+    }
+
+    .app-content .mobile-cards-view {
+      display: grid;
+      gap: var(--space-3);
     }
   }
 

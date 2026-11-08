@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 
@@ -11,12 +11,13 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './register.html',
   styleUrl: './register.css',
 })
-export class Register {
+export class Register implements OnInit {
   nombre = '';
   email = '';
   password = '';
   mensaje = '';
   cargando = false;
+  mostrarPassword = false;
   rolRegistro = 'vendedor';
   titulo = 'Crear cuenta de vendedor';
 
@@ -36,6 +37,16 @@ export class Register {
       this.rolRegistro = 'vendedor';
       this.titulo = 'Crear cuenta de vendedor';
     }
+  }
+
+  cambiarRol(rol: 'vendedor' | 'cliente') {
+    this.rolRegistro = rol;
+    this.titulo = rol === 'cliente' ? 'Crear cuenta de cliente' : 'Crear cuenta de vendedor';
+    this.mensaje = '';
+  }
+
+  alternarPassword() {
+    this.mostrarPassword = !this.mostrarPassword;
   }
 
   register() {

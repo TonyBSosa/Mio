@@ -5,10 +5,12 @@ import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { LiveService } from '../../services/live.service';
 import { ResumenService } from '../../services/resumen.service';
+import { PageHeaderComponent } from '../../shared/ui/page-header/page-header';
+import { StatusBadgeComponent } from '../../shared/ui/status-badge/status-badge';
 
 @Component({
   selector: 'app-resumen',
-  imports: [FormsModule, RouterModule],
+  imports: [FormsModule, RouterModule, PageHeaderComponent, StatusBadgeComponent],
   templateUrl: './resumen.html',
   styleUrl: './resumen.css',
 })
@@ -19,6 +21,32 @@ export class Resumen implements OnInit {
   mensaje = '';
   error = '';
   cargando = false;
+
+  get porcentajeCobrado(): number {
+    const vendido = Number(this.resumen?.totalVendido) || 0;
+    const pagado = Number(this.resumen?.totalPagado) || 0;
+    if (vendido <= 0) return 0;
+    return Math.min(100, Math.max(0, Math.round((pagado / vendido) * 100)));
+  }
+
+  get porcentajeEntregado(): number {
+    const total = Number(this.resumen?.totalPedidos) || 0;
+    const entregados = Number(this.resumen?.totalEntregados) || 0;
+    if (total <= 0) return 0;
+    return Math.min(100, Math.max(0, Math.round((entregados / total) * 100)));
+  }
+
+  get ticketPromedio(): number {
+    const total = Number(this.resumen?.totalPedidos) || 0;
+    const vendido = Number(this.resumen?.totalVendido) || 0;
+    if (total <= 0) return 0;
+    return Math.round(vendido / total);
+  }
+
+  seleccionarModalidadRapida(id: string) {
+    this.liveId = id;
+    this.consultarResumen();
+  }
 
   constructor(
     private authService: AuthService,

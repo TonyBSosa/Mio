@@ -4,10 +4,12 @@ import { Router, RouterModule } from '@angular/router';
 
 import { AuthService } from '../../services/auth.service';
 import { PerfilVendedorService } from '../../services/perfil-vendedor.service';
+import { PageHeaderComponent } from '../../shared/ui/page-header/page-header';
+import { StatusBadgeComponent } from '../../shared/ui/status-badge/status-badge';
 
 @Component({
   selector: 'app-perfil-vendedor',
-  imports: [FormsModule, RouterModule],
+  imports: [FormsModule, RouterModule, PageHeaderComponent, StatusBadgeComponent],
   templateUrl: './perfil-vendedor.html',
   styleUrl: './perfil-vendedor.css',
 })
@@ -27,6 +29,7 @@ export class PerfilVendedor implements OnInit {
   cargando = false;
   usuario: any = null;
   enlaceCatalogo = '';
+  enlaceCopiado = false;
 
   constructor(
     private authService: AuthService,
@@ -95,6 +98,42 @@ export class PerfilVendedor implements OnInit {
         this.detectorCambios.detectChanges();
       },
     });
+  }
+
+  obtenerInicialesTienda(): string {
+    const base = (this.perfil.nombrePublico || this.usuario?.nombre || 'Tienda').trim();
+    const partes = base.split(/\s+/).filter(Boolean);
+    if (partes.length >= 2) {
+      return `${partes[0][0]}${partes[1][0]}`.toUpperCase();
+    }
+    return base.slice(0, 2).toUpperCase();
+  }
+
+  contarCanalesActivos(): number {
+    return [
+      this.perfil.whatsapp,
+      this.perfil.enlaceLive,
+      this.perfil.instagram,
+      this.perfil.facebook,
+      this.perfil.tiktok,
+    ].filter((valor) => Boolean(valor && valor.trim())).length;
+  }
+
+  copiarEnlaceCatalogo() {
+    const origen = typeof window !== 'undefined' ? window.location.origin : '';
+    const urlCompleta = `${origen}${this.enlaceCatalogo}`;
+    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(urlCompleta).then(() => {
+        this.enlaceCopiado = true;
+        this.detectorCambios.detectChanges();
+        setTimeout(() => {
+          this.enlaceCopiado = false;
+          this.detectorCambios.detectChanges();
+        }, 2500);
+      });
+    } else {
+      this.enlaceCopiado = true;
+    }
   }
 
   cerrarSesion() {

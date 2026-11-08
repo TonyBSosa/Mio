@@ -1,163 +1,275 @@
-<section class="dashboard-page">
+<div class="dashboard-page">
+  <mio-page-header
+    kicker="Centro de operaciones"
+    [title]="'Hola, ' + (usuario?.nombre || 'Mi tienda')"
+    subtitle="Revisa tus pendientes de hoy, controla tu transmisión y gestiona pedidos al instante."
+  >
+    <a class="btn-secondary btn-small" routerLink="/resumen">Ver cierres</a>
+    <a class="btn-primary btn-small" routerLink="/pedidos">+ Gestionar pedidos</a>
+  </mio-page-header>
 
-  <!-- Header -->
-  <header class="dashboard-header">
-    <div>
-      <h2>Tu tienda, al día</h2>
-      @if (usuario) {
-        <p>Bienvenido, {{ usuario.nombre }}</p>
-      }
-    </div>
-    <div class="dashboard-header-actions">
-      <button type="button" class="btn-secondary" (click)="cerrarSesion()">
-        Cerrar sesión
-      </button>
-    </div>
-  </header>
-
-  <!-- Nav -->
-  <nav class="dashboard-nav" aria-label="Secciones">
-    <a routerLink="/clientes" routerLinkActive="active">Clientes</a>
-    <a routerLink="/lives" routerLinkActive="active">Lives</a>
-    <a routerLink="/productos" routerLinkActive="active">Productos</a>
-    <a routerLink="/pedidos" routerLinkActive="active">Pedidos</a>
-    <a routerLink="/live-activo" routerLinkActive="active">Live activo</a>
-    <a routerLink="/resumen" routerLinkActive="active">Resumen</a>
-    <a routerLink="/perfil-vendedor" routerLinkActive="active">Perfil público</a>
-    @if (usuario?._id || usuario?.id) {
-      <a [routerLink]="'/catalogo/' + (usuario._id || usuario.id)">Ver mi catalogo publico</a>
-    }
-  </nav>
-
-  <!-- Mensajes -->
   @if (mensaje) {
-    <p class="mensaje exito" role="status">{{ mensaje }}</p>
-    
+    <p class="mensaje exito" role="status" aria-live="polite">{{ mensaje }}</p>
   }
+
   @if (error) {
     <p class="mensaje error" role="alert">{{ error }}</p>
   }
 
-  <!-- Cargando -->
-  @if (cargando) {
-    <p role="status" aria-live="polite">Cargando…</p>
-  }
-
-  <!-- Métricas -->
-  <section class="go-live-panel">
-    <p class="section-label">Activar evento en vivo</p>
-
-    @if (liveActivo) {
-      <article class="live-active-card">
-        <div>
-          <span class="live-indicator pulse">EN VIVO</span>
-          <h3>{{ liveActivo.nombre }}</h3>
-          <p>{{ liveActivo.descripcion }}</p>
-          <p>{{ mostrarFecha(liveActivo.fecha) }}</p>
+  <!-- CONTROL DE TRANSMISIÓN EN VIVO (Compacto y diferenciado) -->
+  @if (liveActivo) {
+    <section class="live-control-strip live-control-strip--active" aria-label="Transmisión en vivo activa">
+      <div class="live-strip__main">
+        <div class="live-strip__info">
+          <div class="live-strip__title-row">
+            <mio-status-badge tone="live" [dot]="true">EN VIVO</mio-status-badge>
+            <h3 class="live-strip__title">{{ liveActivo.nombre }}</h3>
+            <span class="live-strip__date">{{ mostrarFecha(liveActivo.fecha) }}</span>
+          </div>
+          @if (liveActivo.descripcion) {
+            <p class="live-strip__desc">{{ liveActivo.descripcion }}</p>
+          }
         </div>
 
-        <div class="live-actions">
-          <a class="btn btn-live" routerLink="/live-activo">Ir al Live activo</a>
-          <button type="button" class="btn-secondary" [disabled]="cargando" (click)="pausarLive()">Pausar</button>
-          <button type="button" class="btn-secondary" [disabled]="cargando" (click)="finalizarLive()">Finalizar</button>
-          <button type="button" class="btn-secondary" [disabled]="cargando" (click)="cancelarLive()">Cancelar</button>
-        </div>
-      </article>
-    } @else {
-      <article class="go-live-card">
-        <div class="form-group">
-          <label for="liveSeleccionadoId">Live para activar</label>
-          <select
-            id="liveSeleccionadoId"
-            name="liveSeleccionadoId"
-            [(ngModel)]="liveSeleccionadoId"
+        <a class="btn-live live-strip__cta" routerLink="/live-activo">
+          Entrar a Cabina Live →
+        </a>
+      </div>
+
+      <div class="live-strip__controls">
+        <span class="live-strip__controls-label">Control de emisión:</span>
+        <div class="live-strip__btns">
+          <button
+            type="button"
+            class="btn-warning btn-small"
+            (click)="pausarLive()"
+            [disabled]="cargando"
           >
-            <option value="">Seleccione un Live programado o pausado</option>
-            @for (live of obtenerLivesParaActivar(); track live._id) {
-              <option [value]="live._id">
-                {{ live.nombre }} - {{ live.estado }} - {{ mostrarFecha(live.fecha) }}
-              </option>
-            }
-          </select>
+            Pausar
+          </button>
+          <button
+            type="button"
+            class="btn-finish btn-small"
+            (click)="solicitarConfirmacionLive('finalizar')"
+            [disabled]="cargando"
+          >
+            Finalizar
+          </button>
+          <button
+            type="button"
+            class="btn-danger-ghost btn-small"
+            (click)="solicitarConfirmacionLive('cancelar')"
+            [disabled]="cargando"
+          >
+            Cancelar
+          </button>
         </div>
 
-        <button type="button" class="btn-go-live" [disabled]="cargando" (click)="activarLiveSeleccionado()">
+        @if (accionLiveConfirmando === 'finalizar') {
+          <div class="confirm-inline" role="region" aria-label="Confirmar finalizar Live">
+            <span>¿Finalizar la transmisión actual?</span>
+            <button type="button" class="btn-finish" (click)="finalizarLive()" [disabled]="cargando">
+              Sí, finalizar
+            </button>
+            <button type="button" class="btn-secondary" (click)="cancelarConfirmacionLive()">
+              No
+            </button>
+          </div>
+        }
+
+        @if (accionLiveConfirmando === 'cancelar') {
+          <div class="confirm-inline" role="region" aria-label="Confirmar cancelar Live">
+            <span>¿Cancelar este Live?</span>
+            <button type="button" class="danger" (click)="cancelarLive()" [disabled]="cargando">
+              Sí, cancelar
+            </button>
+            <button type="button" class="btn-secondary" (click)="cancelarConfirmacionLive()">
+              No
+            </button>
+          </div>
+        }
+      </div>
+    </section>
+  } @else {
+    <section class="go-live-strip" aria-label="Iniciar transmisión en vivo">
+      <div class="go-live-strip__copy">
+        <mio-status-badge tone="neutral">Fuera del aire</mio-status-badge>
+        <div>
+          <h3>¿Lista para transmitir en vivo?</h3>
+          <p>Selecciona un evento programado o pausado para abrir la cabina de ventas.</p>
+        </div>
+      </div>
+
+      <div class="go-live-strip__controls">
+        <label class="sr-only" for="dashboard-live-select">Seleccionar evento Live</label>
+        <select
+          id="dashboard-live-select"
+          [(ngModel)]="liveSeleccionadoId"
+          name="liveSeleccionadoId"
+        >
+          <option value="">Selecciona un Live programado...</option>
+          @for (live of obtenerLivesParaActivar(); track live._id) {
+            <option [value]="live._id">
+              {{ live.nombre }} ({{ live.estado }}) — {{ mostrarFecha(live.fecha) }}
+            </option>
+          }
+        </select>
+
+        <button
+          type="button"
+          class="btn-go-live"
+          (click)="activarLiveSeleccionado()"
+          [disabled]="cargando"
+        >
           GO LIVE
         </button>
-      </article>
-    }
-  </section>
 
-  @if (!cargando) {
-    <p class="section-label">Métricas principales</p>
-
-    <section class="metricas-grid">
-
-      <article class="metric-card">
-        <a routerLink="/clientes">Clientes</a>
-        <strong>{{ totalClientes }}</strong>
-      </article>
-
-      <article class="metric-card">
-        <a routerLink="/lives">Lives</a>
-        <strong>{{ totalLives }}</strong>
-      </article>
-
-      <article class="metric-card">
-        <a routerLink="/productos">Productos</a>
-        <strong>{{ totalProductos }}</strong>
-      </article>
-
-      <article class="metric-card">
-        <a routerLink="/pedidos">Pedidos</a>
-        <strong>{{ totalPedidos }}</strong>
-      </article>
-
-      <article class="metric-card">
-        <span>Total vendido</span>
-        <strong>L {{ totalVendido }}</strong>
-      </article>
-
-      <article class="metric-card">
-        <span>Pagado</span>
-        <strong>L {{ totalPagado }}</strong>
-      </article>
-
-      <article class="metric-card">
-        <span>Pendiente de pago</span>
-        <strong>L {{ totalPendientePago }}</strong>
-      </article>
-
-      <article class="metric-card">
-        <span>Pedidos pendientes de entrega</span>
-        <strong>{{ totalPendienteEntrega }}</strong>
-      </article>
-
-    </section>
-
-    <!-- Destacados -->
-    <section class="destacados">
-      <p class="section-label">Destacados</p>
-
-      <div class="destacados-grid">
-
-        <article>
-          <span>Live con más ventas</span>
-          <strong>{{ topLive }}</strong>
-        </article>
-
-        <article>
-          <span>Artículo más vendido</span>
-          <strong>{{ topArticulo }}</strong>
-        </article>
-
-        <article>
-          <span>Cliente más recurrente</span>
-          <strong>{{ topCliente }}</strong>
-        </article>
-
+        <a class="btn-secondary" routerLink="/lives">
+          Programar Live
+        </a>
       </div>
     </section>
   }
 
-</section>
+  @if (cargando) {
+    <p class="estado-carga" role="status">Actualizando indicadores de tu tienda...</p>
+  }
+
+  <!-- BLOQUES PRINCIPALES: 1. ¿QUÉ TENGO PENDIENTE? + 2. ¿CUÁNTO HE VENDIDO Y COBRADO? -->
+  <div class="ops-primary-grid">
+    <!-- 1. ¿QUÉ TENGO PENDIENTE? -->
+    <section class="ops-panel ops-panel--urgent" aria-labelledby="heading-pendientes">
+      <div class="ops-panel__header">
+        <div>
+          <span class="ops-panel__eyebrow">1 · Prioridad inmediata</span>
+          <h3 id="heading-pendientes">¿Qué tengo pendiente?</h3>
+        </div>
+        <a class="ops-panel__link" routerLink="/pedidos">Resolver en Pedidos →</a>
+      </div>
+
+      <div class="urgent-cards">
+        <article class="urgent-card" [class.urgent-card--alert]="totalPendienteEntrega > 0">
+          <div class="urgent-card__top">
+            <span class="urgent-card__label">Pendientes de entrega</span>
+            <mio-status-badge [tone]="totalPendienteEntrega > 0 ? 'warning' : 'success'">
+              {{ totalPendienteEntrega > 0 ? 'Por despachar' : 'Al día' }}
+            </mio-status-badge>
+          </div>
+          <strong class="urgent-card__value">{{ totalPendienteEntrega }}</strong>
+          <p class="urgent-card__meta">
+            {{ cantidadPedidosEntregados }} entregados de {{ totalPedidos }} pedidos registrados
+          </p>
+          <a class="urgent-card__action" routerLink="/pedidos">Ver entregas pendientes →</a>
+        </article>
+
+        <article class="urgent-card" [class.urgent-card--alert]="totalPendientePago > 0">
+          <div class="urgent-card__top">
+            <span class="urgent-card__label">Pendiente de cobro</span>
+            <mio-status-badge [tone]="totalPendientePago > 0 ? 'warning' : 'success'">
+              {{ cantidadPedidosPendientesPago }} {{ cantidadPedidosPendientesPago === 1 ? 'pedido' : 'pedidos' }}
+            </mio-status-badge>
+          </div>
+          <strong class="urgent-card__value">L {{ totalPendientePago }}</strong>
+          <p class="urgent-card__meta">
+            Importe por confirmar pago o transferencia
+          </p>
+          <a class="urgent-card__action" routerLink="/pedidos">Confirmar pagos →</a>
+        </article>
+      </div>
+    </section>
+
+    <!-- 2. ¿CUÁNTO HE VENDIDO Y COBRADO? -->
+    <section class="ops-panel ops-panel--finance" aria-labelledby="heading-finanzas">
+      <div class="ops-panel__header">
+        <div>
+          <span class="ops-panel__eyebrow">2 · Balance comercial</span>
+          <h3 id="heading-finanzas">¿Cuánto he vendido y cobrado?</h3>
+        </div>
+        <a class="ops-panel__link" routerLink="/resumen">Ver cierre por Live →</a>
+      </div>
+
+      <div class="finance-summary">
+        <div class="finance-hero">
+          <span class="finance-hero__label">Total vendido acumulado</span>
+          <strong class="finance-hero__amount">L {{ totalVendido }}</strong>
+          <span class="finance-hero__sub">En {{ totalPedidos }} {{ totalPedidos === 1 ? 'pedido registrado' : 'pedidos registrados' }}</span>
+        </div>
+
+        <div class="finance-breakdown">
+          <div class="finance-stat finance-stat--collected">
+            <span class="finance-stat__label">Cobrado (Pagado)</span>
+            <strong class="finance-stat__value">L {{ totalPagado }}</strong>
+          </div>
+          <div class="finance-stat finance-stat--pending">
+            <span class="finance-stat__label">Por cobrar</span>
+            <strong class="finance-stat__value">L {{ totalPendientePago }}</strong>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- 3. ¿QUÉ NECESITO HACER AHORA? (Accesos rápidos a operaciones implementadas) -->
+  <section class="ops-actions-section" aria-labelledby="heading-acciones">
+    <div class="ops-section-head">
+      <span class="ops-panel__eyebrow">3 · Operación directa</span>
+      <h3 id="heading-acciones">¿Qué necesito hacer ahora?</h3>
+    </div>
+
+    <div class="quick-actions-grid">
+      <a class="quick-action-card" routerLink="/pedidos">
+        <span class="quick-action-card__title">Registrar o cobrar pedido</span>
+        <span class="quick-action-card__desc">Apartar pieza, actualizar pago o marcar entrega</span>
+      </a>
+      <a class="quick-action-card" routerLink="/productos">
+        <span class="quick-action-card__title">Cargar pieza al catálogo</span>
+        <span class="quick-action-card__desc">{{ totalProductos }} piezas registradas en inventario</span>
+      </a>
+      <a class="quick-action-card" routerLink="/clientes">
+        <span class="quick-action-card__title">Consultar o agregar cliente</span>
+        <span class="quick-action-card__desc">{{ totalClientes }} compradoras en tu directorio</span>
+      </a>
+      <a class="quick-action-card" routerLink="/lives">
+        <span class="quick-action-card__title">Programar evento Live</span>
+        <span class="quick-action-card__desc">{{ totalLives }} transmisiones en tu historial</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- MÉTRICAS SECUNDARIAS Y DESTACADOS (Jerarquía visual reducida) -->
+  <section class="secondary-insights" aria-label="Resumen de catálogo y destacados">
+    <div class="secondary-counts">
+      <div class="mini-stat">
+        <span>Pedidos totales</span>
+        <strong>{{ totalPedidos }}</strong>
+      </div>
+      <div class="mini-stat">
+        <span>Productos</span>
+        <strong>{{ totalProductos }}</strong>
+      </div>
+      <div class="mini-stat">
+        <span>Clientes</span>
+        <strong>{{ totalClientes }}</strong>
+      </div>
+      <div class="mini-stat">
+        <span>Eventos Live</span>
+        <strong>{{ totalLives }}</strong>
+      </div>
+    </div>
+
+    <div class="highlights-strip">
+      <article class="highlight-item">
+        <span>Live con más ventas</span>
+        <strong>{{ topLive }}</strong>
+      </article>
+      <article class="highlight-item">
+        <span>Artículo más vendido</span>
+        <strong>{{ topArticulo }}</strong>
+      </article>
+      <article class="highlight-item">
+        <span>Cliente más frecuente</span>
+        <strong>{{ topCliente }}</strong>
+      </article>
+    </div>
+  </section>
+</div>

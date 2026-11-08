@@ -1,1 +1,290 @@
-<div class="bienvenida-page"><section class="hero" aria-labelledby="bienvenida-titulo"><div class="hero-content"><p class="eyebrow"><span aria-hidden="true"></span> Tiendas con algo para ti</p><h1 id="bienvenida-titulo">Tu próximo hallazgo empieza en MIO.</h1><p class="intro">Descubre piezas, conoce tiendas y encuentra sus próximos eventos en vivo. Todo empieza con una buena conexión.</p><div class="acciones"><a class="btn-primary" routerLink="/register-cliente">Quiero explorar tiendas</a><a class="btn-secondary" routerLink="/register-vendedor">Quiero vender</a></div><p class="login-note">¿Ya eres parte de MIO? <a routerLink="/login">Inicia sesión</a></p><div class="hero-details"><span>Catálogos de cada tienda</span><span>Eventos en vivo</span><span>Piezas por descubrir</span></div></div><div class="hero-panel" role="img" aria-label="Prendas y accesorios de las tiendas de MIO"><span class="photo-label">Elige. Conecta. Descubre.</span><div class="live-card"><span class="live-tag">Ventas en vivo</span><h2>Detrás de cada pieza, una tienda por conocer.</h2><p>Encuentra sus catálogos y los detalles de sus eventos.</p></div></div></section><section class="seller-section" aria-labelledby="vender-titulo"><div><p class="section-kicker">Para quienes hacen crecer su tienda</p><h2 id="vender-titulo">Tú conectas con tus clientes.<br>MIO te ayuda a organizar las ventas.</h2></div><div class="seller-content"><p>Ten a mano tus productos, clientes y pedidos. Comparte tu catálogo y lleva el control de tus ventas, durante y después de cada live.</p><a routerLink="/register-vendedor">Crear mi cuenta de vendedor</a></div></section></div>
+<div class="landing-page">
+  <!-- HERO EDITORIAL + PRODUCT PREVIEW REAL -->
+  <section class="hero-section" aria-labelledby="hero-title">
+    <div class="hero-copy">
+      <div class="hero-eyebrow">
+        <span class="eyebrow-dot" aria-hidden="true"></span>
+        <span>Gestión comercial y vitrina digital</span>
+      </div>
+
+      <h1 id="hero-title" class="hero-title">
+        Ordena tu catálogo, tus pedidos en vivo y tus cobros desde un solo lugar.
+      </h1>
+
+      <p class="hero-lead">
+        MIO ayuda a vendedores y emprendedores que comercializan por redes sociales, WhatsApp y
+        transmisiones en vivo a llevar el control real de su inventario, sus clientes y su vitrina
+        pública sin perder pedidos en el chat.
+      </p>
+
+      <div class="hero-actions">
+        <a class="btn btn-primary btn--lg" routerLink="/register-vendedor">
+          Crear cuenta de vendedor
+        </a>
+        <a class="btn btn-secondary btn--lg" routerLink="/register-cliente">
+          Explorar como comprador
+        </a>
+      </div>
+
+      <p class="hero-login-prompt">
+        ¿Ya tienes una cuenta en MIO?
+        <a routerLink="/login">Inicia sesión aquí</a>
+      </p>
+
+      <dl class="hero-TrustBar" aria-label="Capacidades principales del sistema">
+        <div class="trust-item">
+          <dt>Inventario con código SKU</dt>
+          <dd>Control de artículos disponibles, apartados y vendidos.</dd>
+        </div>
+        <div class="trust-item">
+          <dt>Cabina para ventas Live</dt>
+          <dd>Asignación inmediata de productos a cada cliente durante la transmisión.</dd>
+        </div>
+        <div class="trust-item">
+          <dt>Vitrina pública compartible</dt>
+          <dd>Enlace directo con catálogo actualizado y canales de contacto.</dd>
+        </div>
+      </dl>
+    </div>
+
+    <!-- REPRESENTACIÓN FIEL DEL PRODUCTO REAL MIO -->
+    <aside class="hero-preview" aria-label="Vista previa del panel operativo de MIO">
+      <div class="preview-window">
+        <div class="preview-window__header">
+          <div class="preview-brand">
+            <span class="preview-brand__mark" aria-hidden="true">m</span>
+            <div>
+              <strong>Centro de Operaciones MIO</strong>
+              <small>Vista del panel del vendedor</small>
+            </div>
+          </div>
+          <mio-status-badge tone="live" [dot]="true">Live activo</mio-status-badge>
+        </div>
+
+        <div class="preview-window__body">
+          <!-- Bloque 1: Cabina Live y métricas operativas -->
+          <div class="preview-kpis">
+            <div class="preview-kpi">
+              <span class="preview-kpi__label">Cobros pendientes</span>
+              <strong class="preview-kpi__value">4 pedidos</strong>
+              <small>Control de pago por liquidar</small>
+            </div>
+            <div class="preview-kpi">
+              <span class="preview-kpi__label">Por entregar</span>
+              <strong class="preview-kpi__value">2 paquetes</strong>
+              <small>Listos para despacho</small>
+            </div>
+          </div>
+
+          <!-- Bloque 2: Catálogo con control de disponibilidad -->
+          <div class="preview-section">
+            <div class="preview-section__head">
+              <span>Catálogo e inventario</span>
+              <span class="preview-mono">Actualización inmediata</span>
+            </div>
+            <div class="preview-item-row">
+              <div class="preview-item-thumb" aria-hidden="true">SKU</div>
+              <div class="preview-item-info">
+                <strong>Set organizador de escritorio</strong>
+                <small>Código <span class="preview-mono">ART-204</span> · Hogar y oficina</small>
+              </div>
+              <div class="preview-item-end">
+                <strong class="preview-price">L 650</strong>
+                <mio-status-badge tone="success">Disponible</mio-status-badge>
+              </div>
+            </div>
+            <div class="preview-item-row">
+              <div class="preview-item-thumb preview-item-thumb--warm" aria-hidden="true">LIVE</div>
+              <div class="preview-item-info">
+                <strong>Lámpara inalámbrica recargable</strong>
+                <small>Código <span class="preview-mono">ILU-089</span> · Asignado en transmisión</small>
+              </div>
+              <div class="preview-item-end">
+                <strong class="preview-price">L 890</strong>
+                <mio-status-badge tone="warning">Apartado</mio-status-badge>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bloque 3: Seguimiento de pedido y vitrina pública -->
+          <div class="preview-footer-bar">
+            <div class="preview-footer-bar__text">
+              <span class="preview-footer-bar__label">Enlace de vitrina pública</span>
+              <code class="preview-mono">/catalogo/tu-tienda</code>
+            </div>
+            <span class="preview-pill">Catálogo visible sin registro</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </section>
+
+  <!-- QUÉ PROBLEMA RESUELVE Y QUÉ PUEDES HACER -->
+  <section class="capabilities-section" aria-labelledby="capabilities-title">
+    <div class="section-heading">
+      <span class="section-kicker">¿Qué puedes hacer con MIO?</span>
+      <h2 id="capabilities-title">Diseñado para el ritmo real de la venta directa y en vivo</h2>
+      <p>
+        Cuando vendes por redes sociales o transmisiones en vivo, anotar en papel o revisar decenas
+        de mensajes provoca errores de inventario y cobros olvidados. MIO organiza cada etapa de tu
+        operación comercial.
+      </p>
+    </div>
+
+    <div class="capabilities-grid">
+      <article class="capability-card">
+        <span class="capability-card__index">01</span>
+        <h3>Catálogo organizado con disponibilidad clara</h3>
+        <p>
+          Registra tus productos con nombre, código SKU, categoría, precio en Lempiras (L),
+          fotografía y estado (<strong>Disponible</strong>, <strong>Apartado</strong> o
+          <strong>Vendido</strong>) para evitar vender el mismo artículo dos veces.
+        </p>
+      </article>
+
+      <article class="capability-card">
+        <span class="capability-card__index">02</span>
+        <h3>Cabina operativa para transmisiones Live</h3>
+        <p>
+          Programa tus eventos en vivo, ábrelos con un clic y asigna productos a tus clientes
+          mientras transmites. Cada venta en vivo aparta el artículo automáticamente en tu catálogo.
+        </p>
+      </article>
+
+      <article class="capability-card">
+        <span class="capability-card__index">03</span>
+        <h3>Control independiente de cobros y entregas</h3>
+        <p>
+          Lleva el seguimiento de cada pedido diferenciando si el pago está pendiente o confirmado,
+          y si el pedido sigue en preparación o ya fue entregado al cliente, por canal Live o
+          venta directa.
+        </p>
+      </article>
+
+      <article class="capability-card">
+        <span class="capability-card__index">04</span>
+        <h3>Vitrina pública lista para compartir</h3>
+        <p>
+          Configura tu perfil comercial con WhatsApp, enlaces a redes sociales y transmisión en
+          vivo. Tus compradores pueden explorar los artículos disponibles desde su teléfono sin
+          necesidad de instalar nada.
+        </p>
+      </article>
+    </div>
+  </section>
+
+  <!-- DOS PERFILES CLAROS: VENDEDOR Y COMPRADOR -->
+  <section class="audiences-section" aria-labelledby="audiences-title">
+    <div class="section-heading">
+      <span class="section-kicker">¿Para quién es MIO?</span>
+      <h2 id="audiences-title">Una experiencia adaptada a cada perfil</h2>
+    </div>
+
+    <div class="audiences-grid">
+      <article class="audience-card audience-card--seller">
+        <div class="audience-card__top">
+          <mio-status-badge tone="brand">Para vendedores y emprendedores</mio-status-badge>
+          <h3>Administra tu tienda y tus ventas diarias</h3>
+          <p>
+            Ideal para comercios independientes de cualquier categoría —accesorios, hogar,
+            tecnología, cosmética, coleccionables o moda— que venden por WhatsApp, Instagram,
+            Facebook o TikTok.
+          </p>
+        </div>
+
+        <ul class="audience-list">
+          <li>Panel operativo con alertas de cobros pendientes y entregas por despachar.</li>
+          <li>Directorio de clientes con teléfono, red social e historial de compras.</li>
+          <li>Resumen comercial con ingresos cobrados, montos por cobrar y desempeño por Live.</li>
+          <li>Perfil público personalizable con enlace directo a tu vitrina digital.</li>
+        </ul>
+
+        <div class="audience-card__actions">
+          <a class="btn btn-primary" routerLink="/register-vendedor">
+            Registrarme como vendedor
+          </a>
+          <a class="btn btn-ghost" routerLink="/login">Ya tengo cuenta</a>
+        </div>
+      </article>
+
+      <article class="audience-card audience-card--buyer">
+        <div class="audience-card__top">
+          <mio-status-badge tone="neutral">Para compradores y visitantes</mio-status-badge>
+          <h3>Explora catálogos y conecta con cada tienda</h3>
+          <p>
+            Consulta las vitrinas públicas de los vendedores, revisa qué productos están realmente
+            disponibles hoy y comunícate por los canales oficiales de cada comercio.
+          </p>
+        </div>
+
+        <ul class="audience-list">
+          <li>Búsqueda rápida por nombre, categoría o presupuesto máximo en Lempiras.</li>
+          <li>Indicador en tiempo real cuando la tienda tiene una transmisión Live activa.</li>
+          <li>Acceso directo al WhatsApp y redes oficiales configuradas por el vendedor.</li>
+          <li>Cuenta de comprador para explorar el directorio de tiendas registradas en MIO.</li>
+        </ul>
+
+        <div class="audience-card__actions">
+          <a class="btn btn-secondary" routerLink="/register-cliente">
+            Crear cuenta de comprador
+          </a>
+          <a class="btn btn-ghost" routerLink="/login">Iniciar sesión</a>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- CÓMO EMPEZAR PASO A PASO -->
+  <section class="steps-section" aria-labelledby="steps-title">
+    <div class="steps-box">
+      <div class="steps-header">
+        <span class="section-kicker">¿Cómo empiezo?</span>
+        <h2 id="steps-title">Pon tu tienda en marcha en tres pasos</h2>
+      </div>
+
+      <ol class="steps-list">
+        <li class="step-item">
+          <span class="step-number">1</span>
+          <div>
+            <h3>Crea tu cuenta y configura tu perfil comercial</h3>
+            <p>
+              Regístrate como vendedor, define el nombre público de tu tienda y agrega tu WhatsApp y
+              redes sociales para que tus clientes te identifiquen.
+            </p>
+          </div>
+        </li>
+        <li class="step-item">
+          <span class="step-number">2</span>
+          <div>
+            <h3>Carga tu catálogo de productos</h3>
+            <p>
+              Registra tus artículos con su precio, categoría y código SKU. Los productos con estado
+              disponible aparecerán automáticamente en tu vitrina pública.
+            </p>
+          </div>
+        </li>
+        <li class="step-item">
+          <span class="step-number">3</span>
+          <div>
+            <h3>Comparte tu vitrina y registra tus pedidos</h3>
+            <p>
+              Envía el enlace de tu catálogo por WhatsApp o redes sociales, inicia tus transmisiones
+              en vivo y lleva el control de cada cobro y entrega desde el panel.
+            </p>
+          </div>
+        </li>
+      </ol>
+
+      <div class="steps-cta">
+        <div>
+          <strong>¿Listo para organizar tus ventas?</strong>
+          <p>Comienza creando tu cuenta gratuita o accede a tu panel si ya estás registrado.</p>
+        </div>
+        <div class="steps-cta__buttons">
+          <a class="btn btn-primary" routerLink="/register-vendedor">Empezar como vendedor</a>
+          <a class="btn btn-secondary" routerLink="/login">Iniciar sesión</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

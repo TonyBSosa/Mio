@@ -15,6 +15,7 @@ export class Login implements OnInit {
   password = '';
   mensaje = '';
   cargando = false;
+  mostrarPassword = false;
 
   constructor(
     private authService: AuthService,
@@ -25,6 +26,10 @@ export class Login implements OnInit {
     if (this.authService.estaAutenticado()) {
       this.authService.redirigirPorRol();
     }
+  }
+
+  alternarPassword() {
+    this.mostrarPassword = !this.mostrarPassword;
   }
 
   login() {

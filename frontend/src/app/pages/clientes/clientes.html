@@ -1,151 +1,324 @@
 <section class="clientes-page">
-  <header class="page-header">
-    <div>
-      <h2>Clientes</h2>
-      <p>
-        Administra tu directorio de clientes para ventas en vivo y directas.
-        @if (usuario) {
-          · Sesión: {{ usuario.nombre }}
-        }
-      </p>
-    </div>
-
-    <button type="button" class="secondary" (click)="cerrarSesion()">Cerrar sesión</button>
-  </header>
-
-  <nav class="page-nav">
-    <a routerLink="/dashboard">Mi tienda</a>
-    <a routerLink="/lives">Eventos live</a>
-    <a routerLink="/productos">Productos</a>
-    <a routerLink="/pedidos">Pedidos</a>
-    <a routerLink="/live-activo">Ir a Live activo</a>
-    <a routerLink="/resumen">Resumen</a>
-    <a routerLink="/perfil-vendedor">Ir a Perfil público</a>
-  </nav>
+  <mio-page-header
+    kicker="Relación comercial"
+    title="Directorio de clientes"
+    subtitle="Consulta datos de contacto y entrega de tus clientes para pedidos en vivo y ventas directas."
+  >
+    <a class="btn-secondary btn-small" href="#directorio-listado">
+      Ver directorio ({{ clientesFiltrados.length }})
+    </a>
+    <button type="button" class="btn-ghost btn-small" (click)="alternarFormulario()">
+      {{ formularioExpandido ? 'Ocultar formulario' : '+ Nuevo cliente' }}
+    </button>
+  </mio-page-header>
 
   @if (mensaje) {
-    <p class="mensaje exito" role="status">{{ mensaje }}</p>
+    <p class="mensaje exito" role="status" aria-live="polite">{{ mensaje }}</p>
   }
 
   @if (error) {
     <p class="mensaje error" role="alert">{{ error }}</p>
   }
 
-  <form class="cliente-form" (ngSubmit)="guardarCliente()">
-    <h3>{{ editando ? 'Editar cliente' : 'Nuevo cliente' }}</h3>
-
-    <div class="form-grid">
-      <div class="form-group">
-        <label for="nombre">Nombre completo *</label>
-        <input
-          id="nombre"
-          name="nombre"
-          type="text"
-          placeholder="Ej: María Fernanda López"
-          [(ngModel)]="cliente.nombre"
-          required
-        >
-      </div>
-
-      <div class="form-group">
-        <label for="telefono">Teléfono / WhatsApp</label>
-        <input
-          id="telefono"
-          name="telefono"
-          type="text"
-          placeholder="Ej: 9988-7766"
-          [(ngModel)]="cliente.telefono"
-        >
-      </div>
-
-      <div class="form-group">
-        <label for="direccion">Dirección / Punto de entrega</label>
-        <input
-          id="direccion"
-          name="direccion"
-          type="text"
-          placeholder="Colonia, ciudad o referencia..."
-          [(ngModel)]="cliente.direccion"
-        >
-      </div>
+  <!-- RESUMEN DEL DIRECTORIO -->
+  <div class="directory-summary-strip" role="region" aria-label="Resumen del directorio de clientes">
+    <div class="dir-pill">
+      <span>Total clientes</span>
+      <strong>{{ clientes.length }}</strong>
     </div>
+    <div class="dir-pill dir-pill--brand">
+      <span>Con teléfono / WhatsApp</span>
+      <strong>{{ totalConTelefono }}</strong>
+    </div>
+    <div class="dir-pill">
+      <span>Con dirección registrada</span>
+      <strong>{{ totalConDireccion }}</strong>
+    </div>
+  </div>
 
-    <div class="form-actions">
-      <button type="submit" [disabled]="cargando">
-        {{ editando ? 'Actualizar cliente' : 'Guardar cliente' }}
-      </button>
+  <!-- FORMULARIO DE REGISTRO Y EDICIÓN DE CLIENTE -->
+  @if (formularioExpandido || editando) {
+    <form class="cliente-form" (ngSubmit)="guardarCliente()">
+      <div class="form-head">
+        <div>
+          <h3>{{ editando ? 'Editar datos de cliente' : 'Registrar nuevo cliente' }}</h3>
+          <p class="form-sub">
+            Guarda el nombre, teléfono y dirección o referencia de entrega para agilizar próximos pedidos.
+          </p>
+        </div>
+      </div>
 
-      @if (editando) {
-        <button type="button" class="secondary" (click)="cancelarEdicion()">
-          Cancelar edición
+      <div class="client-form-grid">
+        <div class="form-group">
+          <label for="nombre">Nombre completo *</label>
+          <input
+            id="nombre"
+            name="nombre"
+            type="text"
+            autocomplete="name"
+            placeholder="Ej. María Fernanda López"
+            [(ngModel)]="cliente.nombre"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="telefono">Teléfono / WhatsApp</label>
+          <input
+            id="telefono"
+            name="telefono"
+            type="tel"
+            inputmode="tel"
+            autocomplete="tel"
+            placeholder="Ej. 9988-7766"
+            [(ngModel)]="cliente.telefono"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="direccion">Dirección o punto de entrega</label>
+          <input
+            id="direccion"
+            name="direccion"
+            type="text"
+            autocomplete="street-address"
+            placeholder="Colonia, ciudad o referencia..."
+            [(ngModel)]="cliente.direccion"
+          />
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-primary" [disabled]="cargando">
+          {{ cargando ? 'Guardando...' : editando ? 'Actualizar cliente' : 'Guardar cliente' }}
         </button>
-      }
-    </div>
-  </form>
 
-  <div class="listado-header">
-    <h3 id="clientes-table-heading">Listado de clientes ({{ clientesFiltrados.length }})</h3>
+        @if (editando) {
+          <button type="button" class="btn-secondary" (click)="cancelarEdicion()" [disabled]="cargando">
+            Cancelar edición
+          </button>
+        }
+      </div>
+    </form>
+  }
 
-    @if (clientes.length > 0) {
-      <div class="buscador-clientes">
+  <!-- BÚSQUEDA Y LISTADO DEL DIRECTORIO -->
+  <section id="directorio-listado" aria-labelledby="clientes-table-heading">
+    <search class="filtros-box directory-search-box" aria-label="Buscar clientes en el directorio">
+      <div class="directory-search-head">
+        <div>
+          <h3 id="clientes-table-heading">Clientes registrados ({{ clientesFiltrados.length }})</h3>
+          <p class="filtros-sub">
+            Escribe el nombre, número telefónico o dirección para encontrar un registro al instante.
+          </p>
+        </div>
+
+        @if (filtroBusqueda.trim()) {
+          <button type="button" class="btn-secondary btn-small" (click)="limpiarBusqueda()">
+            Limpiar búsqueda
+          </button>
+        }
+      </div>
+
+      <div class="form-group search-input-group">
+        <label for="filtroBusqueda">Buscar por nombre, teléfono o dirección</label>
         <input
           id="filtroBusqueda"
           name="filtroBusqueda"
-          type="text"
-          placeholder="Buscar por nombre, teléfono o dirección..."
-          aria-label="Buscar clientes"
+          type="search"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+          placeholder="Nombre, teléfono o colonia..."
           [(ngModel)]="filtroBusqueda"
           (input)="filtrarClientes()"
-        >
+        />
+      </div>
+    </search>
+
+    @if (cargando) {
+      <p class="estado-carga" role="status" aria-live="polite">Cargando directorio de clientes...</p>
+    }
+
+    @if (!cargando && clientes.length === 0) {
+      <div class="empty-directory-box" role="status">
+        <h4>Tu directorio aún no tiene clientes registrados</h4>
+        <p>Registra a tu primer cliente usando el formulario superior para vincular sus apartados y pedidos.</p>
       </div>
     }
-  </div>
 
-  @if (cargando) {
-    <p role="status" aria-live="polite">Cargando…</p>
-  }
+    @if (!cargando && clientes.length > 0 && clientesFiltrados.length === 0) {
+      <div class="empty-directory-box" role="status">
+        <h4>No encontramos clientes que coincidan con "{{ filtroBusqueda }}"</h4>
+        <p>Verifica la ortografía o limpia el filtro para ver todo tu directorio.</p>
+        <button type="button" class="btn-secondary btn-small" (click)="limpiarBusqueda()">
+          Mostrar todos los clientes
+        </button>
+      </div>
+    }
 
-  @if (!cargando && clientes.length === 0) {
-    <p>No hay clientes registrados.</p>
-  }
-
-  @if (!cargando && clientes.length > 0 && clientesFiltrados.length === 0) {
-    <p>No se encontraron clientes que coincidan con "{{ filtroBusqueda }}".</p>
-  }
-
-  @if (clientesFiltrados.length > 0) {
-    <div tabindex="0" role="region" aria-labelledby="clientes-table-heading" class="table-wrapper">
-      <table>
-        <thead>
-          <tr>
-            <th>Nombre</th>
-            <th>Teléfono</th>
-            <th>Dirección</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (clienteItem of clientesFiltrados; track clienteItem._id) {
+    @if (clientesFiltrados.length > 0) {
+      <!-- VISTA ESCRITORIO: TABLA DE DIRECTORIO (>= 768px) -->
+      <div
+        tabindex="0"
+        role="region"
+        aria-labelledby="clientes-table-heading"
+        class="table-wrapper desktop-table-view"
+      >
+        <table>
+          <thead>
             <tr>
-              <td><strong>{{ clienteItem.nombre }}</strong></td>
-              <td>{{ clienteItem.telefono || '—' }}</td>
-              <td>{{ clienteItem.direccion || '—' }}</td>
-              <td>
-                <button type="button" class="secondary" (click)="editarCliente(clienteItem)">
-                  Editar
-                </button>
+              <th>Cliente</th>
+              <th>Teléfono / WhatsApp</th>
+              <th>Dirección / Punto de entrega</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (clienteItem of clientesFiltrados; track clienteItem._id) {
+              <tr>
+                <td>
+                  <div class="client-identity">
+                    <span class="client-avatar" aria-hidden="true">
+                      {{ obtenerIniciales(clienteItem.nombre) }}
+                    </span>
+                    <strong>{{ clienteItem.nombre }}</strong>
+                  </div>
+                </td>
+                <td>
+                  @if (clienteItem.telefono) {
+                    <span class="client-phone">{{ clienteItem.telefono }}</span>
+                  } @else {
+                    <mio-status-badge tone="neutral">Sin teléfono</mio-status-badge>
+                  }
+                </td>
+                <td>
+                  @if (clienteItem.direccion) {
+                    <span class="client-address">{{ clienteItem.direccion }}</span>
+                  } @else {
+                    <span class="text-muted">Sin dirección registrada</span>
+                  }
+                </td>
+                <td>
+                  <div class="table-actions">
+                    <button
+                      type="button"
+                      class="btn-secondary btn-small"
+                      (click)="editarCliente(clienteItem)"
+                      [disabled]="cargando"
+                    >
+                      Editar
+                    </button>
+
+                    @if (confirmandoEliminarId !== clienteItem._id) {
+                      <button
+                        type="button"
+                        class="btn-danger-ghost btn-small"
+                        (click)="solicitarEliminarCliente(clienteItem._id)"
+                        [disabled]="cargando"
+                      >
+                        Eliminar
+                      </button>
+                    } @else {
+                      <div class="confirm-inline">
+                        <span>¿Eliminar registro?</span>
+                        <button
+                          type="button"
+                          class="danger"
+                          (click)="eliminarCliente(clienteItem._id)"
+                          [disabled]="cargando"
+                        >
+                          Sí
+                        </button>
+                        <button
+                          type="button"
+                          class="btn-secondary"
+                          (click)="cancelarEliminarCliente()"
+                        >
+                          No
+                        </button>
+                      </div>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- VISTA MÓVIL: TARJETAS DE DIRECTORIO (< 768px) -->
+      <div class="mobile-cards-view" role="region" aria-label="Tarjetas de clientes en móvil">
+        @for (clienteItem of clientesFiltrados; track clienteItem._id) {
+          <article class="op-card">
+            <div class="op-card__head">
+              <div class="client-identity">
+                <span class="client-avatar" aria-hidden="true">
+                  {{ obtenerIniciales(clienteItem.nombre) }}
+                </span>
+                <div>
+                  <h4 class="op-card__title">{{ clienteItem.nombre }}</h4>
+                  @if (clienteItem.telefono) {
+                    <span class="client-phone-mobile">Tel: {{ clienteItem.telefono }}</span>
+                  } @else {
+                    <span class="op-card__sub">Sin teléfono registrado</span>
+                  }
+                </div>
+              </div>
+              <mio-status-badge [tone]="clienteItem.direccion ? 'brand' : 'neutral'">
+                {{ clienteItem.direccion ? 'Con dirección' : 'Sin dirección' }}
+              </mio-status-badge>
+            </div>
+
+            @if (clienteItem.direccion) {
+              <p class="client-address-box">
+                <strong>Entrega:</strong> {{ clienteItem.direccion }}
+              </p>
+            }
+
+            <div class="op-card__actions">
+              <button
+                type="button"
+                class="btn-secondary"
+                (click)="editarCliente(clienteItem)"
+                [disabled]="cargando"
+              >
+                Editar datos
+              </button>
+
+              @if (confirmandoEliminarId !== clienteItem._id) {
                 <button
                   type="button"
-                  class="danger"
-                  (click)="eliminarCliente(clienteItem._id)"
+                  class="btn-danger-ghost"
+                  (click)="solicitarEliminarCliente(clienteItem._id)"
+                  [disabled]="cargando"
                 >
                   Eliminar
                 </button>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  }
+              } @else {
+                <div class="confirm-inline">
+                  <span>¿Eliminar cliente?</span>
+                  <button
+                    type="button"
+                    class="danger"
+                    (click)="eliminarCliente(clienteItem._id)"
+                    [disabled]="cargando"
+                  >
+                    Sí, eliminar
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-secondary"
+                    (click)="cancelarEliminarCliente()"
+                  >
+                    No
+                  </button>
+                </div>
+              }
+            </div>
+          </article>
+        }
+      </div>
+    }
+  </section>
 </section>

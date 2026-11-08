@@ -1,92 +1,260 @@
 <section class="perfil-page">
-  <header class="page-header">
-    <div>
-      <h2>Perfil público</h2>
-      <p>Configura la informacion que veran los clientes en tu catalogo publico.</p>
+  <mio-page-header
+    eyebrow="Identidad comercial y vitrina"
+    title="Perfil público de la tienda"
+    subtitle="Configura cómo se presenta tu negocio ante los visitantes y qué canales de contacto aparecen en tu catálogo público."
+  >
+    <div headerActions class="header-actions-group">
+      <mio-status-badge [tone]="contarCanalesActivos() > 0 ? 'success' : 'neutral'">
+        {{ contarCanalesActivos() }} canales activos
+      </mio-status-badge>
+      <a class="btn btn-secondary" [routerLink]="enlaceCatalogo">
+        Ver mi catálogo público
+      </a>
     </div>
-
-    <button type="button" class="btn-secondary" (click)="cerrarSesion()">Cerrar sesión</button>
-  </header>
-
-  <nav class="page-nav">
-      <a routerLink="/dashboard">Mi tienda</a>
-      <a routerLink="/clientes">Clientes</a>
-      <a routerLink="/lives">Eventos live</a>
-      <a routerLink="/productos">Productos</a>
-      <a routerLink="/pedidos">Pedidos</a>
-      <a routerLink="/resumen">Resumen</a>
-  </nav>
-
-  <form class="perfil-form" (ngSubmit)="guardarPerfil()">
-    <h3>Datos publicos</h3>
-
-    <div class="form-group">
-      <label for="nombrePublico">Nombre publico</label>
-      <input
-        id="nombrePublico"
-        name="nombrePublico"
-        type="text"
-        [(ngModel)]="perfil.nombrePublico"
-      >
-    </div>
-
-    <div class="form-group">
-      <label for="descripcion">Descripcion</label>
-      <textarea
-        id="descripcion"
-        name="descripcion"
-        [(ngModel)]="perfil.descripcion"
-      ></textarea>
-    </div>
-
-    <div class="form-group">
-      <label for="facebook">Facebook</label>
-      <input id="facebook" name="facebook" type="text" [(ngModel)]="perfil.facebook">
-    </div>
-
-    <div class="form-group">
-      <label for="instagram">Instagram</label>
-      <input id="instagram" name="instagram" type="text" [(ngModel)]="perfil.instagram">
-    </div>
-
-    <div class="form-group">
-      <label for="tiktok">TikTok</label>
-      <input id="tiktok" name="tiktok" type="text" [(ngModel)]="perfil.tiktok">
-    </div>
-
-    <div class="form-group">
-      <label for="whatsapp">WhatsApp</label>
-      <input id="whatsapp" name="whatsapp" type="text" [(ngModel)]="perfil.whatsapp">
-    </div>
-
-    <div class="form-group">
-      <label for="enlaceLive">Enlace Live</label>
-      <input
-        id="enlaceLive"
-        name="enlaceLive"
-        type="text"
-        [(ngModel)]="perfil.enlaceLive"
-      >
-    </div>
-
-    <button type="submit" class="btn-primary" [disabled]="cargando">Guardar</button>
-  </form>
+  </mio-page-header>
 
   @if (mensaje) {
-    <p class="mensaje exito" role="status">{{ mensaje }}</p>
+    <div class="feedback-banner feedback-banner--success" role="status">
+      <strong>Cambios guardados</strong>
+      <span>{{ mensaje }}</span>
+    </div>
   }
 
   @if (error) {
-    <p class="mensaje error" role="alert">{{ error }}</p>
+    <div class="feedback-banner feedback-banner--error" role="alert">
+      <strong>No se pudo completar la operación</strong>
+      <span>{{ error }}</span>
+    </div>
   }
 
-  @if (cargando) {
-    <p role="status" aria-live="polite">Cargando…</p>
-  }
+  <div class="perfil-workspace">
+    <!-- COLUMNA IZQUIERDA: FORMULARIO DE CONFIGURACIÓN PÚBLICA -->
+    <form class="perfil-form" (ngSubmit)="guardarPerfil()" novalidate>
+      <!-- SECCIÓN 1: IDENTIDAD COMERCIAL -->
+      <section class="form-card" aria-labelledby="sec-identidad">
+        <div class="form-card__header">
+          <div>
+            <span class="section-step">Sección 1 · Visible para todos</span>
+            <h3 id="sec-identidad">Identidad comercial de tu tienda</h3>
+          </div>
+          <mio-status-badge tone="brand">Público</mio-status-badge>
+        </div>
 
-  <section class="catalogo-box">
-    <h3>Catalogo publico</h3>
-    <p>{{ enlaceCatalogo }}</p>
-    <a [routerLink]="enlaceCatalogo">Ver mi catalogo publico</a>
-  </section>
+        <div class="form-group">
+          <label for="nombrePublico">Nombre público de la tienda</label>
+          <input
+            id="nombrePublico"
+            name="nombrePublico"
+            type="text"
+            placeholder="Ej. Estudio Lumina · Hogar y Accesorios"
+            [(ngModel)]="perfil.nombrePublico"
+            [disabled]="cargando"
+          />
+          <p class="field-help">
+            Si lo dejas vacío, se mostrará el nombre de tu cuenta ({{ usuario?.nombre || 'Vendedor' }}).
+          </p>
+        </div>
+
+        <div class="form-group">
+          <label for="descripcion">Descripción comercial y horarios / envíos</label>
+          <textarea
+            id="descripcion"
+            name="descripcion"
+            rows="4"
+            placeholder="Describe qué tipo de productos ofreces, zonas de entrega o cómo pueden consultarte por disponibilidad."
+            [(ngModel)]="perfil.descripcion"
+            [disabled]="cargando"
+          ></textarea>
+          <p class="field-help">
+            Aparece en el encabezado de tu vitrina pública para dar confianza a nuevos compradores.
+          </p>
+        </div>
+      </section>
+
+      <!-- SECCIÓN 2: ATENCIÓN DIRECTA Y LIVE -->
+      <section class="form-card" aria-labelledby="sec-atencion">
+        <div class="form-card__header">
+          <div>
+            <span class="section-step">Sección 2 · Conversión y eventos</span>
+            <h3 id="sec-atencion">Atención directa y transmisión en vivo</h3>
+          </div>
+          <mio-status-badge tone="neutral">Contacto directo</mio-status-badge>
+        </div>
+
+        <div class="fields-grid-2">
+          <div class="form-group">
+            <label for="whatsapp">WhatsApp de atención</label>
+            <input
+              id="whatsapp"
+              name="whatsapp"
+              type="text"
+              placeholder="Ej. https://wa.me/50499887766 o +504 9988-7766"
+              [(ngModel)]="perfil.whatsapp"
+              [disabled]="cargando"
+            />
+            <p class="field-help">Canal principal para que los clientes consulten por un artículo.</p>
+          </div>
+
+          <div class="form-group">
+            <label for="enlaceLive">Enlace de transmisión Live</label>
+            <input
+              id="enlaceLive"
+              name="enlaceLive"
+              type="url"
+              placeholder="Ej. https://instagram.com/tutienda/live"
+              [(ngModel)]="perfil.enlaceLive"
+              [disabled]="cargando"
+            />
+            <p class="field-help">Se destaca automáticamente cuando tienes un evento Live activo.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECCIÓN 3: REDES SOCIALES -->
+      <section class="form-card" aria-labelledby="sec-redes">
+        <div class="form-card__header">
+          <div>
+            <span class="section-step">Sección 3 · Presencia digital</span>
+            <h3 id="sec-redes">Redes sociales oficiales</h3>
+          </div>
+          <mio-status-badge tone="neutral">Opcional</mio-status-badge>
+        </div>
+
+        <div class="fields-grid-3">
+          <div class="form-group">
+            <label for="instagram">Instagram</label>
+            <input
+              id="instagram"
+              name="instagram"
+              type="text"
+              placeholder="https://instagram.com/tutienda"
+              [(ngModel)]="perfil.instagram"
+              [disabled]="cargando"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="facebook">Facebook</label>
+            <input
+              id="facebook"
+              name="facebook"
+              type="text"
+              placeholder="https://facebook.com/tutienda"
+              [(ngModel)]="perfil.facebook"
+              [disabled]="cargando"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="tiktok">TikTok</label>
+            <input
+              id="tiktok"
+              name="tiktok"
+              type="text"
+              placeholder="https://tiktok.com/@tutienda"
+              [(ngModel)]="perfil.tiktok"
+              [disabled]="cargando"
+            />
+          </div>
+        </div>
+      </section>
+
+      <div class="form-actions-bar">
+        <span class="form-actions-bar__hint">
+          {{ cargando ? 'Sincronizando con tu vitrina pública...' : 'Los cambios se reflejan de inmediato en tu catálogo público.' }}
+        </span>
+        <button type="submit" class="btn btn-primary" [disabled]="cargando">
+          {{ cargando ? 'Guardando...' : 'Guardar configuración pública' }}
+        </button>
+      </div>
+    </form>
+
+    <!-- COLUMNA DERECHA: VISTA PREVIA DE VITRINA + ENLACE + PRIVACIDAD -->
+    <aside class="perfil-sidebar" aria-label="Vista previa y enlace del catálogo">
+      <!-- VISTA PREVIA EN VIVO -->
+      <section class="preview-card" aria-labelledby="preview-title">
+        <div class="preview-card__top">
+          <span class="section-step">Vista previa en tiempo real</span>
+          <h3 id="preview-title">Así ven los clientes tu tienda</h3>
+        </div>
+
+        <div class="storefront-mini">
+          <div class="storefront-mini__identity">
+            <div class="storefront-avatar" aria-hidden="true">
+              {{ obtenerInicialesTienda() }}
+            </div>
+            <div class="storefront-mini__titles">
+              <strong>{{ perfil.nombrePublico || usuario?.nombre || 'Nombre de tu tienda' }}</strong>
+              <small>Vitrina verificada en MIO</small>
+            </div>
+          </div>
+
+          <p class="storefront-mini__desc">
+            {{
+              perfil.descripcion ||
+                'Agrega una descripción comercial para contarles a tus compradores qué productos ofreces y cómo realizas tus entregas.'
+            }}
+          </p>
+
+          <div class="storefront-mini__channels">
+            @if (perfil.whatsapp) {
+              <span class="channel-chip channel-chip--whatsapp">WhatsApp activo</span>
+            }
+            @if (perfil.enlaceLive) {
+              <span class="channel-chip channel-chip--live">Enlace Live</span>
+            }
+            @if (perfil.instagram) {
+              <span class="channel-chip">Instagram</span>
+            }
+            @if (perfil.facebook) {
+              <span class="channel-chip">Facebook</span>
+            }
+            @if (perfil.tiktok) {
+              <span class="channel-chip">TikTok</span>
+            }
+            @if (contarCanalesActivos() === 0) {
+              <span class="channel-empty">Sin canales de contacto configurados aún</span>
+            }
+          </div>
+        </div>
+      </section>
+
+      <!-- ENLACE COMPARTIBLE -->
+      <section class="catalogo-box" aria-labelledby="share-title">
+        <div class="catalogo-box__head">
+          <h3 id="share-title">Enlace de tu catálogo público</h3>
+          <p>Comparte esta dirección en tu biografía de Instagram, TikTok o estados de WhatsApp.</p>
+        </div>
+
+        <div class="catalogo-url-box">
+          <code>{{ enlaceCatalogo }}</code>
+        </div>
+
+        <div class="catalogo-box__actions">
+          <button type="button" class="btn btn-secondary" (click)="copiarEnlaceCatalogo()">
+            {{ enlaceCopiado ? 'Enlace copiado' : 'Copiar enlace' }}
+          </button>
+          <a class="btn btn-primary" [routerLink]="enlaceCatalogo">
+            Abrir vitrina pública
+          </a>
+        </div>
+      </section>
+
+      <!-- PRIVACIDAD DE DATOS -->
+      <section class="privacy-box" aria-labelledby="privacy-title">
+        <h3 id="privacy-title">Privacidad de tu cuenta</h3>
+        <dl class="privacy-list">
+          <div>
+            <dt>Correo de acceso (Privado)</dt>
+            <dd>{{ usuario?.email || 'Protegido en tu sesión' }}</dd>
+          </div>
+          <div>
+            <dt>Datos internos protegidos</dt>
+            <dd>Tu directorio de clientes, historial de pedidos y métricas de ingresos nunca son visibles en la vitrina pública.</dd>
+          </div>
+        </dl>
+      </section>
+    </aside>
+  </div>
 </section>

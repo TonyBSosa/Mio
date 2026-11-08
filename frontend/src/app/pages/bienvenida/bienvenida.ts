@@ -2,11 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { RouterModule } from '@angular/router';
 
 import { AuthService } from '../../services/auth.service';
+import { StatusBadgeComponent } from '../../shared/ui/status-badge/status-badge';
 
 @Component({
   selector: 'app-bienvenida',
   standalone: true,
-  imports: [RouterModule],
+  imports: [RouterModule, StatusBadgeComponent],
   templateUrl: './bienvenida.html',
   styleUrl: './bienvenida.css',
 })

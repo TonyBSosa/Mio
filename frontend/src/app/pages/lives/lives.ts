@@ -4,10 +4,12 @@ import { Router, RouterModule } from '@angular/router';
 
 import { AuthService } from '../../services/auth.service';
 import { LiveService } from '../../services/live.service';
+import { PageHeaderComponent } from '../../shared/ui/page-header/page-header';
+import { BadgeTone, StatusBadgeComponent } from '../../shared/ui/status-badge/status-badge';
 
 @Component({
   selector: 'app-lives',
-  imports: [FormsModule, RouterModule],
+  imports: [FormsModule, RouterModule, PageHeaderComponent, StatusBadgeComponent],
   templateUrl: './lives.html',
   styleUrl: './lives.css',
 })
@@ -23,6 +25,7 @@ export class Lives implements OnInit {
 
   editando = false;
   liveEditandoId = '';
+  confirmandoAccion: { id: string; tipo: 'cancelado' | 'finalizado' | 'eliminar' } | null = null;
   mensaje = '';
   error = '';
   cargando = false;
@@ -133,7 +136,37 @@ export class Lives implements OnInit {
     this.limpiarFormulario();
   }
 
+  solicitarConfirmacion(id: string, tipo: 'cancelado' | 'finalizado' | 'eliminar') {
+    this.confirmandoAccion = { id, tipo };
+  }
+
+  cancelarConfirmacion() {
+    this.confirmandoAccion = null;
+  }
+
+  esConfirmando(id: string, tipo: 'cancelado' | 'finalizado' | 'eliminar'): boolean {
+    return this.confirmandoAccion?.id === id && this.confirmandoAccion?.tipo === tipo;
+  }
+
+  obtenerTonoEstado(estado: string): BadgeTone {
+    switch (estado) {
+      case 'activo':
+        return 'live';
+      case 'pausado':
+        return 'warning';
+      case 'programado':
+        return 'brand';
+      case 'finalizado':
+        return 'success';
+      case 'cancelado':
+        return 'danger';
+      default:
+        return 'neutral';
+    }
+  }
+
   eliminarLive(id: string) {
+    this.confirmandoAccion = null;
     this.mensaje = '';
     this.error = '';
     this.cargando = true;
@@ -155,6 +188,7 @@ export class Lives implements OnInit {
   }
 
   cambiarEstado(live: any, estado: string) {
+    this.confirmandoAccion = null;
     this.mensaje = '';
     this.error = '';
     this.cargando = true;

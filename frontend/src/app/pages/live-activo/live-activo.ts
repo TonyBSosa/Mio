@@ -8,10 +8,12 @@ import { LiveService } from '../../services/live.service';
 import { PedidoService } from '../../services/pedido.service';
 import { ProductoService } from '../../services/producto.service';
 import { ResumenService } from '../../services/resumen.service';
+import { PageHeaderComponent } from '../../shared/ui/page-header/page-header';
+import { StatusBadgeComponent } from '../../shared/ui/status-badge/status-badge';
 
 @Component({
   selector: 'app-live-activo',
-  imports: [FormsModule, RouterModule],
+  imports: [FormsModule, RouterModule, PageHeaderComponent, StatusBadgeComponent],
   templateUrl: './live-activo.html',
   styleUrl: './live-activo.css',
 })
@@ -43,6 +45,7 @@ export class LiveActivo implements OnInit {
   };
 
   productoSeleccionadoId = '';
+  accionConfirmando: '' | 'finalizar' | 'cancelar' = '';
   mensaje = '';
   error = '';
   cargando = false;
@@ -405,19 +408,35 @@ export class LiveActivo implements OnInit {
     }
   }
 
+  cambiarModoCliente(modo: 'existente' | 'nuevo') {
+    this.modoCliente = modo;
+  }
+
+  solicitarConfirmacion(accion: 'finalizar' | 'cancelar') {
+    this.accionConfirmando = accion;
+  }
+
+  cancelarConfirmacion() {
+    this.accionConfirmando = '';
+  }
+
   pausarLive() {
+    this.accionConfirmando = '';
     this.cambiarEstadoLive('pausado', 'Live pausado correctamente');
   }
 
   continuarLive() {
+    this.accionConfirmando = '';
     this.cambiarEstadoLive('activo', 'Live activo nuevamente');
   }
 
   finalizarLive() {
+    this.accionConfirmando = '';
     this.cambiarEstadoLive('finalizado', 'Live finalizado correctamente');
   }
 
   cancelarLive() {
+    this.accionConfirmando = '';
     this.cambiarEstadoLive('cancelado', 'Live cancelado correctamente');
   }
 
