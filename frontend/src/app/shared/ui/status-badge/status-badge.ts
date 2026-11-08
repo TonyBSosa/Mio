@@ -26,12 +26,45 @@ export type BadgeTone = 'neutral' | 'brand' | 'live' | 'success' | 'warning' | '
       border: 1px solid var(--border);
       background-color: var(--surface-subtle);
       color: var(--ink-secondary);
+      transition: background-color var(--duration-fast) var(--ease-out),
+                  border-color var(--duration-fast) var(--ease-out),
+                  color var(--duration-fast) var(--ease-out);
     }
     .mio-badge__dot {
+      position: relative;
       inline-size: 6px;
       block-size: 6px;
       border-radius: 50%;
       background-color: currentColor;
+      flex-shrink: 0;
+    }
+    .mio-badge[data-tone='live'] .mio-badge__dot::after {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border-radius: 50%;
+      background-color: currentColor;
+      opacity: 0;
+      animation: mio-live-pulse 2.2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .mio-badge[data-tone='live'] .mio-badge__dot::after {
+        animation: none;
+      }
+    }
+    @keyframes mio-live-pulse {
+      0% {
+        transform: scale(0.85);
+        opacity: 0.55;
+      }
+      70% {
+        transform: scale(2.15);
+        opacity: 0;
+      }
+      100% {
+        transform: scale(2.15);
+        opacity: 0;
+      }
     }
     .mio-badge[data-tone='brand'] {
       background-color: var(--brand-soft);

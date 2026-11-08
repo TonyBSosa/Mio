@@ -10,50 +10,18 @@ import { environment } from '../../../environments/environment';
   imports: [FormsModule, RouterLink],
   styleUrls: ['./login.css'],
   template: `
-    <section class="auth-shell" aria-labelledby="recuperar-title">
-      <aside class="auth-aside" aria-label="Seguridad y recuperación de cuenta">
-        <div class="auth-aside__top">
-          <span class="auth-badge">Seguridad de cuenta</span>
-          <h2>Recupera el acceso a tu espacio en MIO de forma segura.</h2>
-          <p>
-            Protegemos tu tienda y tu información comercial mediante enlaces temporales de
-            restablecimiento enviados únicamente al correo registrado.
-          </p>
-        </div>
-
-        <ul class="auth-highlights">
-          <li>
-            <strong>1. Solicita tu enlace</strong>
-            <span>Ingresa el correo con el que creaste tu cuenta de vendedor o comprador.</span>
-          </li>
-          <li>
-            <strong>2. Define una nueva contraseña</strong>
-            <span>Utiliza una clave segura de entre 10 y 128 caracteres.</span>
-          </li>
-        </ul>
-
-        <div class="auth-aside__footer">
-          <span>¿Recordaste tu contraseña?</span>
-          <div class="auth-aside__links">
-            <a routerLink="/login">Volver a iniciar sesión</a>
-            <span aria-hidden="true">·</span>
-            <a routerLink="/bienvenida">Ir al inicio público</a>
-          </div>
-        </div>
-      </aside>
-
+    <section class="auth-page" aria-labelledby="recuperar-title">
       <div class="login-container">
         <div class="auth-header">
-          <p class="auth-kicker">Recuperación de acceso</p>
           <h1 id="recuperar-title">
-            {{ token ? 'Definir nueva contraseña' : 'Recuperar contraseña' }}
+            {{ token ? 'Nueva contraseña' : 'Recuperar contraseña' }}
           </h1>
           <p class="auth-intro">
             @if (!token) {
-              Ingresa tu correo electrónico registrado. Si la cuenta existe, te enviaremos las
-              instrucciones para restablecer tu acceso.
+              Ingresa tu correo registrado. Si la cuenta existe, te enviaremos un enlace para
+              restablecer tu contraseña.
             } @else {
-              Crea tu nueva contraseña segura para volver a ingresar a tu cuenta de MIO.
+              Define tu nueva contraseña segura (de 10 a 128 caracteres).
             }
           </p>
         </div>
@@ -65,7 +33,6 @@ import { environment } from '../../../environments/environment';
             [class.auth-alert--info]="!esError"
             role="status"
           >
-            <strong>{{ esError ? 'Atención' : 'Solicitud procesada' }}</strong>
             <span>{{ mensaje }}</span>
           </div>
         }
@@ -73,7 +40,7 @@ import { environment } from '../../../environments/environment';
         <form class="auth-form" (ngSubmit)="enviar()" novalidate>
           @if (!token) {
             <div class="form-group">
-              <label for="rec-email">Correo electrónico registrado</label>
+              <label for="rec-email">Correo electrónico</label>
               <input
                 id="rec-email"
                 type="email"
@@ -84,9 +51,6 @@ import { environment } from '../../../environments/environment';
                 [disabled]="cargando"
                 required
               />
-              <p class="field-hint">
-                Revisa tu bandeja de entrada y carpeta de correo no deseado después de enviar.
-              </p>
             </div>
           } @else {
             <div class="form-group">
@@ -113,33 +77,24 @@ import { environment } from '../../../environments/environment';
                   {{ mostrarPassword ? 'Ocultar' : 'Mostrar' }}
                 </button>
               </div>
-              <p class="field-hint">Debe contener entre 10 y 128 caracteres.</p>
+              <p class="field-hint">Entre 10 y 128 caracteres.</p>
             </div>
           }
 
           <button type="submit" class="auth-submit-btn" [disabled]="cargando">
             @if (cargando) {
-              Procesando solicitud...
+              Procesando...
             } @else {
-              {{ token ? 'Guardar nueva contraseña' : 'Enviar enlace de recuperación' }}
+              {{ token ? 'Guardar contraseña' : 'Enviar enlace de recuperación' }}
             }
           </button>
         </form>
 
-        <div class="auth-divider" role="separator">
-          <span>Opciones de acceso</span>
-        </div>
-
-        <div class="register-links-grid">
-          <a class="role-link-card" routerLink="/login">
-            <strong>Volver a iniciar sesión</strong>
-            <small>Ingresa con tu correo y contraseña actual</small>
-          </a>
-          <a class="role-link-card" routerLink="/register-vendedor">
-            <strong>Crear una cuenta nueva</strong>
-            <small>Regístrate como vendedor o comprador</small>
-          </a>
-        </div>
+        <footer class="auth-footer">
+          <div class="auth-footer__links">
+            <a routerLink="/login">Volver a iniciar sesión</a>
+          </div>
+        </footer>
       </div>
     </section>
   `,

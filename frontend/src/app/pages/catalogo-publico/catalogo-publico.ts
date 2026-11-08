@@ -22,6 +22,7 @@ export class CatalogoPublico implements OnInit {
   filtroProducto = '';
   filtroCategoria = '';
   filtroPrecioMaximo: any = '';
+  filtrosAbiertos = false;
   mensaje = '';
   error = '';
   cargando = false;
@@ -105,6 +106,10 @@ export class CatalogoPublico implements OnInit {
 
       return coincideProducto && coincideCategoria && coincidePrecio;
     });
+  }
+
+  alternarFiltros() {
+    this.filtrosAbiertos = !this.filtrosAbiertos;
   }
 
   seleccionarCategoria(categoria: string) {

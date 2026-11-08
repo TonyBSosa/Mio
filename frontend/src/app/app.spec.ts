@@ -6,6 +6,7 @@ import { Component } from '@angular/core';
 import { Productos } from './pages/productos/productos';
 import { CatalogoPublico } from './pages/catalogo-publico/catalogo-publico';
 import { PerfilVendedor } from './pages/perfil-vendedor/perfil-vendedor';
+import { Bienvenida } from './pages/bienvenida/bienvenida';
 
 @Component({ standalone: true, template: '<p>Dummy</p>' })
 class DummyComponent {}
@@ -153,5 +154,42 @@ describe('App', () => {
     };
     expect(perfilComp.obtenerInicialesTienda()).toBe('EL');
     expect(perfilComp.contarCanalesActivos()).toBe(3);
+  });
+
+  it('should switch interactive hero demo views in Bienvenida via click, keyboard arrows, and pause controls', () => {
+    const fixture = TestBed.createComponent(Bienvenida);
+    const comp = fixture.componentInstance;
+    fixture.detectChanges();
+
+    expect(comp.vistaActiva).toBe('catalogo');
+    expect(comp.indiceVistaActiva).toBe(0);
+
+    // Keyboard navigation ArrowRight -> pedidos
+    comp.manejarTecladoTabs(new KeyboardEvent('keydown', { key: 'ArrowRight' }));
+    expect(comp.vistaActiva).toBe('pedidos');
+    expect(comp.indiceVistaActiva).toBe(1);
+
+    // Keyboard navigation ArrowRight -> vitrina
+    comp.manejarTecladoTabs(new KeyboardEvent('keydown', { key: 'ArrowRight' }));
+    expect(comp.vistaActiva).toBe('vitrina');
+    expect(comp.indiceVistaActiva).toBe(2);
+
+    // Keyboard navigation ArrowLeft -> pedidos
+    comp.manejarTecladoTabs(new KeyboardEvent('keydown', { key: 'ArrowLeft' }));
+    expect(comp.vistaActiva).toBe('pedidos');
+
+    // Manual selection and interaction pause/resume
+    comp.seleccionarVista('catalogo');
+    expect(comp.vistaActiva).toBe('catalogo');
+    comp.pausarPorInteraccion();
+    expect(comp.pausadoInteraccion).toBe(true);
+    comp.reanudarPorInteraccion();
+    // Keyboard selection retains focus: leaving hover must not resume rotation.
+    expect(comp.pausadoInteraccion).toBe(true);
+    (document.activeElement as HTMLElement)?.blur();
+    comp.reanudarPorInteraccion('foco');
+    expect(comp.pausadoInteraccion).toBe(false);
+    comp.alternarAutoplayManual();
+    expect(comp.pausadoManual).toBe(true);
   });
 });

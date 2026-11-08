@@ -1,73 +1,14 @@
-<section class="auth-shell" aria-labelledby="register-title">
-  <!-- PANEL EDITORIAL DE CONTEXTO SEGÚN EL ROL -->
-  <aside class="auth-aside" aria-label="Información del tipo de cuenta">
-    <div class="auth-aside__top">
-      <span class="auth-badge">
-        {{ rolRegistro === 'cliente' ? 'Perfil Comprador' : 'Perfil Vendedor · Emprendedor' }}
-      </span>
-      @if (rolRegistro === 'vendedor') {
-        <h2>Organiza tu inventario, tus ventas Live y tu vitrina pública.</h2>
-        <p>
-          Con tu cuenta de vendedor tendrás acceso inmediato a tu centro de operaciones para
-          registrar productos, clientes, pedidos y transmisiones en vivo.
-        </p>
-      } @else {
-        <h2>Explora tiendas registradas y consulta catálogos actualizados.</h2>
-        <p>
-          Con tu cuenta de comprador podrás recorrer el directorio de tiendas en MIO, revisar qué
-          artículos están disponibles y contactar a cada comercio.
-        </p>
-      }
-    </div>
-
-    @if (rolRegistro === 'vendedor') {
-      <ul class="auth-highlights">
-        <li>
-          <strong>Catálogo con código SKU y estados</strong>
-          <span>Administra artículos disponibles, apartados y vendidos en cualquier categoría.</span>
-        </li>
-        <li>
-          <strong>Cabina Live y control de cobros</strong>
-          <span>Asigna pedidos durante tus transmisiones y da seguimiento a pagos y entregas.</span>
-        </li>
-        <li>
-          <strong>Vitrina comercial compartible</strong>
-          <span>Publica tu enlace con WhatsApp, redes sociales y productos disponibles.</span>
-        </li>
-      </ul>
-    } @else {
-      <ul class="auth-highlights">
-        <li>
-          <strong>Directorio de comercios</strong>
-          <span>Encuentra tiendas activas con su descripción y canales oficiales de atención.</span>
-        </li>
-        <li>
-          <strong>Disponibilidad transparente</strong>
-          <span>Filtra productos por nombre, categoría o presupuesto máximo en Lempiras.</span>
-        </li>
-      </ul>
-    }
-
-    <div class="auth-aside__footer">
-      <span>¿Ya tienes una cuenta en MIO?</span>
-      <div class="auth-aside__links">
-        <a routerLink="/login">Iniciar sesión con mi cuenta</a>
-      </div>
-    </div>
-  </aside>
-
-  <!-- TARJETA PRINCIPAL DE REGISTRO -->
+<section class="auth-page" aria-labelledby="register-title">
   <div class="register-container">
-    <!-- SELECTOR DE TIPO DE CUENTA -->
-    <div class="role-switcher" role="group" aria-label="Tipo de cuenta a registrar">
+    <!-- SELECTOR CONCISO DE ROL -->
+    <div class="role-switcher" role="group" aria-label="Tipo de cuenta">
       <a
         routerLink="/register-vendedor"
         class="role-tab"
         [class.role-tab--active]="rolRegistro === 'vendedor'"
         (click)="cambiarRol('vendedor')"
       >
-        <strong>Soy vendedor</strong>
-        <small>Gestionar tienda y ventas</small>
+        Vendedor
       </a>
       <a
         routerLink="/register-cliente"
@@ -75,21 +16,17 @@
         [class.role-tab--active]="rolRegistro === 'cliente'"
         (click)="cambiarRol('cliente')"
       >
-        <strong>Soy comprador</strong>
-        <small>Explorar tiendas</small>
+        Comprador
       </a>
     </div>
 
     <div class="auth-header">
-      <p class="auth-kicker">
-        {{ rolRegistro === 'cliente' ? 'Registro de comprador' : 'Registro comercial' }}
-      </p>
       <h1 id="register-title">{{ titulo }}</h1>
       <p class="auth-intro">
         @if (rolRegistro === 'vendedor') {
-          Completa tus datos básicos para abrir tu panel operativo y configurar tu tienda.
+          Para organizar tus productos, pedidos, cobros y tu vitrina pública.
         } @else {
-          Completa tus datos para acceder al directorio de tiendas y catálogos de MIO.
+          Para explorar el directorio de tiendas y consultar sus catálogos.
         }
       </p>
     </div>
@@ -103,9 +40,7 @@
 
     <form class="auth-form" (ngSubmit)="register()" novalidate>
       <div class="form-group">
-        <label for="register-nombre">
-          {{ rolRegistro === 'vendedor' ? 'Tu nombre o nombre del responsable' : 'Nombre completo' }}
-        </label>
+        <label for="register-nombre">Nombre completo</label>
         <input
           id="register-nombre"
           type="text"
@@ -135,7 +70,7 @@
       <div class="form-group">
         <div class="label-row">
           <label for="register-password">Contraseña</label>
-          <span class="field-hint">10 a 128 caracteres</span>
+          <span class="field-hint">Mínimo 10 caracteres</span>
         </div>
         <div class="password-input-wrap">
           <input
@@ -143,7 +78,7 @@
             [type]="mostrarPassword ? 'text' : 'password'"
             name="password"
             autocomplete="new-password"
-            placeholder="Mínimo 10 caracteres"
+            placeholder="10 a 128 caracteres"
             [(ngModel)]="password"
             minlength="10"
             maxlength="128"
@@ -159,23 +94,20 @@
             {{ mostrarPassword ? 'Ocultar' : 'Mostrar' }}
           </button>
         </div>
-        <p class="field-hint">
-          Usa una combinación segura de al menos 10 caracteres para proteger tu cuenta.
-        </p>
       </div>
 
       <button type="submit" class="auth-submit-btn" [disabled]="cargando">
         @if (cargando) {
-          Creando tu cuenta...
+          Creando cuenta...
         } @else {
           {{ rolRegistro === 'cliente' ? 'Crear cuenta de comprador' : 'Crear cuenta de vendedor' }}
         }
       </button>
     </form>
 
-    <div class="auth-footer-bar">
-      <span>¿Ya tienes una cuenta registrada?</span>
-      <a routerLink="/login">Inicia sesión aquí</a>
-    </div>
+    <footer class="auth-footer">
+      <span>¿Ya tienes una cuenta?</span>
+      <a routerLink="/login">Inicia sesión</a>
+    </footer>
   </div>
 </section>
