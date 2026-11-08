@@ -393,7 +393,14 @@
     transition: background-color var(--duration-fast) var(--ease-out),
                 border-color var(--duration-fast) var(--ease-out),
                 color var(--duration-fast) var(--ease-out),
+                box-shadow var(--duration-fast) var(--ease-out),
+                translate var(--duration-fast) var(--ease-out),
                 transform var(--duration-fast) var(--ease-out);
+  }
+
+  .app-content :is(.btn-primary, .btn-secondary, .btn-live, .btn-go-live):hover:not(:disabled) {
+    translate: 0 -1px;
+    box-shadow: var(--shadow-xs);
   }
 
   .app-content :is(button:not(.secondary):not(.btn-secondary):not(.danger):not(.btn-go-live):not(.btn-live):not(.btn-warning):not(.btn-finish):not(.btn-ghost):not(.btn-danger-ghost):not(.btn-limpiar-busqueda):not(.btn-sugerencia-item):not(.btn-quitar-pieza):not(.seg-btn), .btn-primary) {
@@ -889,6 +896,10 @@
     text-decoration: none;
     background: transparent;
     border: 1px solid transparent;
+    transition: background-color var(--duration-fast) var(--ease-out),
+                border-color var(--duration-fast) var(--ease-out),
+                color var(--duration-fast) var(--ease-out),
+                translate var(--duration-fast) var(--ease-out);
   }
 
   .app-nav a:hover,

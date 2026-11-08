@@ -1,290 +1,232 @@
 <div class="landing-page">
-  <!-- HERO EDITORIAL + PRODUCT PREVIEW REAL -->
-  <section class="hero-section" aria-labelledby="hero-title">
+  <!-- 1. HERO A PANTALLA COMPLETA: UN SOLO PROTAGONISTA CON ESCENA VISUAL DINÁMICA -->
+  <section class="hero-section is-visible" data-reveal aria-labelledby="hero-title">
     <div class="hero-copy">
-      <div class="hero-eyebrow">
-        <span class="eyebrow-dot" aria-hidden="true"></span>
-        <span>Gestión comercial y vitrina digital</span>
+      <div class="hero-pill">
+        <span class="hero-pill__dot" aria-hidden="true"></span>
+        <span>Ventas en vivo y catálogo digital</span>
       </div>
 
       <h1 id="hero-title" class="hero-title">
-        Ordena tu catálogo, tus pedidos en vivo y tus cobros desde un solo lugar.
+        Tus ventas en vivo, siempre en orden.
       </h1>
 
       <p class="hero-lead">
-        MIO ayuda a vendedores y emprendedores que comercializan por redes sociales, WhatsApp y
-        transmisiones en vivo a llevar el control real de su inventario, sus clientes y su vitrina
-        pública sin perder pedidos en el chat.
+        Controla tu inventario, asigna pedidos mientras transmites y comparte tu vitrina pública por
+        WhatsApp o Instagram.
       </p>
 
       <div class="hero-actions">
         <a class="btn btn-primary btn--lg" routerLink="/register-vendedor">
-          Crear cuenta de vendedor
+          Crear mi tienda gratis
         </a>
         <a class="btn btn-secondary btn--lg" routerLink="/register-cliente">
-          Explorar como comprador
+          Explorar tiendas
         </a>
       </div>
 
-      <p class="hero-login-prompt">
-        ¿Ya tienes una cuenta en MIO?
-        <a routerLink="/login">Inicia sesión aquí</a>
+      <p class="hero-subnote">
+        Sin costo de apertura · ¿Ya tienes cuenta?
+        <a routerLink="/login">Inicia sesión</a>
       </p>
-
-      <dl class="hero-TrustBar" aria-label="Capacidades principales del sistema">
-        <div class="trust-item">
-          <dt>Inventario con código SKU</dt>
-          <dd>Control de artículos disponibles, apartados y vendidos.</dd>
-        </div>
-        <div class="trust-item">
-          <dt>Cabina para ventas Live</dt>
-          <dd>Asignación inmediata de productos a cada cliente durante la transmisión.</dd>
-        </div>
-        <div class="trust-item">
-          <dt>Vitrina pública compartible</dt>
-          <dd>Enlace directo con catálogo actualizado y canales de contacto.</dd>
-        </div>
-      </dl>
     </div>
 
-    <!-- REPRESENTACIÓN FIEL DEL PRODUCTO REAL MIO -->
-    <aside class="hero-preview" aria-label="Vista previa del panel operativo de MIO">
-      <div class="preview-window">
-        <div class="preview-window__header">
-          <div class="preview-brand">
-            <span class="preview-brand__mark" aria-hidden="true">m</span>
-            <div>
-              <strong>Centro de Operaciones MIO</strong>
-              <small>Vista del panel del vendedor</small>
+    <!-- ESCENA VISUAL FOTOGRÁFICA E INTERACTIVA (3 VISTAS CON TARJETAS FLOTANTES) -->
+    <aside
+      class="hero-demo"
+      aria-label="Escena interactiva de MIO"
+      (mouseenter)="pausarPorInteraccion('hover')"
+      (mouseleave)="reanudarPorInteraccion('hover')"
+      (focusin)="pausarPorInteraccion('foco')"
+      (focusout)="reanudarPorInteraccion('foco', $event)"
+    >
+      <div class="showcase-card">
+        <!-- ESTADO 1: CATÁLOGO VISUAL -->
+        @if (vistaActiva === 'catalogo') {
+          <div
+            id="demo-panel-catalogo"
+            role="tabpanel"
+            aria-labelledby="demo-tab-catalogo"
+            class="showcase-stage"
+          >
+            <img
+              [src]="'/imagens/catalogo-estudio.jpg'"
+              alt="Productos de catálogo: cafetera esmeralda y lámpara de cerámica"
+              class="showcase-photo"
+            />
+            <div class="showcase-overlay" aria-hidden="true"></div>
+
+            <div class="float-badge float-badge--top">
+              <mio-status-badge tone="success" [dot]="true">Disponible</mio-status-badge>
+              <span class="float-mono">HOG-001 · L 650</span>
+            </div>
+
+            <div class="float-card float-card--bottom">
+              <span class="float-avatar" aria-hidden="true">EC</span>
+              <div class="float-card__body">
+                <strong>Catálogo sincronizado al instante</strong>
+                <small>Cafetera Italiana · Lámpara Terracota · 14 activos</small>
+              </div>
+              <span class="float-sample">Ejemplo</span>
             </div>
           </div>
-          <mio-status-badge tone="live" [dot]="true">Live activo</mio-status-badge>
+        }
+
+        <!-- ESTADO 2: VENTAS EN VIVO -->
+        @if (vistaActiva === 'pedidos') {
+          <div
+            id="demo-panel-pedidos"
+            role="tabpanel"
+            aria-labelledby="demo-tab-pedidos"
+            class="showcase-stage"
+          >
+            <img
+              [src]="'/imagens/Bienvenida.jpg'"
+              alt="Emprendedora transmitiendo ventas en vivo desde su teléfono"
+              class="showcase-photo"
+            />
+            <div class="showcase-overlay" aria-hidden="true"></div>
+
+            <div class="float-badge float-badge--top">
+              <mio-status-badge tone="live" [dot]="true">EN VIVO</mio-status-badge>
+              <span>Asignación en 1 clic</span>
+            </div>
+
+            <div class="float-card float-card--bottom">
+              <span class="float-avatar float-avatar--live" aria-hidden="true">AM</span>
+              <div class="float-card__body">
+                <strong>Andrea Molina reservó en el Live</strong>
+                <small>2 artículos · <span class="float-mono">L 1,170</span></small>
+              </div>
+              <mio-status-badge tone="success">Pagado</mio-status-badge>
+            </div>
+          </div>
+        }
+
+        <!-- ESTADO 3: VITRINA PÚBLICA -->
+        @if (vistaActiva === 'vitrina') {
+          <div
+            id="demo-panel-vitrina"
+            role="tabpanel"
+            aria-labelledby="demo-tab-vitrina"
+            class="showcase-stage"
+          >
+            <img
+              [src]="'/imagens/vitrina-productos.jpg'"
+              alt="Vitrina de tienda con cerámica artesanal y pedidos listos para envío"
+              class="showcase-photo"
+            />
+            <div class="showcase-overlay" aria-hidden="true"></div>
+
+            <div class="float-badge float-badge--top">
+              <mio-status-badge tone="brand" [dot]="true">WhatsApp directo</mio-status-badge>
+              <code class="float-mono">/catalogo/tu-tienda</code>
+            </div>
+
+            <div class="float-card float-card--bottom">
+              <span class="float-avatar" aria-hidden="true">CN</span>
+              <div class="float-card__body">
+                <strong>Casa Nómada Estudio</strong>
+                <small>Enlace público listo para compartir en redes</small>
+              </div>
+              <span class="float-sample">Vitrina</span>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- CONTROLES INTERACTIVOS (TABS DESLIZANTES + DOTS + PAUSA) -->
+      <div class="showcase-controls">
+        <div
+          class="demo-tabs"
+          role="tablist"
+          aria-label="Explorar momentos de MIO"
+          [style.--active-tab]="indiceVistaActiva"
+          (keydown)="manejarTecladoTabs($event)"
+        >
+          <span class="demo-tabs__glider" aria-hidden="true"></span>
+          @for (vista of vistasDemo; track vista.id) {
+            <button
+              type="button"
+              role="tab"
+              class="seg-btn demo-tab"
+              [class.demo-tab--active]="vistaActiva === vista.id"
+              [attr.id]="'demo-tab-' + vista.id"
+              [attr.aria-selected]="vistaActiva === vista.id"
+              [attr.aria-controls]="'demo-panel-' + vista.id"
+              [attr.tabindex]="vistaActiva === vista.id ? 0 : -1"
+              (click)="seleccionarVista(vista.id)"
+            >
+              {{ vista.etiqueta }}
+            </button>
+          }
         </div>
 
-        <div class="preview-window__body">
-          <!-- Bloque 1: Cabina Live y métricas operativas -->
-          <div class="preview-kpis">
-            <div class="preview-kpi">
-              <span class="preview-kpi__label">Cobros pendientes</span>
-              <strong class="preview-kpi__value">4 pedidos</strong>
-              <small>Control de pago por liquidar</small>
-            </div>
-            <div class="preview-kpi">
-              <span class="preview-kpi__label">Por entregar</span>
-              <strong class="preview-kpi__value">2 paquetes</strong>
-              <small>Listos para despacho</small>
-            </div>
+        <div class="demo-footer">
+          <div class="demo-dots" role="group" aria-label="Indicador de escena">
+            @for (vista of vistasDemo; track vista.id) {
+              <button
+                type="button"
+                class="seg-btn demo-dot"
+                [class.demo-dot--active]="vistaActiva === vista.id"
+                [attr.aria-label]="'Mostrar escena: ' + vista.etiqueta"
+                [attr.aria-current]="vistaActiva === vista.id ? 'true' : null"
+                (click)="seleccionarVista(vista.id)"
+              ></button>
+            }
           </div>
 
-          <!-- Bloque 2: Catálogo con control de disponibilidad -->
-          <div class="preview-section">
-            <div class="preview-section__head">
-              <span>Catálogo e inventario</span>
-              <span class="preview-mono">Actualización inmediata</span>
-            </div>
-            <div class="preview-item-row">
-              <div class="preview-item-thumb" aria-hidden="true">SKU</div>
-              <div class="preview-item-info">
-                <strong>Set organizador de escritorio</strong>
-                <small>Código <span class="preview-mono">ART-204</span> · Hogar y oficina</small>
-              </div>
-              <div class="preview-item-end">
-                <strong class="preview-price">L 650</strong>
-                <mio-status-badge tone="success">Disponible</mio-status-badge>
-              </div>
-            </div>
-            <div class="preview-item-row">
-              <div class="preview-item-thumb preview-item-thumb--warm" aria-hidden="true">LIVE</div>
-              <div class="preview-item-info">
-                <strong>Lámpara inalámbrica recargable</strong>
-                <small>Código <span class="preview-mono">ILU-089</span> · Asignado en transmisión</small>
-              </div>
-              <div class="preview-item-end">
-                <strong class="preview-price">L 890</strong>
-                <mio-status-badge tone="warning">Apartado</mio-status-badge>
-              </div>
-            </div>
-          </div>
-
-          <!-- Bloque 3: Seguimiento de pedido y vitrina pública -->
-          <div class="preview-footer-bar">
-            <div class="preview-footer-bar__text">
-              <span class="preview-footer-bar__label">Enlace de vitrina pública</span>
-              <code class="preview-mono">/catalogo/tu-tienda</code>
-            </div>
-            <span class="preview-pill">Catálogo visible sin registro</span>
-          </div>
+          <button
+            type="button"
+            class="seg-btn demo-autoplay-btn"
+            [attr.aria-pressed]="pausadoManual"
+            (click)="alternarAutoplayManual()"
+          >
+            {{ pausadoManual ? 'Reanudar' : 'Pausar' }}
+          </button>
         </div>
       </div>
     </aside>
   </section>
 
-  <!-- QUÉ PROBLEMA RESUELVE Y QUÉ PUEDES HACER -->
-  <section class="capabilities-section" aria-labelledby="capabilities-title">
-    <div class="section-heading">
-      <span class="section-kicker">¿Qué puedes hacer con MIO?</span>
-      <h2 id="capabilities-title">Diseñado para el ritmo real de la venta directa y en vivo</h2>
-      <p>
-        Cuando vendes por redes sociales o transmisiones en vivo, anotar en papel o revisar decenas
-        de mensajes provoca errores de inventario y cobros olvidados. MIO organiza cada etapa de tu
-        operación comercial.
-      </p>
+  <!-- 2. CÓMO FUNCIONA (VISIBLE AL HACER SCROLL, LIGERO Y VISUAL) -->
+  <section class="benefits-section" data-reveal aria-labelledby="benefits-title">
+    <div class="benefits-header">
+      <span class="section-eyebrow">Simple de principio a fin</span>
+      <h2 id="benefits-title">Todo tu flujo comercial en tres pasos</h2>
     </div>
 
-    <div class="capabilities-grid">
-      <article class="capability-card">
-        <span class="capability-card__index">01</span>
-        <h3>Catálogo organizado con disponibilidad clara</h3>
-        <p>
-          Registra tus productos con nombre, código SKU, categoría, precio en Lempiras (L),
-          fotografía y estado (<strong>Disponible</strong>, <strong>Apartado</strong> o
-          <strong>Vendido</strong>) para evitar vender el mismo artículo dos veces.
-        </p>
+    <div class="benefits-grid">
+      <article class="benefit-card">
+        <span class="benefit-step">01</span>
+        <h3>Sube tu catálogo</h3>
+        <p>Registra tus artículos con foto, código y precio para saber siempre qué sigue disponible.</p>
       </article>
 
-      <article class="capability-card">
-        <span class="capability-card__index">02</span>
-        <h3>Cabina operativa para transmisiones Live</h3>
-        <p>
-          Programa tus eventos en vivo, ábrelos con un clic y asigna productos a tus clientes
-          mientras transmites. Cada venta en vivo aparta el artículo automáticamente en tu catálogo.
-        </p>
+      <article class="benefit-card">
+        <span class="benefit-step">02</span>
+        <h3>Vende en vivo</h3>
+        <p>Asigna pedidos a tus clientes durante el Live y lleva el control de pagos y entregas.</p>
       </article>
 
-      <article class="capability-card">
-        <span class="capability-card__index">03</span>
-        <h3>Control independiente de cobros y entregas</h3>
-        <p>
-          Lleva el seguimiento de cada pedido diferenciando si el pago está pendiente o confirmado,
-          y si el pedido sigue en preparación o ya fue entregado al cliente, por canal Live o
-          venta directa.
-        </p>
-      </article>
-
-      <article class="capability-card">
-        <span class="capability-card__index">04</span>
-        <h3>Vitrina pública lista para compartir</h3>
-        <p>
-          Configura tu perfil comercial con WhatsApp, enlaces a redes sociales y transmisión en
-          vivo. Tus compradores pueden explorar los artículos disponibles desde su teléfono sin
-          necesidad de instalar nada.
-        </p>
+      <article class="benefit-card">
+        <span class="benefit-step">03</span>
+        <h3>Comparte tu vitrina</h3>
+        <p>Envía el enlace de tu tienda pública para recibir pedidos directos por WhatsApp.</p>
       </article>
     </div>
   </section>
 
-  <!-- DOS PERFILES CLAROS: VENDEDOR Y COMPRADOR -->
-  <section class="audiences-section" aria-labelledby="audiences-title">
-    <div class="section-heading">
-      <span class="section-kicker">¿Para quién es MIO?</span>
-      <h2 id="audiences-title">Una experiencia adaptada a cada perfil</h2>
+  <!-- 3. CIERRE DE CONVERSIÓN CON CONTRASTE ALTO -->
+  <section class="closing-cta" data-reveal aria-labelledby="closing-title">
+    <div class="closing-cta__copy">
+      <h2 id="closing-title">¿Listo para ordenar tus ventas?</h2>
+      <p>Abre tu tienda gratuita hoy o explora los catálogos disponibles.</p>
     </div>
 
-    <div class="audiences-grid">
-      <article class="audience-card audience-card--seller">
-        <div class="audience-card__top">
-          <mio-status-badge tone="brand">Para vendedores y emprendedores</mio-status-badge>
-          <h3>Administra tu tienda y tus ventas diarias</h3>
-          <p>
-            Ideal para comercios independientes de cualquier categoría —accesorios, hogar,
-            tecnología, cosmética, coleccionables o moda— que venden por WhatsApp, Instagram,
-            Facebook o TikTok.
-          </p>
-        </div>
-
-        <ul class="audience-list">
-          <li>Panel operativo con alertas de cobros pendientes y entregas por despachar.</li>
-          <li>Directorio de clientes con teléfono, red social e historial de compras.</li>
-          <li>Resumen comercial con ingresos cobrados, montos por cobrar y desempeño por Live.</li>
-          <li>Perfil público personalizable con enlace directo a tu vitrina digital.</li>
-        </ul>
-
-        <div class="audience-card__actions">
-          <a class="btn btn-primary" routerLink="/register-vendedor">
-            Registrarme como vendedor
-          </a>
-          <a class="btn btn-ghost" routerLink="/login">Ya tengo cuenta</a>
-        </div>
-      </article>
-
-      <article class="audience-card audience-card--buyer">
-        <div class="audience-card__top">
-          <mio-status-badge tone="neutral">Para compradores y visitantes</mio-status-badge>
-          <h3>Explora catálogos y conecta con cada tienda</h3>
-          <p>
-            Consulta las vitrinas públicas de los vendedores, revisa qué productos están realmente
-            disponibles hoy y comunícate por los canales oficiales de cada comercio.
-          </p>
-        </div>
-
-        <ul class="audience-list">
-          <li>Búsqueda rápida por nombre, categoría o presupuesto máximo en Lempiras.</li>
-          <li>Indicador en tiempo real cuando la tienda tiene una transmisión Live activa.</li>
-          <li>Acceso directo al WhatsApp y redes oficiales configuradas por el vendedor.</li>
-          <li>Cuenta de comprador para explorar el directorio de tiendas registradas en MIO.</li>
-        </ul>
-
-        <div class="audience-card__actions">
-          <a class="btn btn-secondary" routerLink="/register-cliente">
-            Crear cuenta de comprador
-          </a>
-          <a class="btn btn-ghost" routerLink="/login">Iniciar sesión</a>
-        </div>
-      </article>
-    </div>
-  </section>
-
-  <!-- CÓMO EMPEZAR PASO A PASO -->
-  <section class="steps-section" aria-labelledby="steps-title">
-    <div class="steps-box">
-      <div class="steps-header">
-        <span class="section-kicker">¿Cómo empiezo?</span>
-        <h2 id="steps-title">Pon tu tienda en marcha en tres pasos</h2>
-      </div>
-
-      <ol class="steps-list">
-        <li class="step-item">
-          <span class="step-number">1</span>
-          <div>
-            <h3>Crea tu cuenta y configura tu perfil comercial</h3>
-            <p>
-              Regístrate como vendedor, define el nombre público de tu tienda y agrega tu WhatsApp y
-              redes sociales para que tus clientes te identifiquen.
-            </p>
-          </div>
-        </li>
-        <li class="step-item">
-          <span class="step-number">2</span>
-          <div>
-            <h3>Carga tu catálogo de productos</h3>
-            <p>
-              Registra tus artículos con su precio, categoría y código SKU. Los productos con estado
-              disponible aparecerán automáticamente en tu vitrina pública.
-            </p>
-          </div>
-        </li>
-        <li class="step-item">
-          <span class="step-number">3</span>
-          <div>
-            <h3>Comparte tu vitrina y registra tus pedidos</h3>
-            <p>
-              Envía el enlace de tu catálogo por WhatsApp o redes sociales, inicia tus transmisiones
-              en vivo y lleva el control de cada cobro y entrega desde el panel.
-            </p>
-          </div>
-        </li>
-      </ol>
-
-      <div class="steps-cta">
-        <div>
-          <strong>¿Listo para organizar tus ventas?</strong>
-          <p>Comienza creando tu cuenta gratuita o accede a tu panel si ya estás registrado.</p>
-        </div>
-        <div class="steps-cta__buttons">
-          <a class="btn btn-primary" routerLink="/register-vendedor">Empezar como vendedor</a>
-          <a class="btn btn-secondary" routerLink="/login">Iniciar sesión</a>
-        </div>
-      </div>
+    <div class="closing-cta__actions">
+      <a class="btn btn-primary" routerLink="/register-vendedor">Crear cuenta de vendedor</a>
+      <a class="btn btn-secondary" routerLink="/register-cliente">Explorar tiendas</a>
     </div>
   </section>
 </div>

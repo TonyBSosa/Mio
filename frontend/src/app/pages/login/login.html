@@ -1,43 +1,9 @@
-<section class="auth-shell" aria-labelledby="login-title">
-  <!-- PANEL EDITORIAL DE CONTEXTO -->
-  <aside class="auth-aside" aria-label="Resumen de MIO">
-    <div class="auth-aside__top">
-      <span class="auth-badge">Atelier Operativo · MIO</span>
-      <h2>Tu centro de operaciones para ventas directas y transmisiones en vivo.</h2>
-      <p>
-        Accede a tu catálogo, controla cobros pendientes y administra tus eventos Live o explora
-        las vitrinas de tiendas registradas.
-      </p>
-    </div>
-
-    <ul class="auth-highlights">
-      <li>
-        <strong>Panel de vendedor</strong>
-        <span>Gestiona inventario por código SKU, clientes, pedidos, pagos y entregas.</span>
-      </li>
-      <li>
-        <strong>Espacio de comprador</strong>
-        <span>Consulta el directorio de tiendas y accede a sus catálogos públicos actualizados.</span>
-      </li>
-    </ul>
-
-    <div class="auth-aside__footer">
-      <span>¿Aún no tienes cuenta?</span>
-      <div class="auth-aside__links">
-        <a routerLink="/register-vendedor">Abrir tienda como vendedor</a>
-        <span aria-hidden="true">·</span>
-        <a routerLink="/register-cliente">Registrarme como comprador</a>
-      </div>
-    </div>
-  </aside>
-
-  <!-- TARJETA PRINCIPAL DE INICIO DE SESIÓN -->
+<section class="auth-page" aria-labelledby="login-title">
   <div class="login-container">
     <div class="auth-header">
-      <p class="auth-kicker">Acceso a tu cuenta</p>
       <h1 id="login-title">Iniciar sesión</h1>
       <p class="auth-intro">
-        Ingresa tu correo electrónico y contraseña para continuar a tu espacio en MIO.
+        Ingresa a tu cuenta de MIO para gestionar tu tienda o explorar catálogos.
       </p>
     </div>
 
@@ -74,7 +40,7 @@
             [type]="mostrarPassword ? 'text' : 'password'"
             name="password"
             autocomplete="current-password"
-            placeholder="Ingresa tu contraseña"
+            placeholder="Tu contraseña"
             [(ngModel)]="password"
             [disabled]="cargando"
             required
@@ -91,23 +57,17 @@
       </div>
 
       <button type="submit" class="auth-submit-btn" [disabled]="cargando">
-        {{ cargando ? 'Verificando credenciales...' : 'Entrar a mi cuenta' }}
+        {{ cargando ? 'Verificando...' : 'Iniciar sesión' }}
       </button>
     </form>
 
-    <div class="auth-divider" role="separator">
-      <span>¿Nuevo en MIO? Elige tu perfil</span>
-    </div>
-
-    <div class="register-links-grid">
-      <a class="role-link-card" routerLink="/register-vendedor">
-        <strong>Crear cuenta de vendedor</strong>
-        <small>Para administrar productos, pedidos y Lives</small>
-      </a>
-      <a class="role-link-card" routerLink="/register-cliente">
-        <strong>Crear cuenta de comprador</strong>
-        <small>Para explorar tiendas y catálogos</small>
-      </a>
-    </div>
+    <footer class="auth-footer">
+      <p class="auth-footer__title">¿Aún no tienes una cuenta?</p>
+      <div class="auth-footer__links">
+        <a routerLink="/register-vendedor">Crear cuenta de vendedor</a>
+        <span aria-hidden="true">·</span>
+        <a routerLink="/register-cliente">Registrarme como comprador</a>
+      </div>
+    </footer>
   </div>
 </section>

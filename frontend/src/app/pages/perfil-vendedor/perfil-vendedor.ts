@@ -5,11 +5,10 @@ import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { PerfilVendedorService } from '../../services/perfil-vendedor.service';
 import { PageHeaderComponent } from '../../shared/ui/page-header/page-header';
-import { StatusBadgeComponent } from '../../shared/ui/status-badge/status-badge';
 
 @Component({
   selector: 'app-perfil-vendedor',
-  imports: [FormsModule, RouterModule, PageHeaderComponent, StatusBadgeComponent],
+  imports: [FormsModule, RouterModule, PageHeaderComponent],
   templateUrl: './perfil-vendedor.html',
   styleUrl: './perfil-vendedor.css',
 })
@@ -30,6 +29,7 @@ export class PerfilVendedor implements OnInit {
   usuario: any = null;
   enlaceCatalogo = '';
   enlaceCopiado = false;
+  redesAbiertas = true;
 
   constructor(
     private authService: AuthService,
@@ -117,6 +117,12 @@ export class PerfilVendedor implements OnInit {
       this.perfil.facebook,
       this.perfil.tiktok,
     ].filter((valor) => Boolean(valor && valor.trim())).length;
+  }
+
+  contarRedesSociales(): number {
+    return [this.perfil.instagram, this.perfil.facebook, this.perfil.tiktok].filter((valor) =>
+      Boolean(valor && valor.trim()),
+    ).length;
   }
 
   copiarEnlaceCatalogo() {

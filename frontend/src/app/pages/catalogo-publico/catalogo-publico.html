@@ -1,26 +1,20 @@
-<section class="catalogo-page" aria-label="Vitrina pública comercial">
-  <!-- ESTADO DE CARGA -->
+<section class="catalogo-page" aria-label="Catálogo público">
   @if (cargando) {
     <div class="status-box" role="status" aria-live="polite">
       <span class="status-box__spinner" aria-hidden="true"></span>
-      <div>
-        <strong>Cargando vitrina comercial…</strong>
-        <p>Consultando información de la tienda y productos disponibles.</p>
-      </div>
+      <span>Cargando catálogo…</span>
     </div>
   }
 
-  <!-- ESTADO DE ERROR O TIENDA NO ENCONTRADA -->
   @if (error && !cargando) {
     <div class="error-card" role="alert">
-      <mio-status-badge tone="danger">Vitrina no disponible</mio-status-badge>
-      <h1>No pudimos abrir este catálogo</h1>
-      <p>{{ error }}. Verifica que el enlace de la tienda sea correcto o inténtalo nuevamente.</p>
+      <h1>Catálogo no disponible</h1>
+      <p>{{ error }}. Verifica que el enlace sea correcto o vuelve a intentarlo.</p>
       <div class="error-card__actions">
         <button type="button" class="btn btn-primary" (click)="cargarCatalogo()">
-          Reintentar carga
+          Reintentar
         </button>
-        <a class="btn btn-secondary" routerLink="/bienvenida">Ir al inicio de MIO</a>
+        <a class="btn btn-secondary" routerLink="/bienvenida">Ir al inicio</a>
       </div>
     </div>
   }
@@ -29,252 +23,153 @@
     <p class="mensaje exito" role="status">{{ mensaje }}</p>
   }
 
-  <!-- ENCABEZADO DE IDENTIDAD DE LA TIENDA -->
   @if (perfil && !cargando) {
+    <!-- ENCABEZADO COMPACTO DE LA TIENDA -->
     <header class="catalogo-header">
-      <div class="catalogo-header__main">
+      <div class="catalogo-header__identity">
         <div class="store-avatar" aria-hidden="true">
           {{ obtenerInicialesTienda() }}
         </div>
 
         <div class="store-identity">
-          <div class="store-identity__badges">
-            <mio-status-badge tone="brand">Vitrina comercial verificada</mio-status-badge>
-            @if (liveActivo) {
-              <mio-status-badge tone="live" [dot]="true">Transmitiendo en vivo</mio-status-badge>
-            }
+          <div class="store-title-row">
+            <h1>{{ perfil.nombrePublico || 'Catálogo del vendedor' }}</h1>
             <span class="store-count-pill">
-              {{ productos.length }}
-              {{ productos.length === 1 ? 'artículo disponible' : 'artículos disponibles' }}
+              {{ productos.length }} {{ productos.length === 1 ? 'disponible' : 'disponibles' }}
             </span>
           </div>
 
-          <h1>{{ perfil.nombrePublico || 'Catálogo del vendedor' }}</h1>
-
           @if (perfil.descripcion) {
             <p class="store-description">{{ perfil.descripcion }}</p>
-          } @else {
-            <p class="store-description store-description--muted">
-              Explora los artículos disponibles de esta tienda y comunícate por sus canales de
-              atención para consultar detalles.
-            </p>
           }
         </div>
       </div>
 
-      <!-- CANALES DE CONTACTO Y REDES -->
-      <div class="store-channels-bar">
-        @if (tieneCanalesContacto()) {
-          <div class="redes" aria-label="Canales de contacto de la tienda">
-            @if (perfil.whatsapp) {
-              <a
-                class="channel-link channel-link--whatsapp"
-                [href]="obtenerEnlaceCanal(perfil.whatsapp, 'whatsapp')"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                WhatsApp de la tienda
-              </a>
-            }
+      @if (tieneCanalesContacto()) {
+        <div class="redes" aria-label="Canales de contacto">
+          @if (perfil.whatsapp) {
+            <a
+              class="channel-link channel-link--whatsapp"
+              [href]="obtenerEnlaceCanal(perfil.whatsapp, 'whatsapp')"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              WhatsApp
+            </a>
+          }
+          @if (perfil.enlaceLive) {
+            <a
+              class="channel-link channel-link--live"
+              [href]="obtenerEnlaceCanal(perfil.enlaceLive)"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Ver Live
+            </a>
+          }
+          @if (perfil.instagram) {
+            <a
+              class="channel-link"
+              [href]="obtenerEnlaceCanal(perfil.instagram)"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Instagram
+            </a>
+          }
+          @if (perfil.facebook) {
+            <a
+              class="channel-link"
+              [href]="obtenerEnlaceCanal(perfil.facebook)"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Facebook
+            </a>
+          }
+          @if (perfil.tiktok) {
+            <a
+              class="channel-link"
+              [href]="obtenerEnlaceCanal(perfil.tiktok)"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              TikTok
+            </a>
+          }
+        </div>
+      }
+    </header>
+
+    <!-- FRANJA COMPACTA DE LIVE ACTIVO Y LIVES PROGRAMADOS -->
+    @if (liveActivo || livesProgramados.length > 0) {
+      <div class="events-strip">
+        @if (liveActivo) {
+          <section class="catalogo-live-activo" aria-label="Transmisión en vivo actual">
+            <div class="catalogo-live-activo__main">
+              <mio-status-badge tone="live" [dot]="true">EN VIVO</mio-status-badge>
+              <strong>{{ liveActivo.nombre }}</strong>
+              @if (liveActivo.descripcion) {
+                <span class="live-desc-inline">· {{ liveActivo.descripcion }}</span>
+              }
+            </div>
+
             @if (perfil.enlaceLive) {
               <a
-                class="channel-link channel-link--live"
+                class="btn btn-live btn-small"
                 [href]="obtenerEnlaceCanal(perfil.enlaceLive)"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Ver transmisión Live
+                Unirse al Live
               </a>
             }
-            @if (perfil.instagram) {
-              <a
-                class="channel-link"
-                [href]="obtenerEnlaceCanal(perfil.instagram)"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Instagram
-              </a>
-            }
-            @if (perfil.facebook) {
-              <a
-                class="channel-link"
-                [href]="obtenerEnlaceCanal(perfil.facebook)"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Facebook
-              </a>
-            }
-            @if (perfil.tiktok) {
-              <a
-                class="channel-link"
-                [href]="obtenerEnlaceCanal(perfil.tiktok)"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                TikTok
-              </a>
-            }
-          </div>
-        } @else {
-          <span class="no-channels-note">
-            Esta tienda aún no ha publicado enlaces externos de contacto.
-          </span>
+          </section>
         }
-      </div>
-    </header>
 
-    <!-- BANNER DESTACADO SI HAY LIVE ACTIVO -->
-    @if (liveActivo) {
-      <section class="catalogo-live-activo" aria-labelledby="live-activo-title">
-        <div class="catalogo-live-activo__info">
-          <div class="live-head-row">
-            <mio-status-badge tone="live" [dot]="true">EN VIVO AHORA</mio-status-badge>
-            <span class="live-date">{{ mostrarFecha(liveActivo.fecha) }}</span>
-          </div>
-          <h2 id="live-activo-title">{{ liveActivo.nombre }}</h2>
-          @if (liveActivo.descripcion) {
-            <p>{{ liveActivo.descripcion }}</p>
-          }
-        </div>
-
-        @if (perfil.enlaceLive) {
-          <a
-            class="btn btn-live live-cta-btn"
-            [href]="obtenerEnlaceCanal(perfil.enlaceLive)"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Unirme a la transmisión
-          </a>
-        }
-      </section>
-    }
-
-    <!-- PRÓXIMOS EVENTOS EN VIVO -->
-    @if (livesProgramados.length > 0) {
-      <section class="catalogo-section catalogo-section--compact" aria-labelledby="proximos-lives-title">
-        <div class="section-bar">
-          <h2 id="proximos-lives-title">Próximos eventos en vivo</h2>
-          <mio-status-badge tone="neutral">{{ livesProgramados.length }} programados</mio-status-badge>
-        </div>
-
-        <div class="lives-grid">
-          @for (live of livesProgramados; track live._id) {
-            <article class="live-card">
-              <div class="live-card__top">
-                <mio-status-badge tone="brand">Programado</mio-status-badge>
-                <time class="live-card__date">{{ mostrarFecha(live.fecha) }}</time>
-              </div>
-              <h3>{{ live.nombre }}</h3>
-              @if (live.descripcion) {
-                <p>{{ live.descripcion }}</p>
+        @if (livesProgramados.length > 0) {
+          <details class="proximos-lives">
+            <summary>
+              <span>Próximas transmisiones ({{ livesProgramados.length }})</span>
+              <small>Ver fechas</small>
+            </summary>
+            <div class="lives-grid">
+              @for (live of livesProgramados; track live._id) {
+                <article class="live-card">
+                  <strong>{{ live.nombre }}</strong>
+                  <time>{{ mostrarFecha(live.fecha) }}</time>
+                  @if (live.descripcion) {
+                    <p>{{ live.descripcion }}</p>
+                  }
+                </article>
               }
-            </article>
-          }
-        </div>
-      </section>
-    }
-
-    <!-- CATÁLOGO DE PRODUCTOS DISPONIBLES -->
-    <section class="catalogo-section" aria-labelledby="catalogo-productos-title">
-      <div class="section-bar">
-        <div>
-          <h2 id="catalogo-productos-title">Productos disponibles</h2>
-          <p class="section-subtitle">
-            Artículos con disponibilidad confirmada en el inventario de la tienda.
-          </p>
-        </div>
-        @if (productos.length > 0) {
-          <span class="resultados-pill" role="status">
-            Mostrando {{ productosFiltrados.length }} de {{ productos.length }}
-          </span>
+            </div>
+          </details>
         }
       </div>
+    }
 
-      <!-- TIENDA SIN PRODUCTOS DISPONIBLES -->
-      @if (productos.length === 0) {
-        <div class="mio-empty-state">
-          <h3>Esta tienda no tiene productos disponibles en este momento</h3>
-          <p>
-            El vendedor aún no ha publicado artículos disponibles o el inventario actual ya fue
-            reservado. Puedes comunicarte por sus canales oficiales para próximas entradas.
-          </p>
-        </div>
-      }
-
-      <!-- BARRA DE BÚSQUEDA Y FILTROS -->
-      @if (productos.length > 0) {
-        <search class="catalogo-filtros" aria-label="Filtrar productos de la tienda">
-          <div class="filtros-grid">
-            <div class="form-group">
-              <label for="filtroProducto">Buscar en la tienda</label>
-              <input
-                id="filtroProducto"
-                name="filtroProducto"
-                type="search"
-                placeholder="Nombre, descripción o código SKU…"
-                [(ngModel)]="filtroProducto"
-                (input)="filtrarProductos()"
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="filtroCategoria">Categoría</label>
-              <select
-                id="filtroCategoria"
-                name="filtroCategoria"
-                [(ngModel)]="filtroCategoria"
-                (change)="filtrarProductos()"
-              >
-                <option value="">Todas las categorías</option>
-                @for (categoria of categorias; track categoria) {
-                  <option [value]="categoria">{{ categoria }}</option>
-                }
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label for="filtroPrecioMaximo">Precio máximo (L)</label>
-              <input
-                id="filtroPrecioMaximo"
-                name="filtroPrecioMaximo"
-                type="number"
-                min="0"
-                placeholder="Sin límite"
-                [(ngModel)]="filtroPrecioMaximo"
-                (input)="filtrarProductos()"
-              />
-            </div>
-
-            <div class="filtro-actions">
-              <button
-                type="button"
-                class="btn btn-secondary btn-limpiar"
-                [disabled]="!tieneFiltrosActivos()"
-                (click)="limpiarFiltros()"
-              >
-                Limpiar filtros
-              </button>
-            </div>
-          </div>
+    <!-- SECCIÓN PROTAGONISTA: PRODUCTOS DISPONIBLES -->
+    <section class="catalogo-section" aria-labelledby="catalogo-productos-title">
+      <div class="catalog-toolbar">
+        <div class="catalog-toolbar__left">
+          <h2 id="catalogo-productos-title">Productos disponibles</h2>
 
           @if (categorias.length > 1) {
-            <div class="category-chips" role="group" aria-label="Filtro rápido por categoría">
+            <div class="category-chips" role="group" aria-label="Categorías">
               <button
                 type="button"
                 class="btn-ghost cat-chip"
-                [class.cat-chip--active]="!filtroCategoria"
+                [class.cat-chip--active]="!filtroCategoria" [attr.aria-pressed]="!filtroCategoria"
                 (click)="filtroCategoria = ''; filtrarProductos()"
               >
-                Todas ({{ productos.length }})
+                Todas
               </button>
               @for (categoria of categorias; track categoria) {
                 <button
                   type="button"
                   class="btn-ghost cat-chip"
-                  [class.cat-chip--active]="filtroCategoria === categoria"
+                  [class.cat-chip--active]="filtroCategoria === categoria" [attr.aria-pressed]="filtroCategoria === categoria"
                   (click)="seleccionarCategoria(categoria)"
                 >
                   {{ categoria }}
@@ -282,24 +177,110 @@
               }
             </div>
           }
+        </div>
+
+        <!-- BÚSQUEDA RÁPIDA + DIVULGACIÓN PROGRESIVA DE FILTROS -->
+        @if (productos.length > 0) {
+          <div class="catalog-toolbar__right">
+            @if (productos.length > 2 || tieneFiltrosActivos() || filtrosAbiertos) {
+              <input
+                id="filtroProducto"
+                name="filtroProducto"
+                type="search"
+                class="quick-search-input"
+                placeholder="Buscar producto o código…"
+                aria-label="Buscar producto"
+                [(ngModel)]="filtroProducto"
+                (input)="filtrarProductos()"
+              />
+            }
+
+            <button
+              type="button"
+              class="btn btn-secondary btn-small"
+              (click)="alternarFiltros()"
+              [attr.aria-expanded]="filtrosAbiertos"
+            >
+              {{ filtrosAbiertos ? 'Ocultar filtros' : 'Filtrar' }}
+            </button>
+          </div>
+        }
+      </div>
+
+      <!-- PANEL PLEGABLE DE FILTROS AVANZADOS -->
+      @if (productos.length > 0 && (filtrosAbiertos || filtroPrecioMaximo)) {
+        <search class="catalogo-filtros" aria-label="Filtros del catálogo">
+          @if (productos.length <= 2) {
+            <div class="form-group">
+              <label for="filtroProducto">Buscar producto</label>
+              <input
+                id="filtroProducto"
+                name="filtroProducto"
+                type="search"
+                placeholder="Nombre o código…"
+                [(ngModel)]="filtroProducto"
+                (input)="filtrarProductos()"
+              />
+            </div>
+          }
+
+          <div class="form-group">
+            <label for="filtroCategoria">Categoría</label>
+            <select
+              id="filtroCategoria"
+              name="filtroCategoria"
+              [(ngModel)]="filtroCategoria"
+              (change)="filtrarProductos()"
+            >
+              <option value="">Todas</option>
+              @for (categoria of categorias; track categoria) {
+                <option [value]="categoria">{{ categoria }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="filtroPrecioMaximo">Precio máximo (L)</label>
+            <input
+              id="filtroPrecioMaximo"
+              name="filtroPrecioMaximo"
+              type="number"
+              min="0"
+              placeholder="Sin límite"
+              [(ngModel)]="filtroPrecioMaximo"
+              (input)="filtrarProductos()"
+            />
+          </div>
+
+          <button
+            type="button"
+            class="btn btn-ghost btn-limpiar"
+            [disabled]="!tieneFiltrosActivos()"
+            (click)="limpiarFiltros()"
+          >
+            Limpiar
+          </button>
         </search>
       }
 
-      <!-- FILTROS SIN COINCIDENCIAS -->
+      @if (productos.length === 0) {
+        <div class="mio-empty-state">
+          <h3>Sin productos disponibles por ahora</h3>
+          <p>Consulta directamente con la tienda por sus canales de contacto para próximos ingresos.</p>
+        </div>
+      }
+
       @if (productos.length > 0 && productosFiltrados.length === 0) {
         <div class="mio-empty-state">
-          <h3>Ningún producto coincide con tu búsqueda</h3>
-          <p>
-            Prueba buscando con otro término, cambiando la categoría o ampliando el presupuesto
-            máximo.
-          </p>
+          <h3>Sin resultados para tu búsqueda</h3>
+          <p>Intenta con otro término o restablece los filtros.</p>
           <button type="button" class="btn btn-secondary" (click)="limpiarFiltros()">
             Ver todos los productos ({{ productos.length }})
           </button>
         </div>
       }
 
-      <!-- CUADRÍCULA DE PRODUCTOS -->
+      <!-- CUADRÍCULA DE PRODUCTOS PROTAGONISTA -->
       @if (productosFiltrados.length > 0) {
         <div class="product-grid">
           @for (producto of productosFiltrados; track producto._id) {
@@ -318,8 +299,8 @@
                   />
                 } @else {
                   <div class="producto-sin-foto" aria-label="Producto sin imagen">
-                    <span class="producto-sin-foto__code">{{ producto.codigo || 'CATÁLOGO' }}</span>
-                    <small>Sin imagen de referencia</small>
+                    <span class="producto-sin-foto__code">{{ producto.codigo || 'ARTÍCULO' }}</span>
+                    <small>Sin foto</small>
                   </div>
                 }
 
@@ -343,10 +324,7 @@
                 </div>
 
                 <div class="producto-info__footer">
-                  <div class="producto-precio-block">
-                    <span class="precio-label">Precio</span>
-                    <strong class="producto-precio">L {{ producto.precio }}</strong>
-                  </div>
+                  <strong class="producto-precio">L {{ producto.precio }}</strong>
 
                   @if (perfil.whatsapp) {
                     <a
