@@ -1,142 +1,357 @@
-<section class="lives-page">
-  <header class="page-header">
-    <div>
-      <h2>Lives</h2>
-      <p>Programa, activa y administra los eventos Live del vendedor.</p>
-    </div>
-
-    <button type="button" class="btn-secondary" (click)="cerrarSesion()">Cerrar sesión</button>
-  </header>
-
-  <nav class="page-nav">
-      <a routerLink="/dashboard">Mi tienda</a>
-      <a routerLink="/clientes">Volver a Clientes</a>
-      <a routerLink="/productos">Productos</a>
-      <a routerLink="/pedidos">Pedidos</a>
-      <a routerLink="/live-activo">Ir al Live activo</a>
-      <a routerLink="/resumen">Resumen</a>
-      <a routerLink="/perfil-vendedor">Perfil público</a>
-  </nav>
-
-  <form class="live-form" (ngSubmit)="guardarLive()">
-    <h3>{{ editando ? 'Editar Live' : 'Nuevo Live' }}</h3>
-
-    <div class="form-group">
-      <label for="nombre">Nombre</label>
-      <input
-        id="nombre"
-        name="nombre"
-        type="text"
-        [(ngModel)]="live.nombre"
-        required
-      >
-    </div>
-
-    <div class="form-group">
-      <label for="descripcion">Descripcion</label>
-      <input
-        id="descripcion"
-        name="descripcion"
-        type="text"
-        [(ngModel)]="live.descripcion"
-      >
-    </div>
-
-    <div class="form-group">
-      <label for="fecha">Fecha</label>
-      <input
-        id="fecha"
-        name="fecha"
-        type="datetime-local"
-        [(ngModel)]="live.fecha"
-      >
-    </div>
-
-    <div class="form-group">
-      <label for="estado">Estado</label>
-      <select id="estado" name="estado" [(ngModel)]="live.estado">
-        <option value="programado">programado</option>
-        <option value="activo">activo</option>
-        <option value="pausado">pausado</option>
-        <option value="finalizado">finalizado</option>
-        <option value="cancelado">cancelado</option>
-      </select>
-    </div>
-
-    <button type="submit" class="btn-primary" [disabled]="cargando">
-      {{ editando ? 'Actualizar' : 'Guardar' }}
-    </button>
-
-    @if (editando) {
-      <button type="button" class="secondary" (click)="cancelarEdicion()">
-        Cancelar edicion
-      </button>
-    }
-  </form>
+<div class="lives-page">
+  <mio-page-header
+    kicker="Agenda de transmisiones"
+    title="Eventos Live"
+    subtitle="Programa tus próximas sesiones de venta en vivo, administra estados de transmisión y entra a tu cabina."
+  >
+    <a class="btn-live btn-small" routerLink="/live-activo">Cabina Live activo →</a>
+  </mio-page-header>
 
   @if (mensaje) {
-    <p class="mensaje exito" role="status">{{ mensaje }}</p>
+    <p class="mensaje exito" role="status" aria-live="polite">{{ mensaje }}</p>
   }
 
   @if (error) {
     <p class="mensaje error" role="alert">{{ error }}</p>
   }
 
-  <h3 class="section-label">Listado de Lives</h3>
+  <form (ngSubmit)="guardarLive()" class="live-form">
+    <div class="live-form__header">
+      <div>
+        <h3>{{ editando ? 'Editar evento Live' : 'Programar nuevo Live' }}</h3>
+        <p class="live-form__sub">
+          Define el título, fecha y enfoque de tu próxima transmisión para vincular pedidos.
+        </p>
+      </div>
+    </div>
+
+    <div class="live-form__grid">
+      <div class="form-group">
+        <label for="live-nombre">Nombre del evento *</label>
+        <input
+          id="live-nombre"
+          type="text"
+          placeholder="Ej. Especial Cápsula de Verano"
+          [(ngModel)]="live.nombre"
+          name="nombre"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="live-fecha">Fecha y hora programada</label>
+        <input
+          id="live-fecha"
+          type="datetime-local"
+          [(ngModel)]="live.fecha"
+          name="fecha"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="live-estado">Estado inicial</label>
+        <select id="live-estado" [(ngModel)]="live.estado" name="estado">
+          <option value="programado">Programado</option>
+          <option value="activo">Activo (en vivo ahora)</option>
+          <option value="pausado">Pausado</option>
+          <option value="finalizado">Finalizado</option>
+          <option value="cancelado">Cancelado</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="live-descripcion">Descripción o prendas destacadas</label>
+      <input
+        id="live-descripcion"
+        type="text"
+        placeholder="Ej. Blusas de lino y vestidos frescos en pieza única"
+        [(ngModel)]="live.descripcion"
+        name="descripcion"
+      />
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn-primary" [disabled]="cargando">
+        {{ cargando ? 'Guardando...' : editando ? 'Actualizar Live' : 'Guardar evento Live' }}
+      </button>
+
+      @if (editando) {
+        <button
+          type="button"
+          class="btn-secondary"
+          (click)="cancelarEdicion()"
+          [disabled]="cargando"
+        >
+          Cancelar edición
+        </button>
+      }
+    </div>
+  </form>
 
   @if (cargando) {
-    <p role="status" aria-live="polite">Cargando…</p>
+    <p class="estado-carga" role="status">Actualizando lista de transmisiones...</p>
   }
 
   @if (!cargando && lives.length === 0) {
-    <p>No hay Lives registrados.</p>
+    <div class="empty-lives-box">
+      <h4>Aún no has programado transmisiones Live</h4>
+      <p>Crea tu primer evento desde el formulario superior para organizar tus ventas en vivo.</p>
+    </div>
   }
 
   @if (lives.length > 0) {
-    <table>
-      <thead>
-        <tr>
-          <th>Nombre</th>
-          <th>Descripcion</th>
-          <th>Fecha</th>
-          <th>Estado</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (liveItem of lives; track liveItem._id) {
+    <!-- VISTA ESCRITORIO: TABLA DE EVENTOS LIVE (>= 768px) -->
+    <div
+      class="table-wrapper desktop-table-view"
+      tabindex="0"
+      role="region"
+      aria-label="Tabla de eventos Live"
+    >
+      <table>
+        <thead>
           <tr>
-            <td>{{ liveItem.nombre }}</td>
-            <td>{{ liveItem.descripcion }}</td>
-            <td>{{ mostrarFecha(liveItem.fecha) }}</td>
-            <td>{{ liveItem.estado }}</td>
-            <td>
-              <button type="button" (click)="editarLive(liveItem)">
-                Editar
-              </button>
-              <button type="button" (click)="cambiarEstado(liveItem, 'activo')">
-                Activar
-              </button>
-              <button type="button" (click)="cambiarEstado(liveItem, 'pausado')">
+            <th>Evento Live</th>
+            <th>Fecha programada</th>
+            <th>Estado</th>
+            <th>Control de transmisión y acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of lives; track item._id) {
+            <tr>
+              <td>
+                <div class="cell-primary">{{ item.nombre }}</div>
+                @if (item.descripcion) {
+                  <div class="cell-sub">{{ item.descripcion }}</div>
+                }
+              </td>
+              <td>{{ mostrarFecha(item.fecha) }}</td>
+              <td>
+                <mio-status-badge
+                  [tone]="obtenerTonoEstado(item.estado)"
+                  [dot]="item.estado === 'activo' || item.estado === 'pausado'"
+                >
+                  {{ item.estado === 'activo' ? 'EN VIVO' : item.estado }}
+                </mio-status-badge>
+              </td>
+              <td>
+                <div class="table-actions">
+                  @if (item.estado === 'activo') {
+                    <a class="btn-live btn-small" routerLink="/live-activo">
+                      Abrir Cabina →
+                    </a>
+                  }
+
+                  @if (item.estado !== 'activo') {
+                    <button
+                      type="button"
+                      class="btn-primary btn-small"
+                      (click)="cambiarEstado(item, 'activo')"
+                      [disabled]="cargando"
+                    >
+                      Activar
+                    </button>
+                  }
+
+                  @if (item.estado === 'activo') {
+                    <button
+                      type="button"
+                      class="btn-warning btn-small"
+                      (click)="cambiarEstado(item, 'pausado')"
+                      [disabled]="cargando"
+                    >
+                      Pausar
+                    </button>
+                  }
+
+                  @if (item.estado !== 'programado' && item.estado !== 'activo') {
+                    <button
+                      type="button"
+                      class="btn-ghost btn-small"
+                      (click)="cambiarEstado(item, 'programado')"
+                      [disabled]="cargando"
+                    >
+                      Reprogramar
+                    </button>
+                  }
+
+                  @if (item.estado !== 'finalizado') {
+                    <button
+                      type="button"
+                      class="btn-finish btn-small"
+                      (click)="solicitarConfirmacion(item._id, 'finalizado')"
+                      [disabled]="cargando"
+                    >
+                      Finalizar
+                    </button>
+                  }
+
+                  @if (item.estado !== 'cancelado') {
+                    <button
+                      type="button"
+                      class="btn-danger-ghost btn-small"
+                      (click)="solicitarConfirmacion(item._id, 'cancelado')"
+                      [disabled]="cargando"
+                    >
+                      Cancelar
+                    </button>
+                  }
+
+                  <button
+                    type="button"
+                    class="btn-ghost btn-small"
+                    (click)="editarLive(item)"
+                    [disabled]="cargando"
+                  >
+                    Editar
+                  </button>
+
+                  <button
+                    type="button"
+                    class="btn-danger-ghost btn-small"
+                    (click)="solicitarConfirmacion(item._id, 'eliminar')"
+                    [disabled]="cargando"
+                  >
+                    Eliminar
+                  </button>
+
+                  @if (esConfirmando(item._id, 'finalizado')) {
+                    <div class="confirm-inline">
+                      <span>¿Finalizar Live?</span>
+                      <button type="button" class="btn-finish" (click)="cambiarEstado(item, 'finalizado')">
+                        Sí
+                      </button>
+                      <button type="button" class="btn-secondary" (click)="cancelarConfirmacion()">
+                        No
+                      </button>
+                    </div>
+                  }
+
+                  @if (esConfirmando(item._id, 'cancelado')) {
+                    <div class="confirm-inline">
+                      <span>¿Cancelar Live?</span>
+                      <button type="button" class="danger" (click)="cambiarEstado(item, 'cancelado')">
+                        Sí
+                      </button>
+                      <button type="button" class="btn-secondary" (click)="cancelarConfirmacion()">
+                        No
+                      </button>
+                    </div>
+                  }
+
+                  @if (esConfirmando(item._id, 'eliminar')) {
+                    <div class="confirm-inline">
+                      <span>¿Eliminar evento?</span>
+                      <button type="button" class="danger" (click)="eliminarLive(item._id)">
+                        Sí, eliminar
+                      </button>
+                      <button type="button" class="btn-secondary" (click)="cancelarConfirmacion()">
+                        No
+                      </button>
+                    </div>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- VISTA MÓVIL: TARJETAS DE EVENTOS LIVE (< 768px) -->
+    <div class="mobile-cards-view" role="region" aria-label="Tarjetas de eventos Live en móvil">
+      @for (item of lives; track item._id) {
+        <article class="op-card">
+          <div class="op-card__head">
+            <div>
+              <h4 class="op-card__title">{{ item.nombre }}</h4>
+              <p class="op-card__sub">{{ mostrarFecha(item.fecha) }}</p>
+            </div>
+            <mio-status-badge
+              [tone]="obtenerTonoEstado(item.estado)"
+              [dot]="item.estado === 'activo' || item.estado === 'pausado'"
+            >
+              {{ item.estado === 'activo' ? 'EN VIVO' : item.estado }}
+            </mio-status-badge>
+          </div>
+
+          @if (item.descripcion) {
+            <p class="op-card__sub">{{ item.descripcion }}</p>
+          }
+
+          <div class="op-card__actions">
+            @if (item.estado === 'activo') {
+              <a class="btn-live" routerLink="/live-activo">
+                Ir a Cabina Live →
+              </a>
+              <button type="button" class="btn-warning" (click)="cambiarEstado(item, 'pausado')">
                 Pausar
               </button>
-              <button type="button" (click)="cambiarEstado(liveItem, 'finalizado')">
+            } @else {
+              <button type="button" class="btn-primary" (click)="cambiarEstado(item, 'activo')">
+                Activar Live
+              </button>
+            }
+
+            @if (item.estado !== 'finalizado') {
+              <button type="button" class="btn-finish" (click)="solicitarConfirmacion(item._id, 'finalizado')">
                 Finalizar
               </button>
-              <button type="button" (click)="cambiarEstado(liveItem, 'cancelado')">
+            }
+
+            @if (item.estado !== 'cancelado') {
+              <button type="button" class="btn-danger-ghost" (click)="solicitarConfirmacion(item._id, 'cancelado')">
                 Cancelar
               </button>
-              <button
-                type="button"
-                class="danger"
-                (click)="eliminarLive(liveItem._id)"
-              >
-                Eliminar
-              </button>
-            </td>
-          </tr>
-        }
-      </tbody>
-    </table>
+            }
+
+            <button type="button" class="btn-ghost" (click)="editarLive(item)">
+              Editar
+            </button>
+
+            <button type="button" class="btn-danger-ghost" (click)="solicitarConfirmacion(item._id, 'eliminar')">
+              Eliminar
+            </button>
+
+            @if (esConfirmando(item._id, 'finalizado')) {
+              <div class="confirm-inline">
+                <span>¿Finalizar este Live?</span>
+                <button type="button" class="btn-finish" (click)="cambiarEstado(item, 'finalizado')">
+                  Sí, finalizar
+                </button>
+                <button type="button" class="btn-secondary" (click)="cancelarConfirmacion()">
+                  No
+                </button>
+              </div>
+            }
+
+            @if (esConfirmando(item._id, 'cancelado')) {
+              <div class="confirm-inline">
+                <span>¿Cancelar este Live?</span>
+                <button type="button" class="danger" (click)="cambiarEstado(item, 'cancelado')">
+                  Sí, cancelar
+                </button>
+                <button type="button" class="btn-secondary" (click)="cancelarConfirmacion()">
+                  No
+                </button>
+              </div>
+            }
+
+            @if (esConfirmando(item._id, 'eliminar')) {
+              <div class="confirm-inline">
+                <span>¿Eliminar este evento?</span>
+                <button type="button" class="danger" (click)="eliminarLive(item._id)">
+                  Sí, eliminar
+                </button>
+                <button type="button" class="btn-secondary" (click)="cancelarConfirmacion()">
+                  No
+                </button>
+              </div>
+            }
+          </div>
+        </article>
+      }
+    </div>
   }
-</section>
+</div>

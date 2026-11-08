@@ -1,12 +1,13 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 
 import { CatalogoPublicoService } from '../../services/catalogo-publico.service';
+import { StatusBadgeComponent } from '../../shared/ui/status-badge/status-badge';
 
 @Component({
   selector: 'app-catalogo-publico',
-  imports: [FormsModule],
+  imports: [FormsModule, RouterModule, StatusBadgeComponent],
   templateUrl: './catalogo-publico.html',
   styleUrl: './catalogo-publico.css',
 })
@@ -25,6 +26,7 @@ export class CatalogoPublico implements OnInit {
   error = '';
   cargando = false;
   vendedorId = '';
+  fotosConError = new Set<string>();
 
   constructor(
     private route: ActivatedRoute,
@@ -54,12 +56,13 @@ export class CatalogoPublico implements OnInit {
       next: (respuesta: any) => {
         this.perfil = respuesta.perfil;
         this.productos = respuesta.productos || [];
+        this.fotosConError.clear();
         this.actualizarCategorias();
         this.filtrarProductos();
         this.lives = respuesta.lives || [];
         this.liveActivo = this.lives.find((live) => live.estado === 'activo') || null;
         this.livesProgramados = this.lives.filter(
-          (live) => live.estado === 'programado'
+          (live) => live.estado === 'programado',
         );
         this.cargando = false;
         this.detectorCambios.detectChanges();
@@ -104,6 +107,19 @@ export class CatalogoPublico implements OnInit {
     });
   }
 
+  seleccionarCategoria(categoria: string) {
+    this.filtroCategoria = this.filtroCategoria === categoria ? '' : categoria;
+    this.filtrarProductos();
+  }
+
+  tieneFiltrosActivos(): boolean {
+    return Boolean(
+      this.filtroProducto.trim() ||
+        this.filtroCategoria ||
+        (this.filtroPrecioMaximo !== '' && this.filtroPrecioMaximo !== null),
+    );
+  }
+
   limpiarFiltros() {
     this.filtroProducto = '';
     this.filtroCategoria = '';
@@ -127,11 +143,72 @@ export class CatalogoPublico implements OnInit {
       return '';
     }
 
-    if (foto.startsWith('http://') || foto.startsWith('https://') || foto.startsWith('/')) {
+    if (
+      foto.startsWith('http://') ||
+      foto.startsWith('https://') ||
+      foto.startsWith('/') ||
+      foto.startsWith('data:')
+    ) {
       return foto;
     }
 
     return `https://${foto}`;
+  }
+
+  private obtenerClaveFoto(producto: any): string {
+    return String(producto?._id || producto?.codigo || producto?.nombre || '');
+  }
+
+  tieneFotoValida(producto: any): boolean {
+    const url = this.obtenerFotoProducto(producto);
+    if (!url) return false;
+    return !this.fotosConError.has(this.obtenerClaveFoto(producto));
+  }
+
+  marcarErrorFoto(producto: any) {
+    const clave = this.obtenerClaveFoto(producto);
+    if (clave) {
+      this.fotosConError.add(clave);
+      this.detectorCambios.detectChanges();
+    }
+  }
+
+  obtenerInicialesTienda(): string {
+    const nombre = (this.perfil?.nombrePublico || 'Tienda MIO').trim();
+    const partes = nombre.split(/\s+/).filter(Boolean);
+    if (partes.length >= 2) {
+      return `${partes[0][0]}${partes[1][0]}`.toUpperCase();
+    }
+    return nombre.slice(0, 2).toUpperCase();
+  }
+
+  obtenerEnlaceCanal(valor: string, tipo: 'whatsapp' | 'web' = 'web'): string {
+    const limpio = String(valor || '').trim();
+    if (!limpio) return '';
+
+    if (limpio.startsWith('http://') || limpio.startsWith('https://') || limpio.startsWith('/')) {
+      return limpio;
+    }
+
+    if (tipo === 'whatsapp') {
+      const digitos = limpio.replace(/[^\d]/g, '');
+      if (digitos.length >= 8 && !limpio.includes('wa.me')) {
+        return `https://wa.me/${digitos}`;
+      }
+    }
+
+    return `https://${limpio}`;
+  }
+
+  tieneCanalesContacto(): boolean {
+    if (!this.perfil) return false;
+    return Boolean(
+      this.perfil.whatsapp ||
+        this.perfil.instagram ||
+        this.perfil.facebook ||
+        this.perfil.tiktok ||
+        this.perfil.enlaceLive,
+    );
   }
 
   mostrarFecha(fecha: any) {

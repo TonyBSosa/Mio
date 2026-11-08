@@ -1,116 +1,308 @@
-<section class="resumen-page">
-  <header class="page-header">
-    <div>
-      <h2>Resumen de ventas y entregas</h2>
-      <p>Consulta ventas, cobros y entregas globales, directas o por evento Live.</p>
-    </div>
-
-    <button type="button" class="btn-secondary" (click)="cerrarSesion()">Cerrar sesión</button>
-  </header>
-
-  <nav class="page-nav">
-    <a routerLink="/dashboard">Mi tienda</a>
-    <a routerLink="/clientes">Clientes</a>
-    <a routerLink="/lives">Eventos live</a>
-    <a routerLink="/productos">Productos</a>
-    <a routerLink="/pedidos">Pedidos</a>
-    <a routerLink="/perfil-vendedor">Ir a Perfil público</a>
-  </nav>
-
-  <form class="resumen-form" (ngSubmit)="consultarResumen()">
-    <h3>Filtrar resumen</h3>
-
-    <div class="form-group">
-      <label for="liveId">Origen / Evento Live</label>
-      <select id="liveId" name="liveId" [(ngModel)]="liveId" (change)="consultarResumen()">
-        <option value="todos">Resumen general de la tienda (Todos los pedidos)</option>
-        <option value="directa">Solo Ventas directas (sin Live)</option>
-        @for (liveItem of lives; track liveItem._id) {
-          <option [value]="liveItem._id">Live: {{ liveItem.nombre }} ({{ liveItem.estado }})</option>
-        }
-      </select>
-    </div>
-
-    <button type="submit" class="btn-primary" [disabled]="cargando">
-      Actualizar resumen
-    </button>
-
-    <button type="button" class="secondary" (click)="limpiarResumen()">
-      Ver resumen general
-    </button>
-  </form>
+<div class="resumen-page">
+  <mio-page-header
+    kicker="Resultados comerciales"
+    title="Resumen de ventas, pagos y entregas"
+    subtitle="Consulta el monto vendido, pagos registrados y estado de entregas de forma general, directa o por evento Live."
+  >
+    <a headerActions routerLink="/pedidos" class="btn-secondary">
+      Gestionar pedidos
+    </a>
+    <a headerActions routerLink="/lives" class="btn-secondary">
+      Eventos Live
+    </a>
+  </mio-page-header>
 
   @if (mensaje) {
-    <p class="mensaje exito" role="status">{{ mensaje }}</p>
+    <div class="alert alert-success" role="status" aria-live="polite">
+      <span>{{ mensaje }}</span>
+      <button type="button" class="alert-dismiss" (click)="mensaje = ''" aria-label="Cerrar aviso">×</button>
+    </div>
   }
 
   @if (error) {
-    <p class="mensaje error" role="alert">{{ error }}</p>
+    <div class="alert alert-error" role="alert">
+      <span>{{ error }}</span>
+      <button type="button" class="alert-dismiss" (click)="error = ''" aria-label="Cerrar error">×</button>
+    </div>
   }
+
+  <search class="filtros-box resumen-filter-panel" aria-label="Filtrar alcance del resumen comercial">
+    <form class="resumen-filter-form" (ngSubmit)="consultarResumen()">
+      <div class="filter-scope-head">
+        <div>
+          <span class="section-kicker">Alcance de la consulta</span>
+          <h2 class="section-title">Selecciona modalidad o evento Live</h2>
+        </div>
+
+        <div class="quick-scope-pills" role="group" aria-label="Accesos rápidos de modalidad">
+          <button
+            type="button"
+            class="scope-pill"
+            [class.active]="liveId === 'todos'"
+            (click)="seleccionarModalidadRapida('todos')"
+          >
+            Resumen general
+          </button>
+          <button
+            type="button"
+            class="scope-pill"
+            [class.active]="liveId === 'directa'"
+            (click)="seleccionarModalidadRapida('directa')"
+          >
+            Ventas directas
+          </button>
+        </div>
+      </div>
+
+      <div class="filter-controls-row">
+        <div class="form-group filter-select-group">
+          <label for="liveId">Origen / Evento Live</label>
+          <select id="liveId" name="liveId" [(ngModel)]="liveId" (change)="consultarResumen()">
+            <option value="todos">Resumen general de la tienda</option>
+            <option value="directa">Ventas directas (sin Live)</option>
+            @for (liveItem of lives; track liveItem._id) {
+              <option [value]="liveItem._id">Live: {{ liveItem.nombre }} ({{ liveItem.estado }})</option>
+            }
+          </select>
+        </div>
+
+        <div class="filter-actions-group">
+          <button type="submit" class="btn-primary" [disabled]="cargando">
+            {{ cargando ? 'Consultando…' : 'Actualizar resumen' }}
+          </button>
+          @if (liveId !== 'todos') {
+            <button type="button" class="btn-secondary" (click)="limpiarResumen()">
+              Ver resumen general
+            </button>
+          }
+        </div>
+      </div>
+    </form>
+  </search>
 
   @if (cargando) {
-    <p role="status" aria-live="polite">Cargando…</p>
+    <div class="empty-state" role="status" aria-live="polite">
+      <p class="empty-state-title">Consultando resumen comercial…</p>
+      <p class="empty-state-desc">Calculando ventas, pagos y entregas de la modalidad seleccionada.</p>
+    </div>
   }
 
-  @if (resumen) {
-    <section class="resumen-box">
-      <h3>{{ resumen.nombreLive }}</h3>
+  @if (!cargando && resumen) {
+    <section class="resumen-workspace" aria-label="Resultados comerciales del alcance seleccionado">
+      <!-- Encabezado del alcance consultado -->
+      <header class="corte-banner">
+        <div class="corte-banner-main">
+          <div class="corte-badge-row">
+            <span class="corte-kicker">Modalidad consultada</span>
+            <mio-status-badge
+              [tone]="liveId === 'todos' ? 'brand' : liveId === 'directa' ? 'neutral' : 'live'"
+              [dot]="true"
+            >
+              {{ liveId === 'todos' ? 'Toda la tienda' : liveId === 'directa' ? 'Venta directa' : 'Evento Live' }}
+            </mio-status-badge>
+          </div>
+          <h2 class="corte-title">{{ resumen.nombreLive }}</h2>
+        </div>
 
-      <div class="resumen-kpis">
-        <article class="kpi-card">
-          <span>Total pedidos</span>
-          <strong>{{ resumen.totalPedidos }}</strong>
+        <div class="corte-ticket-summary">
+          <span class="ticket-label">Promedio por pedido</span>
+          <strong class="ticket-amount tabular-nums">L {{ ticketPromedio }}</strong>
+          <span class="ticket-sub">
+            {{ resumen.totalPedidos }} {{ resumen.totalPedidos === 1 ? 'pedido registrado' : 'pedidos registrados' }}
+          </span>
+        </div>
+      </header>
+
+      <!-- Dos bloques analíticos primarios: Ventas/Pagos vs. Pedidos/Entregas -->
+      <div class="analytics-grid">
+        <!-- Bloque 1: Ventas, pagos recibidos y pendiente de pago -->
+        <article class="analytics-card finance-card">
+          <div class="analytics-card-head">
+            <div>
+              <span class="analytics-kicker">Ventas y pagos</span>
+              <h3 class="analytics-title">Importe vendido y estado de pago</h3>
+            </div>
+            <mio-status-badge [tone]="resumen.totalPendientePago > 0 ? 'warning' : 'success'">
+              {{ porcentajeCobrado }}% pagado
+            </mio-status-badge>
+          </div>
+
+          <div class="primary-figure-block">
+            <span class="figure-caption">Total vendido en pedidos</span>
+            <strong class="figure-hero tabular-nums">L {{ resumen.totalVendido }}</strong>
+          </div>
+
+          <div
+            class="composition-bar"
+            role="img"
+            [attr.aria-label]="'Proporción pagada: ' + porcentajeCobrado + ' por ciento del total vendido'"
+          >
+            <div class="composition-fill fill-success" [style.width.%]="porcentajeCobrado"></div>
+          </div>
+
+          <dl class="split-metrics">
+            <div class="split-metric-box ok">
+              <dt>Total pagado</dt>
+              <dd class="tabular-nums">L {{ resumen.totalPagado }}</dd>
+              <span class="split-note">{{ porcentajeCobrado }}% del total vendido</span>
+            </div>
+
+            <div class="split-metric-box" [class.warn]="resumen.totalPendientePago > 0">
+              <dt>Pendiente de pago</dt>
+              <dd class="tabular-nums">L {{ resumen.totalPendientePago }}</dd>
+              <span class="split-note">
+                @if (resumen.totalPendientePago > 0) {
+                  Pedidos con pago pendiente
+                } @else {
+                  Sin pagos pendientes
+                }
+              </span>
+            </div>
+          </dl>
         </article>
-        <article class="kpi-card">
-          <span>Total vendido</span>
-          <strong>L {{ resumen.totalVendido }}</strong>
-        </article>
-        <article class="kpi-card ok">
-          <span>Total pagado</span>
-          <strong>L {{ resumen.totalPagado }}</strong>
-        </article>
-        <article class="kpi-card warn">
-          <span>Pendiente de pago</span>
-          <strong>L {{ resumen.totalPendientePago }}</strong>
-        </article>
-        <article class="kpi-card ok">
-          <span>Total entregados</span>
-          <strong>{{ resumen.totalEntregados }}</strong>
-        </article>
-        <article class="kpi-card warn">
-          <span>Pendientes de entrega</span>
-          <strong>{{ resumen.totalPendienteEntrega }}</strong>
+
+        <!-- Bloque 2: Pedidos y entregas -->
+        <article class="analytics-card fulfillment-card">
+          <div class="analytics-card-head">
+            <div>
+              <span class="analytics-kicker">Pedidos y entregas</span>
+              <h3 class="analytics-title">Total de pedidos y estado de entrega</h3>
+            </div>
+            <mio-status-badge [tone]="resumen.totalPendienteEntrega > 0 ? 'warning' : 'success'">
+              {{ porcentajeEntregado }}% entregado
+            </mio-status-badge>
+          </div>
+
+          <div class="primary-figure-block">
+            <span class="figure-caption">Total pedidos registrados</span>
+            <strong class="figure-hero tabular-nums">{{ resumen.totalPedidos }}</strong>
+          </div>
+
+          <div
+            class="composition-bar"
+            role="img"
+            [attr.aria-label]="'Proporción entregada: ' + porcentajeEntregado + ' por ciento del total de pedidos'"
+          >
+            <div class="composition-fill fill-brand" [style.width.%]="porcentajeEntregado"></div>
+          </div>
+
+          <dl class="split-metrics">
+            <div class="split-metric-box ok">
+              <dt>Total entregados</dt>
+              <dd class="tabular-nums">{{ resumen.totalEntregados }}</dd>
+              <span class="split-note">{{ porcentajeEntregado }}% del total de pedidos</span>
+            </div>
+
+            <div class="split-metric-box" [class.warn]="resumen.totalPendienteEntrega > 0">
+              <dt>Pendientes de entrega</dt>
+              <dd class="tabular-nums">{{ resumen.totalPendienteEntrega }}</dd>
+              <span class="split-note">
+                @if (resumen.totalPendienteEntrega > 0) {
+                  Pedidos con entrega pendiente
+                } @else {
+                  Sin entregas pendientes
+                }
+              </span>
+            </div>
+          </dl>
         </article>
       </div>
 
-      <table>
-        <tbody>
-          <tr>
-            <th>Total pedidos</th>
-            <td>{{ resumen.totalPedidos }}</td>
-          </tr>
-          <tr>
-            <th>Total vendido</th>
-            <td><strong>L {{ resumen.totalVendido }}</strong></td>
-          </tr>
-          <tr>
-            <th>Total pagado</th>
-            <td>L {{ resumen.totalPagado }}</td>
-          </tr>
-          <tr>
-            <th>Total pendiente de pago</th>
-            <td>L {{ resumen.totalPendientePago }}</td>
-          </tr>
-          <tr>
-            <th>Total entregados</th>
-            <td>{{ resumen.totalEntregados }}</td>
-          </tr>
-          <tr>
-            <th>Pedidos pendientes de entrega</th>
-            <td>{{ resumen.totalPendienteEntrega }}</td>
-          </tr>
-        </tbody>
-      </table>
+      <!-- Detalle resumido de indicadores -->
+      <article class="panel-card balance-card">
+        <div class="panel-card-header">
+          <div>
+            <span class="section-kicker">Desglose de indicadores</span>
+            <h3 class="section-title">Detalle de {{ resumen.nombreLive }}</h3>
+          </div>
+          <a routerLink="/pedidos" class="btn-secondary btn-sm">
+            Ir a pedidos →
+          </a>
+        </div>
+
+        <div class="balance-table-wrapper">
+          <table class="balance-table">
+            <thead>
+              <tr>
+                <th scope="col">Indicador</th>
+                <th scope="col" class="col-status">Estado</th>
+                <th scope="col" class="col-num">Valor</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">
+                  <span class="balance-row-title">Total vendido</span>
+                  <span class="balance-row-sub">Importe total en pedidos registrados</span>
+                </th>
+                <td class="col-status">
+                  <mio-status-badge tone="brand">Ventas registradas</mio-status-badge>
+                </td>
+                <td class="col-num"><strong class="tabular-nums">L {{ resumen.totalVendido }}</strong></td>
+              </tr>
+
+              <tr>
+                <th scope="row">
+                  <span class="balance-row-title">Total pagado</span>
+                  <span class="balance-row-sub">Monto de pedidos marcados como pagados</span>
+                </th>
+                <td class="col-status">
+                  <mio-status-badge tone="success">{{ porcentajeCobrado }}% pagado</mio-status-badge>
+                </td>
+                <td class="col-num"><strong class="tabular-nums text-ok">L {{ resumen.totalPagado }}</strong></td>
+              </tr>
+
+              <tr>
+                <th scope="row">
+                  <span class="balance-row-title">Total pendiente de pago</span>
+                  <span class="balance-row-sub">Monto de pedidos con pago pendiente</span>
+                </th>
+                <td class="col-status">
+                  <mio-status-badge [tone]="resumen.totalPendientePago > 0 ? 'warning' : 'success'">
+                    {{ resumen.totalPendientePago > 0 ? 'Pago pendiente' : 'Al día' }}
+                  </mio-status-badge>
+                </td>
+                <td class="col-num"><strong class="tabular-nums text-warn">L {{ resumen.totalPendientePago }}</strong></td>
+              </tr>
+
+              <tr>
+                <th scope="row">
+                  <span class="balance-row-title">Total pedidos</span>
+                  <span class="balance-row-sub">Cantidad de pedidos en esta consulta</span>
+                </th>
+                <td class="col-status">
+                  <mio-status-badge tone="neutral">Promedio L {{ ticketPromedio }}</mio-status-badge>
+                </td>
+                <td class="col-num"><strong class="tabular-nums">{{ resumen.totalPedidos }}</strong></td>
+              </tr>
+
+              <tr>
+                <th scope="row">
+                  <span class="balance-row-title">Total entregados</span>
+                  <span class="balance-row-sub">Pedidos marcados como entregados</span>
+                </th>
+                <td class="col-status">
+                  <mio-status-badge tone="success">{{ porcentajeEntregado }}% entregado</mio-status-badge>
+                </td>
+                <td class="col-num"><strong class="tabular-nums">{{ resumen.totalEntregados }}</strong></td>
+              </tr>
+
+              <tr>
+                <th scope="row">
+                  <span class="balance-row-title">Pedidos pendientes de entrega</span>
+                  <span class="balance-row-sub">Pedidos marcados con entrega pendiente</span>
+                </th>
+                <td class="col-status">
+                  <mio-status-badge [tone]="resumen.totalPendienteEntrega > 0 ? 'warning' : 'success'">
+                    {{ resumen.totalPendienteEntrega > 0 ? 'Entrega pendiente' : 'Al día' }}
+                  </mio-status-badge>
+                </td>
+                <td class="col-num"><strong class="tabular-nums">{{ resumen.totalPendienteEntrega }}</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
     </section>
   }
-</section>
+</div>

@@ -4,11 +4,13 @@ import { Router, RouterModule } from '@angular/router';
 
 import { AuthService } from '../../services/auth.service';
 import { ClienteService } from '../../services/cliente.service';
+import { PageHeaderComponent } from '../../shared/ui/page-header/page-header';
+import { StatusBadgeComponent } from '../../shared/ui/status-badge/status-badge';
 
 @Component({
   selector: 'app-clientes',
   standalone: true,
-  imports: [FormsModule, RouterModule],
+  imports: [FormsModule, RouterModule, PageHeaderComponent, StatusBadgeComponent],
   templateUrl: './clientes.html',
   styleUrls: ['./clientes.css'],
 })
@@ -26,6 +28,8 @@ export class Clientes implements OnInit {
   usuario: any = null;
   editando = false;
   clienteEditandoId = '';
+  confirmandoEliminarId = '';
+  formularioExpandido = true;
   mensaje = '';
   error = '';
   cargando = false;
@@ -138,8 +142,43 @@ export class Clientes implements OnInit {
     }
   }
 
+  get totalConTelefono(): number {
+    return this.clientes.filter((c) => Boolean(String(c.telefono || '').trim())).length;
+  }
+
+  get totalConDireccion(): number {
+    return this.clientes.filter((c) => Boolean(String(c.direccion || '').trim())).length;
+  }
+
+  alternarFormulario() {
+    this.formularioExpandido = !this.formularioExpandido;
+  }
+
+  limpiarBusqueda() {
+    this.filtroBusqueda = '';
+    this.filtrarClientes();
+  }
+
+  solicitarEliminarCliente(id: string) {
+    this.confirmandoEliminarId = id;
+  }
+
+  cancelarEliminarCliente() {
+    this.confirmandoEliminarId = '';
+  }
+
+  obtenerIniciales(nombre: string): string {
+    const limpio = String(nombre || '').trim();
+    if (!limpio) return 'C';
+    const partes = limpio.split(/\s+/).filter(Boolean);
+    if (partes.length === 1) return partes[0].slice(0, 2).toUpperCase();
+    return (partes[0][0] + partes[1][0]).toUpperCase();
+  }
+
   editarCliente(cliente: any) {
     this.editando = true;
+    this.formularioExpandido = true;
+    this.confirmandoEliminarId = '';
     this.clienteEditandoId = cliente._id;
     this.cliente = {
       nombre: cliente.nombre,
@@ -160,6 +199,7 @@ export class Clientes implements OnInit {
   }
 
   eliminarCliente(id: string) {
+    this.confirmandoEliminarId = '';
     this.mensaje = '';
     this.error = '';
     this.cargando = true;

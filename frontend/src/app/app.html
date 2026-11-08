@@ -21,6 +21,7 @@
           class="live-cabin-cta"
           routerLink="/live-activo"
           routerLinkActive="is-active"
+          [routerLinkActiveOptions]="{ exact: true }"
           ariaCurrentWhenActive="page"
         >
           <span class="live-dot" aria-hidden="true"></span>
@@ -34,7 +35,7 @@
       <nav class="sidebar-nav" aria-label="Secciones del vendedor">
         <div class="nav-group">
           <span class="nav-group__label">Operación diaria</span>
-          <a routerLink="/dashboard" routerLinkActive="active" ariaCurrentWhenActive="page">
+          <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" ariaCurrentWhenActive="page">
             <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
               <rect x="2.5" y="2.5" width="6.5" height="6.5" rx="1.5" />
               <rect x="11" y="2.5" width="6.5" height="6.5" rx="1.5" />
@@ -43,14 +44,14 @@
             </svg>
             <span>Mi tienda</span>
           </a>
-          <a routerLink="/pedidos" routerLinkActive="active" ariaCurrentWhenActive="page">
+          <a routerLink="/pedidos" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" ariaCurrentWhenActive="page">
             <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
               <path d="M5 3.5h10A1.5 1.5 0 0 1 16.5 5v11.5l-2.5-1.5-2 1.5-2-1.5-2 1.5-2-1.5-2.5 1.5V5A1.5 1.5 0 0 1 5 3.5Z" />
               <path d="M7 8h6M7 11.5h4" stroke-linecap="round" />
             </svg>
             <span>Pedidos y apartados</span>
           </a>
-          <a routerLink="/lives" routerLinkActive="active" ariaCurrentWhenActive="page">
+          <a routerLink="/lives" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" ariaCurrentWhenActive="page">
             <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
               <circle cx="10" cy="10" r="2.25" />
               <path d="M6.2 6.2a5.4 5.4 0 0 0 0 7.6M13.8 6.2a5.4 5.4 0 0 1 0 7.6M3.5 3.8a9 9 0 0 0 0 12.4M16.5 3.8a9 9 0 0 1 0 12.4" stroke-linecap="round" />
@@ -61,14 +62,14 @@
 
         <div class="nav-group">
           <span class="nav-group__label">Catálogo y clientes</span>
-          <a routerLink="/productos" routerLinkActive="active" ariaCurrentWhenActive="page">
+          <a routerLink="/productos" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" ariaCurrentWhenActive="page">
             <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
               <path d="M10 2.25 17 6v8l-7 3.75L3 14V6l7-3.75Z" stroke-linejoin="round" />
               <path d="M3 6l7 3.75L17 6M10 9.75v8" stroke-linejoin="round" />
             </svg>
             <span>Productos</span>
           </a>
-          <a routerLink="/clientes" routerLinkActive="active" ariaCurrentWhenActive="page">
+          <a routerLink="/clientes" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" ariaCurrentWhenActive="page">
             <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
               <circle cx="7.5" cy="6.5" r="2.75" />
               <path d="M2.5 16c0-2.6 2.2-4.5 5-4.5s5 1.9 5 4.5" stroke-linecap="round" />
@@ -81,13 +82,13 @@
 
         <div class="nav-group">
           <span class="nav-group__label">Análisis y vitrina</span>
-          <a routerLink="/resumen" routerLinkActive="active" ariaCurrentWhenActive="page">
+          <a routerLink="/resumen" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" ariaCurrentWhenActive="page">
             <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
               <path d="M3.5 16.5h13M6 13.5V9.5M10 13.5V5.5M14 13.5v-6" stroke-linecap="round" />
             </svg>
             <span>Resumen</span>
           </a>
-          <a routerLink="/perfil-vendedor" routerLinkActive="active" ariaCurrentWhenActive="page">
+          <a routerLink="/perfil-vendedor" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" ariaCurrentWhenActive="page">
             <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
               <path d="M3 7.5 4.5 3.5h11L17 7.5a2.5 2.5 0 0 1-4.5 1.5 2.5 2.5 0 0 1-5 0A2.5 2.5 0 0 1 3 7.5Z" stroke-linejoin="round" />
               <path d="M4.5 9.8v6.7h11V9.8" stroke-linecap="round" stroke-linejoin="round" />
@@ -182,16 +183,16 @@
           </div>
 
           <nav class="mobile-drawer__nav" aria-label="Todas las secciones">
-            <a routerLink="/dashboard" routerLinkActive="active" (click)="cerrarMenuMovil()">Mi tienda (Dashboard)</a>
-            <a routerLink="/live-activo" routerLinkActive="active" (click)="cerrarMenuMovil()">Cabina Live activo</a>
-            <a routerLink="/pedidos" routerLinkActive="active" (click)="cerrarMenuMovil()">Pedidos y apartados</a>
-            <a routerLink="/productos" routerLinkActive="active" (click)="cerrarMenuMovil()">Catálogo de productos</a>
-            <a routerLink="/clientes" routerLinkActive="active" (click)="cerrarMenuMovil()">Directorio de clientes</a>
-            <a routerLink="/lives" routerLinkActive="active" (click)="cerrarMenuMovil()">Eventos Live</a>
-            <a routerLink="/resumen" routerLinkActive="active" (click)="cerrarMenuMovil()">Resumen de ventas</a>
-            <a routerLink="/perfil-vendedor" routerLinkActive="active" (click)="cerrarMenuMovil()">Perfil público</a>
+            <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" ariaCurrentWhenActive="page" (click)="cerrarMenuMovil()">Mi tienda (Dashboard)</a>
+            <a routerLink="/live-activo" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" ariaCurrentWhenActive="page" (click)="cerrarMenuMovil()">Cabina Live activo</a>
+            <a routerLink="/pedidos" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" ariaCurrentWhenActive="page" (click)="cerrarMenuMovil()">Pedidos y apartados</a>
+            <a routerLink="/productos" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" ariaCurrentWhenActive="page" (click)="cerrarMenuMovil()">Catálogo de productos</a>
+            <a routerLink="/clientes" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" ariaCurrentWhenActive="page" (click)="cerrarMenuMovil()">Directorio de clientes</a>
+            <a routerLink="/lives" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" ariaCurrentWhenActive="page" (click)="cerrarMenuMovil()">Eventos Live</a>
+            <a routerLink="/resumen" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" ariaCurrentWhenActive="page" (click)="cerrarMenuMovil()">Resumen de ventas</a>
+            <a routerLink="/perfil-vendedor" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" ariaCurrentWhenActive="page" (click)="cerrarMenuMovil()">Perfil público</a>
             @if (enlaceCatalogoPublico()) {
-              <a [routerLink]="enlaceCatalogoPublico()" (click)="cerrarMenuMovil()">Ver mi catálogo público →</a>
+              <a [routerLink]="enlaceCatalogoPublico()" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="cerrarMenuMovil()">Ver mi catálogo público →</a>
             }
           </nav>
 
@@ -209,7 +210,7 @@
 
       <!-- BARRA INFERIOR MOBILE-FIRST (< 1024px) -->
       <nav class="mobile-bottom-nav" aria-label="Navegación rápida móvil">
-        <a routerLink="/dashboard" routerLinkActive="active" ariaCurrentWhenActive="page">
+        <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" ariaCurrentWhenActive="page">
           <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
             <rect x="2.5" y="2.5" width="6.5" height="6.5" rx="1.5" />
             <rect x="11" y="2.5" width="6.5" height="6.5" rx="1.5" />
@@ -218,27 +219,27 @@
           </svg>
           <span>Tienda</span>
         </a>
-        <a routerLink="/pedidos" routerLinkActive="active" ariaCurrentWhenActive="page">
+        <a routerLink="/pedidos" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" ariaCurrentWhenActive="page">
           <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
             <path d="M5 3.5h10A1.5 1.5 0 0 1 16.5 5v11.5l-2.5-1.5-2 1.5-2-1.5-2 1.5-2-1.5-2.5 1.5V5A1.5 1.5 0 0 1 5 3.5Z" />
             <path d="M7 8h6M7 11.5h4" stroke-linecap="round" />
           </svg>
           <span>Pedidos</span>
         </a>
-        <a class="bottom-nav-live" routerLink="/live-activo" routerLinkActive="active" ariaCurrentWhenActive="page">
+        <a class="bottom-nav-live" routerLink="/live-activo" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" ariaCurrentWhenActive="page">
           <span class="bottom-nav-live__pill">
             <span class="live-dot" aria-hidden="true"></span>
             <span>Live</span>
           </span>
         </a>
-        <a routerLink="/productos" routerLinkActive="active" ariaCurrentWhenActive="page">
+        <a routerLink="/productos" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" ariaCurrentWhenActive="page">
           <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
             <path d="M10 2.25 17 6v8l-7 3.75L3 14V6l7-3.75Z" stroke-linejoin="round" />
             <path d="M3 6l7 3.75L17 6M10 9.75v8" stroke-linejoin="round" />
           </svg>
           <span>Productos</span>
         </a>
-        <a routerLink="/clientes" routerLinkActive="active" ariaCurrentWhenActive="page">
+        <a routerLink="/clientes" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" ariaCurrentWhenActive="page">
           <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
             <circle cx="8" cy="6.5" r="2.75" />
             <path d="M3 16c0-2.6 2.2-4.5 5-4.5s5 1.9 5 4.5" stroke-linecap="round" />
@@ -312,7 +313,7 @@
       <div class="app-footer__inner">
         <div class="app-footer__brand">
           <a class="brand-footer-link" routerLink="/bienvenida">MIO</a>
-          <p>Comercio en vivo y gestión de piezas únicas para tiendas independientes.</p>
+          <p>Catálogos digitales, ventas en vivo y control comercial para tiendas y emprendedores.</p>
         </div>
         <div class="app-footer__links">
           <a routerLink="/cliente/inicio">Explorar catálogos</a>

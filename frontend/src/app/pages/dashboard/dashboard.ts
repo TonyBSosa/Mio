@@ -7,10 +7,12 @@ import { ClienteService } from '../../services/cliente.service';
 import { LiveService } from '../../services/live.service';
 import { PedidoService } from '../../services/pedido.service';
 import { ProductoService } from '../../services/producto.service';
+import { PageHeaderComponent } from '../../shared/ui/page-header/page-header';
+import { StatusBadgeComponent } from '../../shared/ui/status-badge/status-badge';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [FormsModule, RouterModule],
+  imports: [FormsModule, RouterModule, PageHeaderComponent, StatusBadgeComponent],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
@@ -37,6 +39,7 @@ export class Dashboard implements OnInit {
   usuario: any = null;
   liveActivo: any = null;
   liveSeleccionadoId = '';
+  accionLiveConfirmando: '' | 'finalizar' | 'cancelar' = '';
 
   private cargasPendientes = 0;
 
@@ -325,15 +328,34 @@ export class Dashboard implements OnInit {
     });
   }
 
+  get cantidadPedidosPendientesPago(): number {
+    return this.pedidos.filter((pedido) => pedido.estadoPago === 'pendiente').length;
+  }
+
+  get cantidadPedidosEntregados(): number {
+    return this.pedidos.filter((pedido) => pedido.estadoEntrega === 'entregado').length;
+  }
+
+  solicitarConfirmacionLive(accion: 'finalizar' | 'cancelar') {
+    this.accionLiveConfirmando = accion;
+  }
+
+  cancelarConfirmacionLive() {
+    this.accionLiveConfirmando = '';
+  }
+
   pausarLive() {
+    this.accionLiveConfirmando = '';
     this.cambiarEstadoLiveActivo('pausado', 'Live pausado correctamente');
   }
 
   finalizarLive() {
+    this.accionLiveConfirmando = '';
     this.cambiarEstadoLiveActivo('finalizado', 'Live finalizado correctamente');
   }
 
   cancelarLive() {
+    this.accionLiveConfirmando = '';
     this.cambiarEstadoLiveActivo('cancelado', 'Live cancelado correctamente');
   }
 

@@ -1,22 +1,15 @@
-<section class="live-activo-page">
-  <header class="page-header">
-    <div>
-      <h2>Live activo</h2>
-      <p>Opera el evento en vivo, registra pedidos y controla pagos y entregas.</p>
-    </div>
-
-    <button type="button" class="btn-secondary" (click)="cerrarSesion()">Cerrar sesión</button>
-  </header>
-
-  <nav class="page-nav">
-      <a routerLink="/dashboard">Mi tienda</a>
-      <a routerLink="/pedidos">Pedidos</a>
-      <a routerLink="/lives">Eventos live</a>
-      <a routerLink="/resumen">Resumen</a>
-  </nav>
+<div class="live-activo-page">
+  <mio-page-header
+    kicker="Cabina de transmisión"
+    title="Operación de Live en vivo"
+    subtitle="Registra pedidos mientras transmites, aparta piezas únicas y controla cobros en tiempo real."
+  >
+    <a class="btn-secondary btn-small" routerLink="/pedidos">Todos los pedidos</a>
+    <a class="btn-ghost btn-small" routerLink="/lives">Eventos Live</a>
+  </mio-page-header>
 
   @if (mensaje) {
-    <p class="mensaje exito" role="status">{{ mensaje }}</p>
+    <p class="mensaje exito" role="status" aria-live="polite">{{ mensaje }}</p>
   }
 
   @if (error) {
@@ -24,280 +17,524 @@
   }
 
   @if (cargando) {
-    <p role="status" aria-live="polite">Cargando…</p>
+    <p class="estado-carga" role="status">Sincronizando cabina en vivo...</p>
   }
 
   @if (!cargando && !liveActivo) {
-    <section class="empty-live">
-      <h3>No hay un Live activo</h3>
-      <p>Activa un Live desde el Dashboard para registrar pedidos.</p>
-      <a routerLink="/dashboard">Mi tienda</a>
+    <section class="empty-live" aria-label="Sin transmisión activa">
+      <mio-status-badge tone="neutral">Cabina en espera</mio-status-badge>
+      <h3>No tienes un Live activo en este momento</h3>
+      <p>
+        Activa un evento programado desde el panel de inicio o crea una nueva transmisión en Eventos Live.
+      </p>
+      <div class="empty-live__actions">
+        <a class="btn-primary" routerLink="/dashboard">Activar desde Inicio</a>
+        <a class="btn-secondary" routerLink="/lives">Ir a Eventos Live</a>
+      </div>
     </section>
   }
 
   @if (liveActivo) {
-    <section class="live-header" [class.paused]="liveActivo.estado === 'pausado'">
-      <span class="live-indicator pulse">
-        {{ liveActivo.estado === 'activo' ? 'EN VIVO' : liveActivo.estado }}
-      </span>
-      <h3>{{ liveActivo.nombre }}</h3>
-      <p>{{ liveActivo.descripcion }}</p>
-      <p>{{ mostrarFecha(liveActivo.fecha) }}</p>
-
-      <div class="live-actions">
-        @if (liveActivo.estado === 'activo') {
-          <button type="button" [disabled]="cargando" (click)="pausarLive()">Pausar</button>
-        }
-
-        @if (liveActivo.estado === 'pausado') {
-          <button type="button" [disabled]="cargando" (click)="continuarLive()">Continuar</button>
-        }
-
-        @if (liveActivo.estado === 'activo' || liveActivo.estado === 'pausado') {
-          <button type="button" [disabled]="cargando" (click)="finalizarLive()">Finalizar</button>
-          <button type="button" class="danger" [disabled]="cargando" (click)="cancelarLive()">Cancelar</button>
-        }
-      </div>
-    </section>
-
-    @if (liveActivo.estado === 'pausado') {
-      <p class="mensaje error" role="alert">El Live esta pausado. Continua el Live para registrar pedidos.</p>
-    }
-
-    <form class="pedido-form" (ngSubmit)="guardarPedido()">
-      <h3>Agregar pedido al Live</h3>
-
-      <div class="form-group">
-        <label for="modoCliente">Tipo de cliente</label>
-        <select id="modoCliente" name="modoCliente" [(ngModel)]="modoCliente">
-          <option value="existente">Cliente existente</option>
-          <option value="nuevo">Cliente nuevo rapido</option>
-        </select>
-      </div>
-
-      @if (modoCliente === 'existente') {
-        <div class="form-group">
-          <label for="clienteId">Cliente</label>
-          <select id="clienteId" name="clienteId" [(ngModel)]="pedido.clienteId">
-            <option value="">Seleccione un cliente</option>
-            @for (cliente of clientes; track cliente._id) {
-              <option [value]="cliente._id">{{ cliente.nombre }}</option>
+    <!-- BARRA DE CONTROL DE TRANSMISIÓN (Estado inequívoco + Acciones protegidas) -->
+    <section
+      class="live-control-strip"
+      [class.live-control-strip--active]="liveActivo.estado === 'activo'"
+      [class.live-control-strip--paused]="liveActivo.estado === 'pausado'"
+      aria-label="Estado y controles de la transmisión"
+    >
+      <div class="cabin-status-main">
+        <div class="cabin-status-info">
+          <div class="cabin-status-badges">
+            @if (liveActivo.estado === 'activo') {
+              <mio-status-badge tone="live" [dot]="true">EN VIVO AHORA</mio-status-badge>
+            } @else if (liveActivo.estado === 'pausado') {
+              <mio-status-badge tone="warning" [dot]="true">TRANSMISIÓN PAUSADA</mio-status-badge>
+            } @else {
+              <mio-status-badge tone="neutral">{{ liveActivo.estado }}</mio-status-badge>
             }
-          </select>
-        </div>
-      }
-
-      @if (modoCliente === 'nuevo') {
-        <section class="cliente-rapido-box">
-          <h4>Cliente rapido</h4>
-
-          <div class="form-group">
-            <label for="clienteRapidoNombre">Nombre</label>
-            <input
-              id="clienteRapidoNombre"
-              name="clienteRapidoNombre"
-              type="text"
-              [(ngModel)]="clienteRapido.nombre"
-            >
+            <span class="cabin-date">{{ mostrarFecha(liveActivo.fecha) }}</span>
           </div>
-
-          <div class="form-group">
-            <label for="clienteRapidoTelefono">Telefono</label>
-            <input
-              id="clienteRapidoTelefono"
-              name="clienteRapidoTelefono"
-              type="text"
-              [(ngModel)]="clienteRapido.telefono"
-            >
-          </div>
-
-          <div class="form-group">
-            <label for="clienteRapidoDireccion">Direccion</label>
-            <input
-              id="clienteRapidoDireccion"
-              name="clienteRapidoDireccion"
-              type="text"
-              [(ngModel)]="clienteRapido.direccion"
-            >
-          </div>
-        </section>
-      }
-
-      <div class="form-group">
-        <label for="productoLista">Tomar pieza activa del catálogo ({{ productos.length }} disponibles)</label>
-        <select
-          id="productoLista"
-          name="productoLista"
-          [(ngModel)]="productoSeleccionadoId"
-          (change)="seleccionarProductoPorId()"
-        >
-          <option value="">-- Captura manual o seleccione pieza del catálogo --</option>
-          @for (producto of productos; track producto._id) {
-            <option [value]="producto._id">
-              {{ producto.codigo ? '[' + producto.codigo + '] ' : '' }}{{ producto.nombre }} · L {{ producto.precio }}
-            </option>
+          <h3 class="cabin-title">{{ liveActivo.nombre }}</h3>
+          @if (liveActivo.descripcion) {
+            <p class="cabin-desc">{{ liveActivo.descripcion }}</p>
           }
-        </select>
-      </div>
-
-      <div class="form-grid">
-        <div class="form-group">
-          <label for="producto">Producto *</label>
-          <input
-            id="producto"
-            name="producto"
-            type="text"
-            [(ngModel)]="pedido.producto"
-            [readonly]="!!productoSeleccionadoId"
-            placeholder="Nombre de la pieza o producto"
-            required
-          >
         </div>
 
-        <div class="form-group">
-          <label for="cantidad">Cantidad *</label>
-          <input
-            id="cantidad"
-            name="cantidad"
-            type="number"
-            min="1"
-            [(ngModel)]="pedido.cantidad"
-            [readonly]="!!productoSeleccionadoId"
-            required
-          >
-        </div>
+        <div class="cabin-primary-toggle">
+          @if (liveActivo.estado === 'activo') {
+            <button
+              type="button"
+              class="btn-warning"
+              (click)="pausarLive()"
+              [disabled]="cargando"
+            >
+              Pausar transmisión
+            </button>
+          }
 
-        <div class="form-group">
-          <label for="precio">Precio (Lempiras) *</label>
-          <input
-            id="precio"
-            name="precio"
-            type="number"
-            min="0"
-            step="0.01"
-            [(ngModel)]="pedido.precio"
-            required
-          >
+          @if (liveActivo.estado === 'pausado') {
+            <button
+              type="button"
+              class="btn-primary"
+              (click)="continuarLive()"
+              [disabled]="cargando"
+            >
+              Reanudar transmisión
+            </button>
+          }
         </div>
       </div>
 
-      <div class="form-group">
-        <label for="observaciones">Observaciones</label>
-        <textarea
-          id="observaciones"
-          name="observaciones"
-          placeholder="Notas de entrega o apartado..."
-          [(ngModel)]="pedido.observaciones"
-        ></textarea>
-      </div>
+      <div class="cabin-secondary-bar">
+        <span class="cabin-secondary-hint">
+          @if (liveActivo.estado === 'activo') {
+            Recibiendo pedidos en tiempo real.
+          } @else {
+            La captura de pedidos está detenida mientras el Live está en pausa.
+          }
+        </span>
 
-      <button type="submit" class="btn-primary" [disabled]="cargando || liveActivo.estado !== 'activo'">
-        Agregar pedido al Live
-      </button>
-    </form>
-
-    <section class="resumen-box">
-      <h3>Resumen del Live</h3>
-
-      @if (resumen) {
-        <div class="resumen-grid">
-          <article>
-            <span>Pedidos</span>
-            <strong>{{ resumen.totalPedidos }}</strong>
-          </article>
-          <article>
-            <span>Total vendido</span>
-            <strong>L {{ resumen.totalVendido }}</strong>
-          </article>
-          <article>
-            <span>Total pagado</span>
-            <strong>L {{ resumen.totalPagado }}</strong>
-          </article>
-          <article>
-            <span>Pendiente pago</span>
-            <strong>L {{ resumen.totalPendientePago }}</strong>
-          </article>
-          <article>
-            <span>Entregados</span>
-            <strong>{{ resumen.totalEntregados }}</strong>
-          </article>
-          <article>
-            <span>Pendiente entrega</span>
-            <strong>{{ resumen.totalPendienteEntrega }}</strong>
-          </article>
+        <div class="cabin-End-actions">
+          <button
+            type="button"
+            class="btn-finish btn-small"
+            (click)="solicitarConfirmacion('finalizar')"
+            [disabled]="cargando"
+          >
+            Finalizar Live
+          </button>
+          <button
+            type="button"
+            class="btn-danger-ghost btn-small"
+            (click)="solicitarConfirmacion('cancelar')"
+            [disabled]="cargando"
+          >
+            Cancelar Live
+          </button>
         </div>
-      }
 
-      <a class="link-resumen" routerLink="/resumen">Ver pantalla de resumen →</a>
+        @if (accionConfirmando === 'finalizar') {
+          <div class="confirm-inline" role="region" aria-label="Confirmar finalizar Live">
+            <span>¿Cerrar y finalizar esta transmisión?</span>
+            <button type="button" class="btn-finish" (click)="finalizarLive()" [disabled]="cargando">
+              Sí, finalizar
+            </button>
+            <button type="button" class="btn-secondary" (click)="cancelarConfirmacion()">
+              No
+            </button>
+          </div>
+        }
+
+        @if (accionConfirmando === 'cancelar') {
+          <div class="confirm-inline" role="region" aria-label="Confirmar cancelar Live">
+            <span>¿Cancelar este Live por completo?</span>
+            <button type="button" class="danger" (click)="cancelarLive()" [disabled]="cargando">
+              Sí, cancelar
+            </button>
+            <button type="button" class="btn-secondary" (click)="cancelarConfirmacion()">
+              No
+            </button>
+          </div>
+        }
+      </div>
     </section>
 
-    <h3 id="live-orders-caption" class="section-label">Pedidos de este Live</h3>
-
-    @if (pedidosDelLive.length === 0) {
-      <p class="empty-msg">No hay pedidos registrados en este Live.</p>
+    <!-- RESUMEN COMPACTO EN TIEMPO REAL -->
+    @if (resumen) {
+      <section class="live-kpi-strip" aria-label="Indicadores en vivo de la transmisión">
+        <article class="live-kpi">
+          <span>Pedidos</span>
+          <strong>{{ resumen.totalPedidos }}</strong>
+        </article>
+        <article class="live-kpi live-kpi--highlight">
+          <span>Vendido</span>
+          <strong>L {{ resumen.totalVendido }}</strong>
+        </article>
+        <article class="live-kpi live-kpi--success">
+          <span>Cobrado</span>
+          <strong>L {{ resumen.totalPagado }}</strong>
+        </article>
+        <article class="live-kpi live-kpi--warn">
+          <span>Por cobrar</span>
+          <strong>L {{ resumen.totalPendientePago }}</strong>
+        </article>
+        <article class="live-kpi">
+          <span>Entregados</span>
+          <strong>{{ resumen.totalEntregados }}</strong>
+        </article>
+        <article class="live-kpi live-kpi--warn">
+          <span>Por entregar</span>
+          <strong>{{ resumen.totalPendienteEntrega }}</strong>
+        </article>
+      </section>
     }
 
-    @if (pedidosDelLive.length > 0) {
-      <div tabindex="0" role="region" aria-labelledby="live-orders-caption" class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>Cliente</th>
-              <th>Producto</th>
-              <th>Cant.</th>
-              <th>Precio</th>
-              <th>Total</th>
-              <th>Pago</th>
-              <th>Entrega</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (pedidoItem of pedidosDelLive; track pedidoItem._id) {
-              <tr>
-                <td><strong>{{ obtenerNombreCliente(pedidoItem.clienteId) }}</strong></td>
-                <td>{{ pedidoItem.producto }}</td>
-                <td>{{ pedidoItem.cantidad }}</td>
-                <td>L {{ pedidoItem.precio }}</td>
-                <td><strong>L {{ calcularTotal(pedidoItem) }}</strong></td>
-                <td>
-                  <span class="estado-badge" [class.estado-ok]="pedidoItem.estadoPago === 'pagado'">
-                    {{ pedidoItem.estadoPago }}
-                  </span>
-                </td>
-                <td>
-                  <span class="estado-badge" [class.estado-ok]="pedidoItem.estadoEntrega === 'entregado'">
-                    {{ pedidoItem.estadoEntrega }}
-                  </span>
-                </td>
-                <td>
-                  <div class="acciones-fila">
-                    @if (pedidoItem.estadoPago === 'pendiente') {
-                      <button type="button" class="btn-small btn-pago" (click)="marcarPagado(pedidoItem)">
-                        Pagado
-                      </button>
-                    } @else {
-                      <button type="button" class="btn-small secondary" (click)="marcarPendientePago(pedidoItem)">
-                        Pendiente pago
-                      </button>
-                    }
-
-                    @if (pedidoItem.estadoEntrega === 'pendiente') {
-                      <button type="button" class="btn-small btn-entrega" (click)="marcarEntregado(pedidoItem)">
-                        Entregado
-                      </button>
-                    } @else {
-                      <button type="button" class="btn-small secondary" (click)="marcarPendienteEntrega(pedidoItem)">
-                        Por entregar
-                      </button>
-                    }
-                  </div>
-                </td>
-              </tr>
+    <!-- DISTRIBUCIÓN DE CABINA: CAPTURA RÁPIDA + LISTADO DE PEDIDOS DEL LIVE -->
+    <div class="cabin-workspace-grid">
+      <!-- COLUMNA 1: REGISTRO RÁPIDO DE VENTA -->
+      <section class="cabin-capture-col" aria-label="Captura rápida de pedido">
+        <form (ngSubmit)="guardarPedido()" class="pedido-form cabin-form">
+          <div class="cabin-form__head">
+            <div>
+              <h3>Captura rápida de pedido</h3>
+              <p>Asigna una pieza a una compradora sin salir de la transmisión.</p>
+            </div>
+            @if (pedido.precio > 0) {
+              <div class="cabin-total-badge">
+                <span>Total</span>
+                <strong>L {{ calcularTotal(pedido) }}</strong>
+              </div>
             }
-          </tbody>
-        </table>
-      </div>
-    }
+          </div>
+
+          <!-- Selector táctil de modo de cliente (2 opciones -> Segmented Control) -->
+          <div class="form-group">
+            <label>1 · Compradora</label>
+            <div class="segmented-toggle" role="group" aria-label="Tipo de cliente">
+              <button
+                type="button"
+                class="seg-btn"
+                [class.seg-btn--active]="modoCliente === 'existente'"
+                (click)="cambiarModoCliente('existente')"
+              >
+                Cliente registrado
+              </button>
+              <button
+                type="button"
+                class="seg-btn"
+                [class.seg-btn--active]="modoCliente === 'nuevo'"
+                (click)="cambiarModoCliente('nuevo')"
+              >
+                + Cliente nuevo rápido
+              </button>
+            </div>
+          </div>
+
+          @if (modoCliente === 'existente') {
+            <div class="form-group">
+              <label for="live-cliente-select">Seleccionar compradora *</label>
+              <select
+                id="live-cliente-select"
+                [(ngModel)]="pedido.clienteId"
+                name="clienteId"
+                required
+              >
+                <option value="">Seleccione un cliente...</option>
+                @for (cliente of clientes; track cliente._id) {
+                  <option [value]="cliente._id">
+                    {{ cliente.nombre }} — {{ cliente.telefono }}
+                  </option>
+                }
+              </select>
+            </div>
+          }
+
+          @if (modoCliente === 'nuevo') {
+            <div class="quick-client-fields">
+              <div class="form-group">
+                <label for="live-cliente-nombre">Nombre del cliente *</label>
+                <input
+                  id="live-cliente-nombre"
+                  type="text"
+                  placeholder="Ej. Sofía Hernández"
+                  [(ngModel)]="clienteRapido.nombre"
+                  name="nombreClienteRapido"
+                  required
+                />
+              </div>
+              <div class="cabin-grid-2">
+                <div class="form-group">
+                  <label for="live-cliente-tel">Teléfono / WhatsApp</label>
+                  <input
+                    id="live-cliente-tel"
+                    type="tel"
+                    inputmode="tel"
+                    placeholder="Ej. 9988-7766"
+                    [(ngModel)]="clienteRapido.telefono"
+                    name="telefonoClienteRapido"
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="live-cliente-dir">Dirección / Ciudad</label>
+                  <input
+                    id="live-cliente-dir"
+                    type="text"
+                    placeholder="Ej. Tegucigalpa"
+                    [(ngModel)]="clienteRapido.direccion"
+                    name="direccionClienteRapido"
+                  />
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- Selección rápida de pieza disponible -->
+          <div class="form-group">
+            <label for="live-producto-select">2 · Pieza disponible en catálogo ({{ productos.length }})</label>
+            <select
+              id="live-producto-select"
+              [(ngModel)]="productoSeleccionadoId"
+              name="productoSeleccionadoId"
+              (change)="seleccionarProductoPorId()"
+            >
+              <option value="">-- Escribir artículo manualmente --</option>
+              @for (producto of productos; track producto._id) {
+                <option [value]="producto._id">
+                  {{ producto.codigo ? '[' + producto.codigo + '] ' : '' }}{{ producto.nombre }} — L {{ producto.precio }}
+                </option>
+              }
+            </select>
+          </div>
+
+          @if (productos.length > 0) {
+            <div class="quick-pieces-tray" aria-label="Toque rápido de piezas disponibles">
+              @for (prod of productos.slice(0, 6); track prod._id) {
+                <button
+                  type="button"
+                  class="btn-sugerencia-item quick-piece-chip"
+                  [class.quick-piece-chip--selected]="productoSeleccionadoId === prod._id"
+                  (click)="seleccionarProducto(prod)"
+                >
+                  @if (prod.codigo) {
+                    <span class="chip-codigo">{{ prod.codigo }}</span>
+                  }
+                  <span class="quick-piece-chip__name">{{ prod.nombre }}</span>
+                  <strong>L {{ prod.precio }}</strong>
+                </button>
+              }
+            </div>
+          }
+
+          <div class="form-group">
+            <label for="live-producto-nombre">Nombre del producto / prenda *</label>
+            <input
+              id="live-producto-nombre"
+              type="text"
+              placeholder="Ej. Vestido midi olivo"
+              [(ngModel)]="pedido.producto"
+              name="producto"
+              [readonly]="!!productoSeleccionadoId"
+              required
+            />
+          </div>
+
+          <div class="cabin-grid-2">
+            <div class="form-group">
+              <label for="live-cantidad">Cantidad *</label>
+              <input
+                id="live-cantidad"
+                type="number"
+                min="1"
+                [(ngModel)]="pedido.cantidad"
+                name="cantidad"
+                [readonly]="!!productoSeleccionadoId"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="live-precio">Precio unitario (L) *</label>
+              <input
+                id="live-precio"
+                type="number"
+                min="0"
+                step="0.01"
+                [(ngModel)]="pedido.precio"
+                name="precio"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="cabin-grid-2">
+            <div class="form-group">
+              <label for="live-estado-pago">Pago inicial</label>
+              <select
+                id="live-estado-pago"
+                [(ngModel)]="pedido.estadoPago"
+                name="estadoPago"
+              >
+                <option value="pendiente">Pendiente de cobro</option>
+                <option value="pagado">Pagado</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="live-estado-entrega">Entrega</label>
+              <select
+                id="live-estado-entrega"
+                [(ngModel)]="pedido.estadoEntrega"
+                name="estadoEntrega"
+              >
+                <option value="pendiente">Por entregar</option>
+                <option value="entregado">Entregado</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="live-observaciones">Nota rápida (opcional)</label>
+            <input
+              id="live-observaciones"
+              type="text"
+              placeholder="Ej. Pidió cambio de botón, entrega mañana..."
+              [(ngModel)]="pedido.observaciones"
+              name="observaciones"
+            />
+          </div>
+
+          <button
+            type="submit"
+            class="btn-primary cabin-submit-btn"
+            [disabled]="cargando || liveActivo.estado !== 'activo'"
+          >
+            {{ liveActivo.estado === 'activo' ? '+ Agregar pedido al Live' : 'Reanuda el Live para registrar pedidos' }}
+          </button>
+        </form>
+      </section>
+
+      <!-- COLUMNA 2: PEDIDOS CAPTURADOS EN ESTE LIVE -->
+      <section class="cabin-orders-col" aria-label="Pedidos capturados en esta transmisión">
+        <div class="cabin-orders-header">
+          <div>
+            <h3>Pedidos de este Live ({{ pedidosDelLive.length }})</h3>
+            <p>Actualiza cobros y entregas con un toque conforme avanzas.</p>
+          </div>
+          <a class="btn-secondary btn-small" routerLink="/pedidos">Ver todos →</a>
+        </div>
+
+        @if (pedidosDelLive.length === 0) {
+          <div class="empty-orders-box">
+            <h4>Aún no hay pedidos en esta transmisión</h4>
+            <p>Usa el formulario de captura rápida para asignar la primera pieza en vivo.</p>
+          </div>
+        } @else {
+          <!-- Tabla en escritorio (>= 768px) -->
+          <div
+            class="table-wrapper desktop-table-view"
+            tabindex="0"
+            role="region"
+            aria-label="Tabla de pedidos del Live activo"
+          >
+            <table>
+              <thead>
+                <tr>
+                  <th>Compradora</th>
+                  <th>Producto</th>
+                  <th>Total</th>
+                  <th>Pago</th>
+                  <th>Entrega</th>
+                  <th>Acciones en vivo</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of pedidosDelLive; track item._id) {
+                  <tr>
+                    <td>
+                      <strong>{{ obtenerNombreCliente(item.clienteId) }}</strong>
+                    </td>
+                    <td>
+                      <div>{{ item.producto }} <span class="cell-sub">× {{ item.cantidad }}</span></div>
+                      @if (item.observaciones) {
+                        <div class="cell-sub">{{ item.observaciones }}</div>
+                      }
+                    </td>
+                    <td>
+                      <strong>L {{ calcularTotal(item) }}</strong>
+                    </td>
+                    <td>
+                      <mio-status-badge [tone]="item.estadoPago === 'pagado' ? 'success' : 'warning'">
+                        {{ item.estadoPago === 'pagado' ? 'Pagado' : 'Pendiente' }}
+                      </mio-status-badge>
+                    </td>
+                    <td>
+                      <mio-status-badge [tone]="item.estadoEntrega === 'entregado' ? 'success' : 'warning'">
+                        {{ item.estadoEntrega === 'entregado' ? 'Entregado' : 'Por entregar' }}
+                      </mio-status-badge>
+                    </td>
+                    <td>
+                      <div class="table-actions">
+                        @if (item.estadoPago === 'pendiente') {
+                          <button type="button" class="btn-primary btn-small" (click)="marcarPagado(item)">
+                            Pagado
+                          </button>
+                        } @else {
+                          <button type="button" class="btn-ghost btn-small" (click)="marcarPendientePago(item)">
+                            Pendiente
+                          </button>
+                        }
+
+                        @if (item.estadoEntrega === 'pendiente') {
+                          <button type="button" class="btn-secondary btn-small" (click)="marcarEntregado(item)">
+                            Entregado
+                          </button>
+                        } @else {
+                          <button type="button" class="btn-ghost btn-small" (click)="marcarPendienteEntrega(item)">
+                            Por entregar
+                          </button>
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Tarjetas táctiles en móvil (< 768px) -->
+          <div class="mobile-cards-view" role="region" aria-label="Tarjetas de pedidos del Live">
+            @for (item of pedidosDelLive; track item._id) {
+              <article
+                class="op-card"
+                [class.op-card--pending]="item.estadoPago === 'pendiente' || item.estadoEntrega === 'pendiente'"
+              >
+                <div class="op-card__head">
+                  <div>
+                    <h4 class="op-card__title">{{ obtenerNombreCliente(item.clienteId) }}</h4>
+                    <p class="op-card__sub">{{ item.producto }} × {{ item.cantidad }}</p>
+                  </div>
+                  <span class="op-card__amount">L {{ calcularTotal(item) }}</span>
+                </div>
+
+                @if (item.observaciones) {
+                  <p class="op-card__sub">Nota: {{ item.observaciones }}</p>
+                }
+
+                <div class="op-card__badges">
+                  <mio-status-badge [tone]="item.estadoPago === 'pagado' ? 'success' : 'warning'">
+                    Pago: {{ item.estadoPago === 'pagado' ? 'Pagado' : 'Pendiente' }}
+                  </mio-status-badge>
+                  <mio-status-badge [tone]="item.estadoEntrega === 'entregado' ? 'success' : 'warning'">
+                    Entrega: {{ item.estadoEntrega === 'entregado' ? 'Entregado' : 'Por entregar' }}
+                  </mio-status-badge>
+                </div>
+
+                <div class="op-card__actions">
+                  @if (item.estadoPago === 'pendiente') {
+                    <button type="button" class="btn-primary" (click)="marcarPagado(item)">
+                      Cobrar (Pagado)
+                    </button>
+                  } @else {
+                    <button type="button" class="btn-ghost" (click)="marcarPendientePago(item)">
+                      Pago pendiente
+                    </button>
+                  }
+
+                  @if (item.estadoEntrega === 'pendiente') {
+                    <button type="button" class="btn-secondary" (click)="marcarEntregado(item)">
+                      Marcar entregado
+                    </button>
+                  } @else {
+                    <button type="button" class="btn-ghost" (click)="marcarPendienteEntrega(item)">
+                      Por entregar
+                    </button>
+                  }
+                </div>
+              </article>
+            }
+          </div>
+        }
+      </section>
+    </div>
   }
-</section>
+</div>

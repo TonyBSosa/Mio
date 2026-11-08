@@ -7,11 +7,13 @@ import { ClienteService } from '../../services/cliente.service';
 import { LiveService } from '../../services/live.service';
 import { PedidoService } from '../../services/pedido.service';
 import { ProductoService } from '../../services/producto.service';
+import { PageHeaderComponent } from '../../shared/ui/page-header/page-header';
+import { StatusBadgeComponent } from '../../shared/ui/status-badge/status-badge';
 
 @Component({
   selector: 'app-pedidos',
   standalone: true,
-  imports: [FormsModule, RouterModule],
+  imports: [FormsModule, RouterModule, PageHeaderComponent, StatusBadgeComponent],
   templateUrl: './pedidos.html',
   styleUrl: './pedidos.css',
 })
@@ -44,6 +46,8 @@ export class Pedidos implements OnInit {
 
   editando = false;
   pedidoEditandoId = '';
+  confirmandoEliminarId = '';
+  formularioExpandido = true;
   mensaje = '';
   error = '';
   cargando = false;
@@ -350,9 +354,44 @@ export class Pedidos implements OnInit {
     }
   }
 
+  get totalImporteFiltrado(): number {
+    return this.pedidosFiltrados.reduce(
+      (acc, p) => acc + this.calcularTotal(p),
+      0
+    );
+  }
+
+  get pendientesPagoFiltrados(): number {
+    return this.pedidosFiltrados.filter((p) => p.estadoPago === 'pendiente').length;
+  }
+
+  get pendientesEntregaFiltrados(): number {
+    return this.pedidosFiltrados.filter((p) => p.estadoEntrega === 'pendiente').length;
+  }
+
+  get tieneFiltrosActivos(): boolean {
+    return Boolean(
+      this.filtroLiveId || this.filtroClienteId || this.filtroProducto.trim()
+    );
+  }
+
+  alternarFormulario() {
+    this.formularioExpandido = !this.formularioExpandido;
+  }
+
+  solicitarEliminarPedido(id: string) {
+    this.confirmandoEliminarId = id;
+  }
+
+  cancelarEliminarPedido() {
+    this.confirmandoEliminarId = '';
+  }
+
   editarPedido(pedido: any) {
     if (this.cargando) return;
     this.editando = true;
+    this.formularioExpandido = true;
+    this.confirmandoEliminarId = '';
     this.pedidoEditandoId = pedido._id;
     const prodId = this.obtenerId(pedido.productoId) || '';
 
@@ -391,6 +430,7 @@ export class Pedidos implements OnInit {
 
   eliminarPedido(id: string) {
     if (this.cargando) return;
+    this.confirmandoEliminarId = '';
     this.mensaje = '';
     this.error = '';
     this.cargando = true;

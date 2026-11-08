@@ -1,257 +1,705 @@
 <section class="productos-page">
-  <header class="page-header">
-    <div>
-      <h2>Productos</h2>
-      <p>Administra el catalogo de productos disponibles para tus Lives.</p>
-    </div>
-
-    <button type="button" class="btn-secondary" (click)="cerrarSesion()">Cerrar sesión</button>
-  </header>
-
-  <nav class="page-nav">
-      <a routerLink="/dashboard">Mi tienda</a>
-      <a routerLink="/clientes">Clientes</a>
-      <a routerLink="/lives">Eventos live</a>
-      <a routerLink="/pedidos">Pedidos</a>
-      <a routerLink="/resumen">Resumen</a>
-      <a routerLink="/perfil-vendedor">Perfil público</a>
-  </nav>
-
-  <form class="producto-form" (ngSubmit)="guardarProducto()">
-    <h3>{{ editando ? 'Editar producto' : 'Nuevo producto' }}</h3>
-
-    <div class="form-grid">
-      <div class="form-group">
-        <label for="codigo">Código de la pieza</label>
-        <input id="codigo" name="codigo" type="text" maxlength="30"
-          placeholder="Ejemplo: BLUSA-001 (opcional)" [(ngModel)]="producto.codigo">
-        <small class="field-hint">Se genera al crear si lo dejas vacío. Único en tu tienda.</small>
-      </div>
-
-      <div class="form-group">
-        <label for="nombre">Nombre *</label>
-        <input
-          id="nombre"
-          name="nombre"
-          type="text"
-          placeholder="Nombre de la prenda o pieza"
-          [(ngModel)]="producto.nombre"
-          required
-        >
-      </div>
-
-      <div class="form-group">
-        <label for="categoria">Categoría</label>
-        <input
-          id="categoria"
-          name="categoria"
-          type="text"
-          placeholder="Ej: Blusas, Vestidos, Calzado..."
-          [(ngModel)]="producto.categoria"
-        >
-      </div>
-
-      <div class="form-group">
-        <label for="precio">Precio (Lempiras) *</label>
-        <input
-          id="precio"
-          name="precio"
-          type="number"
-          min="0"
-          step="0.01"
-          [(ngModel)]="producto.precio"
-          required
-        >
-      </div>
-
-      <div class="form-group">
-        <label for="estado">Estado</label>
-        <select id="estado" name="estado" [(ngModel)]="producto.estado">
-          <option value="activo">activo</option>
-          <option value="inactivo">inactivo</option>
-          <option value="apartado">apartado</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label for="foto">URL de Foto</label>
-        <input
-          id="foto"
-          name="foto"
-          type="text"
-          placeholder="https://..."
-          [(ngModel)]="producto.foto"
-        >
-      </div>
-    </div>
-
-    <div class="form-group">
-      <label for="descripcion">Descripción</label>
-      <input
-        id="descripcion"
-        name="descripcion"
-        type="text"
-        placeholder="Talla, marca, detalles o condición de la pieza..."
-        [(ngModel)]="producto.descripcion"
-      >
-    </div>
-
-    <button type="submit" class="btn-primary" [disabled]="cargando">
-      {{ editando ? 'Actualizar' : 'Guardar' }}
+  <mio-page-header
+    kicker="Catálogo e inventario"
+    title="Catálogo de productos"
+    subtitle="Registra tus productos, controla su disponibilidad en tiempo real y localízalos por código o categoría."
+  >
+    <a class="btn-secondary btn-small" href="#catalogo-listado">
+      Ver catálogo ({{ productosFiltrados.length }})
+    </a>
+    <button type="button" class="btn-ghost btn-small" (click)="alternarFormulario()">
+      {{ formularioExpandido ? 'Ocultar formulario' : '+ Nuevo producto' }}
     </button>
-
-    @if (editando) {
-      <button type="button" class="secondary" (click)="cancelarEdicion()">
-        Cancelar edicion
-      </button>
-    }
-  </form>
+  </mio-page-header>
 
   @if (mensaje) {
-    <p class="mensaje exito" role="status">{{ mensaje }}</p>
+    <p class="mensaje exito" role="status" aria-live="polite">{{ mensaje }}</p>
   }
 
   @if (error) {
     <p class="mensaje error" role="alert">{{ error }}</p>
   }
 
-  <h3 id="productos-table-heading" class="section-label">Listado de productos ({{ productosFiltrados.length }})</h3>
-
-  <section class="filtros-box">
-    <div class="form-group">
-      <label for="filtroNombre">Buscar producto</label>
-      <input
-        id="filtroNombre"
-        name="filtroNombre"
-        type="text"
-        placeholder="Buscar por nombre o código"
-        [(ngModel)]="filtroNombre"
-        (input)="filtrarProductos()"
-      >
+  <!-- RESUMEN DE DISPONIBILIDAD DE INVENTARIO -->
+  <div class="inventory-summary-strip" role="region" aria-label="Estado actual del catálogo">
+    <div class="inv-pill">
+      <span>Total en catálogo</span>
+      <strong>{{ productos.length }}</strong>
     </div>
+    <div class="inv-pill inv-pill--success">
+      <span>Disponibles (Activo)</span>
+      <strong>{{ totalDisponibles }}</strong>
+    </div>
+    <div class="inv-pill inv-pill--warn">
+      <span>Reservados (Apartado)</span>
+      <strong>{{ totalApartados }}</strong>
+    </div>
+    <div class="inv-pill inv-pill--muted">
+      <span>Inactivos</span>
+      <strong>{{ totalInactivos }}</strong>
+    </div>
+  </div>
 
-    <div class="form-group">
-      <label for="filtroCategoria">Filtrar por categoria</label>
-      <select
-        id="filtroCategoria"
-        name="filtroCategoria"
-        [(ngModel)]="filtroCategoria"
-        (change)="filtrarProductos()"
-      >
-        <option value="">Todas las categorias</option>
-        @for (categoriaItem of categorias; track categoriaItem) {
-          <option [value]="categoriaItem">{{ categoriaItem }}</option>
+  <!-- FORMULARIO DE REGISTRO Y EDICIÓN DE PRODUCTO -->
+  @if (formularioExpandido || editando) {
+    <form class="producto-form" (ngSubmit)="guardarProducto()">
+      <div class="form-head">
+        <div>
+          <h3>{{ editando ? 'Editar producto del catálogo' : 'Registrar nuevo producto' }}</h3>
+          <p class="form-sub">
+            Si dejas el código vacío, MIO asignará un código único automáticamente al guardar.
+          </p>
+        </div>
+        @if (producto.precio > 0) {
+          <div class="price-preview-chip">
+            <span>Precio de venta</span>
+            <strong>L {{ producto.precio }}</strong>
+          </div>
         }
-      </select>
-    </div>
+      </div>
 
-    <div class="form-group">
-      <label for="filtroEstado">Filtrar por estado</label>
-      <select
-        id="filtroEstado"
-        name="filtroEstado"
-        [(ngModel)]="filtroEstado"
-        (change)="filtrarProductos()"
+      <div class="form-section">
+        <span class="form-section__label">1 · Identificación y precio</span>
+        <div class="prod-grid-4">
+          <div class="form-group">
+            <label for="codigo">Código / SKU</label>
+            <input
+              id="codigo"
+              name="codigo"
+              type="text"
+              maxlength="30"
+              autocorrect="off"
+              autocapitalize="characters"
+              spellcheck="false"
+              placeholder="Ej. PROD-001 (opcional)"
+              [(ngModel)]="producto.codigo"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="nombre">Nombre del producto *</label>
+            <input
+              id="nombre"
+              name="nombre"
+              type="text"
+              placeholder="Nombre comercial del artículo"
+              [(ngModel)]="producto.nombre"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="categoria">Categoría</label>
+            <input
+              id="categoria"
+              name="categoria"
+              type="text"
+              list="lista-categorias-tienda"
+              placeholder="Ej. Accesorios, Hogar, Moda..."
+              [(ngModel)]="producto.categoria"
+            />
+            <datalist id="lista-categorias-tienda">
+              @for (cat of categorias; track cat) {
+                <option [value]="cat"></option>
+              }
+            </datalist>
+          </div>
+
+          <div class="form-group">
+            <label for="precio">Precio (L) *</label>
+            <input
+              id="precio"
+              name="precio"
+              type="number"
+              min="0"
+              step="0.01"
+              [(ngModel)]="producto.precio"
+              required
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <span class="form-section__label">2 · Disponibilidad, detalles e imagen</span>
+        <div class="prod-grid-3">
+          <div class="form-group">
+            <label for="descripcion">Descripción y detalles</label>
+            <input
+              id="descripcion"
+              name="descripcion"
+              type="text"
+              placeholder="Marca, medidas, presentación o condición..."
+              [(ngModel)]="producto.descripcion"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="estado">Disponibilidad</label>
+            <select
+              id="estado"
+              name="estado"
+              [(ngModel)]="producto.estado"
+              [disabled]="editando && tienePedidoVinculado(productoEditandoId)"
+            >
+              <option value="activo">Disponible (activo)</option>
+              <option value="apartado">Reservado (apartado)</option>
+              <option value="inactivo">Oculto / Inactivo</option>
+            </select>
+            @if (editando && tienePedidoVinculado(productoEditandoId)) {
+              <small class="field-hint">
+                Vinculado a un pedido activo; su disponibilidad se libera desde Pedidos.
+              </small>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="foto">URL de imagen (opcional)</label>
+            <div class="foto-input-row">
+              <input
+                id="foto"
+                name="foto"
+                type="url"
+                autocorrect="off"
+                autocapitalize="off"
+                spellcheck="false"
+                placeholder="https://..."
+                [(ngModel)]="producto.foto"
+                (input)="alCambiarUrlFoto()"
+              />
+              @if (producto.foto.trim()) {
+                <div class="foto-preview-mini">
+                  @if (tieneFotoValida(producto)) {
+                    <img
+                      class="producto-thumb"
+                      [src]="producto.foto"
+                      [alt]="producto.nombre || 'Vista previa'"
+                      width="44"
+                      height="44"
+                      (error)="marcarErrorFoto(producto)"
+                    />
+                  } @else {
+                    <div
+                      class="producto-thumb-fallback producto-thumb-fallback--error"
+                      title="No se pudo cargar la imagen desde la URL indicada"
+                    >
+                      <span class="fallback-code">URL</span>
+                      <span class="fallback-sub">inválida</span>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-primary" [disabled]="cargando">
+          {{ cargando ? 'Guardando...' : editando ? 'Actualizar producto' : 'Guardar producto' }}
+        </button>
+
+        @if (editando) {
+          <button type="button" class="btn-secondary" (click)="cancelarEdicion()" [disabled]="cargando">
+            Cancelar edición
+          </button>
+        }
+      </div>
+    </form>
+  }
+
+  <!-- BÚSQUEDA Y FILTRADO DEL CATÁLOGO -->
+  <section id="catalogo-listado" aria-labelledby="productos-table-heading">
+    <search class="filtros-box" aria-label="Filtrar y buscar productos del catálogo">
+      <div class="filtros-head">
+        <div>
+          <h3 id="productos-table-heading">Catálogo de productos ({{ productosFiltrados.length }})</h3>
+          <p class="filtros-sub">
+            Localiza rápido un artículo por su código, nombre, categoría o disponibilidad.
+          </p>
+        </div>
+
+        @if (tieneFiltrosActivos) {
+          <button type="button" class="btn-secondary btn-small" (click)="limpiarFiltros()">
+            Limpiar filtros
+          </button>
+        }
+      </div>
+
+      <div class="filtros-grid">
+        <div class="form-group">
+          <label for="filtroNombre">Buscar por nombre o código</label>
+          <input
+            id="filtroNombre"
+            name="filtroNombre"
+            type="search"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+            placeholder="Nombre o código del producto..."
+            [(ngModel)]="filtroNombre"
+            (input)="filtrarProductos()"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="filtroCategoria">Categoría</label>
+          <select
+            id="filtroCategoria"
+            name="filtroCategoria"
+            [(ngModel)]="filtroCategoria"
+            (change)="filtrarProductos()"
+          >
+            <option value="">Todas las categorías</option>
+            @for (categoriaItem of categorias; track categoriaItem) {
+              <option [value]="categoriaItem">{{ categoriaItem }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="filtroEstado">Disponibilidad</label>
+          <select
+            id="filtroEstado"
+            name="filtroEstado"
+            [(ngModel)]="filtroEstado"
+            (change)="filtrarProductos()"
+          >
+            <option value="">Todos los estados</option>
+            <option value="activo">Disponibles (activo)</option>
+            <option value="apartado">Reservados (apartado)</option>
+            <option value="inactivo">Inactivos</option>
+          </select>
+        </div>
+      </div>
+    </search>
+
+    @if (cargando) {
+      <p class="estado-carga" role="status" aria-live="polite">Actualizando catálogo de productos...</p>
+    }
+
+    @if (!cargando && productos.length === 0) {
+      <div class="empty-catalog-box" role="status">
+        <h4>Tu catálogo aún no tiene productos registrados</h4>
+        <p>Agrega tu primer producto en el formulario superior para venderlo en tus transmisiones o en tu catálogo público.</p>
+      </div>
+    }
+
+    @if (!cargando && productos.length > 0 && productosFiltrados.length === 0) {
+      <div class="empty-catalog-box" role="status">
+        <h4>Ningún producto coincide con los filtros seleccionados</h4>
+        <p>Intenta limpiar la búsqueda o cambiar el estado de disponibilidad seleccionado.</p>
+        <button type="button" class="btn-secondary btn-small" (click)="limpiarFiltros()">
+          Mostrar todo el catálogo
+        </button>
+      </div>
+    }
+
+    @if (productosFiltrados.length > 0) {
+      <!-- VISTA ESCRITORIO: TABLA DE CATÁLOGO (>= 768px) -->
+      <div
+        tabindex="0"
+        role="region"
+        aria-labelledby="productos-table-heading"
+        class="table-wrapper desktop-table-view"
       >
-        <option value="">Todos los estados</option>
-        <option value="activo">activo</option>
-        <option value="inactivo">inactivo</option>
-        <option value="apartado">apartado</option>
-      </select>
-    </div>
-
-    <div class="filtros-actions">
-      <button type="button" class="secondary" (click)="limpiarFiltros()">
-        Limpiar filtros
-      </button>
-    </div>
-  </section>
-
-  @if (cargando) {
-    <p role="status" aria-live="polite">Cargando…</p>
-  }
-
-  @if (!cargando && productos.length === 0) {
-    <p>No hay productos registrados.</p>
-  }
-
-  @if (!cargando && productos.length > 0 && productosFiltrados.length === 0) {
-    <p>No hay productos que coincidan con los filtros.</p>
-  }
-
-  @if (productosFiltrados.length > 0) {
-    <div tabindex="0" role="region" aria-labelledby="productos-table-heading" class="table-wrapper">
-      <table>
-        <thead>
-          <tr>
-            <th>Código</th>
-            <th>Nombre</th>
-            <th>Descripción</th>
-            <th>Categoría</th>
-            <th>Foto</th>
-            <th>Precio</th>
-            <th>Estado</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (productoItem of productosFiltrados; track productoItem._id) {
+        <table>
+          <thead>
             <tr>
-              <td>
-                <span class="chip-codigo">{{ productoItem.codigo || 'Sin código' }}</span>
-              </td>
-              <td><strong>{{ productoItem.nombre }}</strong></td>
-              <td>{{ productoItem.descripcion || '—' }}</td>
-              <td>{{ productoItem.categoria || '—' }}</td>
-              <td>
-                @if (productoItem.foto) {
-                  <img class="producto-thumb" [src]="productoItem.foto" [alt]="productoItem.nombre">
+              <th>Producto y código</th>
+              <th>Categoría</th>
+              <th>Precio</th>
+              <th>Disponibilidad</th>
+              <th>Acciones de inventario</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (productoItem of productosFiltrados; track productoItem._id) {
+              <tr>
+                <td>
+                  <div class="prod-identity">
+                    @if (tieneFotoValida(productoItem)) {
+                      <img
+                        class="producto-thumb"
+                        [src]="productoItem.foto"
+                        [alt]="productoItem.nombre"
+                        width="52"
+                        height="44"
+                        loading="lazy"
+                        (error)="marcarErrorFoto(productoItem)"
+                      />
+                    } @else {
+                      <div
+                        class="producto-thumb-fallback"
+                        [class.producto-thumb-fallback--error]="tieneErrorFoto(productoItem)"
+                        [attr.title]="tieneErrorFoto(productoItem) ? 'La URL de imagen no pudo cargarse' : 'Producto sin imagen'"
+                        aria-hidden="true"
+                      >
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8">
+                          <rect x="3" y="4" width="18" height="16" rx="2.5"></rect>
+                          <circle cx="8.5" cy="9.5" r="1.5"></circle>
+                          <path d="m21 15-4.5-4.5L6 20"></path>
+                        </svg>
+                        <span class="fallback-sub">{{ tieneErrorFoto(productoItem) ? 'Error URL' : 'Sin foto' }}</span>
+                      </div>
+                    }
+                    <div class="prod-identity__copy">
+                      <div class="prod-identity__title-row">
+                        <span class="chip-codigo">{{ productoItem.codigo || 'S/C' }}</span>
+                        <strong>{{ productoItem.nombre }}</strong>
+                      </div>
+                      @if (productoItem.descripcion) {
+                        <p class="prod-identity__desc">{{ productoItem.descripcion }}</p>
+                      }
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  @if (productoItem.categoria) {
+                    <span class="category-tag">{{ productoItem.categoria }}</span>
+                  } @else {
+                    <span class="text-muted">General</span>
+                  }
+                </td>
+                <td>
+                  <strong class="prod-price">L {{ productoItem.precio }}</strong>
+                </td>
+                <td>
+                  <div class="status-cell-stack">
+                    <mio-status-badge
+                      [tone]="obtenerTonoEstado(productoItem.estado)"
+                      [dot]="productoItem.estado === 'activo'"
+                    >
+                      {{ obtenerEtiquetaEstado(productoItem.estado) }}
+                    </mio-status-badge>
+                    @if (tienePedidoVinculado(productoItem._id)) {
+                      <a routerLink="/pedidos" class="linked-order-note">
+                        En pedido activo →
+                      </a>
+                    }
+                  </div>
+                </td>
+                <td>
+                  <div class="table-actions">
+                    @if (tienePedidoVinculado(productoItem._id)) {
+                      <span
+                        class="locked-inventory-hint"
+                        title="Este producto está reservado por un pedido registrado. Para liberarlo o eliminarlo, gestiona primero el pedido."
+                      >
+                        Reserva protegida por pedido
+                      </span>
+                      <button
+                        type="button"
+                        class="btn-secondary btn-small"
+                        (click)="editarProducto(productoItem)"
+                        [disabled]="cargando"
+                      >
+                        Editar datos
+                      </button>
+                    } @else {
+                      @if (productoItem.estado === 'inactivo') {
+                        <button
+                          type="button"
+                          class="btn-primary btn-small"
+                          (click)="cambiarEstado(productoItem, 'activo')"
+                          [disabled]="cargando"
+                        >
+                          Activar
+                        </button>
+                      }
+
+                      @if (productoItem.estado === 'apartado') {
+                        @if (confirmandoReactivarId !== productoItem._id) {
+                          <button
+                            type="button"
+                            class="btn-secondary btn-small"
+                            (click)="solicitarReactivarProducto(productoItem)"
+                            [disabled]="cargando"
+                          >
+                            Liberar reserva
+                          </button>
+                        } @else {
+                          <div class="confirm-inline">
+                            <span>¿Marcar disponible?</span>
+                            <button
+                              type="button"
+                              class="btn-primary btn-small"
+                              (click)="confirmarReactivarProducto(productoItem)"
+                              [disabled]="cargando"
+                            >
+                              Sí
+                            </button>
+                            <button
+                              type="button"
+                              class="btn-secondary btn-small"
+                              (click)="cancelarReactivarProducto()"
+                            >
+                              No
+                            </button>
+                          </div>
+                        }
+                      }
+
+                      @if (productoItem.estado === 'activo') {
+                        <button
+                          type="button"
+                          class="btn-warning btn-small"
+                          (click)="cambiarEstado(productoItem, 'apartado')"
+                          [disabled]="cargando"
+                        >
+                          Apartar
+                        </button>
+                      }
+
+                      @if (productoItem.estado !== 'inactivo') {
+                        <button
+                          type="button"
+                          class="btn-ghost btn-small"
+                          (click)="cambiarEstado(productoItem, 'inactivo')"
+                          [disabled]="cargando"
+                        >
+                          Inactivar
+                        </button>
+                      }
+
+                      <button
+                        type="button"
+                        class="btn-secondary btn-small"
+                        (click)="editarProducto(productoItem)"
+                        [disabled]="cargando"
+                      >
+                        Editar
+                      </button>
+
+                      @if (confirmandoEliminarId !== productoItem._id) {
+                        <button
+                          type="button"
+                          class="btn-danger-ghost btn-small"
+                          (click)="solicitarEliminarProducto(productoItem._id)"
+                          [disabled]="cargando"
+                        >
+                          Eliminar
+                        </button>
+                      } @else {
+                        <div class="confirm-inline">
+                          <span>¿Eliminar producto?</span>
+                          <button
+                            type="button"
+                            class="danger"
+                            (click)="eliminarProducto(productoItem._id)"
+                            [disabled]="cargando"
+                          >
+                            Sí
+                          </button>
+                          <button
+                            type="button"
+                            class="btn-secondary"
+                            (click)="cancelarEliminarProducto()"
+                          >
+                            No
+                          </button>
+                        </div>
+                      }
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- VISTA MÓVIL: TARJETAS DE CATÁLOGO (< 768px) -->
+      <div class="mobile-cards-view" role="region" aria-label="Tarjetas de productos en móvil">
+        @for (productoItem of productosFiltrados; track productoItem._id) {
+          <article
+            class="op-card"
+            [class.op-card--pending]="productoItem.estado === 'apartado'"
+          >
+            <div class="op-card__head prod-card-head-mobile">
+              <div class="prod-mobile-identity">
+                @if (tieneFotoValida(productoItem)) {
+                  <img
+                    class="producto-thumb"
+                    [src]="productoItem.foto"
+                    [alt]="productoItem.nombre"
+                    width="52"
+                    height="44"
+                    loading="lazy"
+                    (error)="marcarErrorFoto(productoItem)"
+                  />
                 } @else {
-                  <span class="sin-foto-label">Sin foto</span>
+                  <div
+                    class="producto-thumb-fallback"
+                    [class.producto-thumb-fallback--error]="tieneErrorFoto(productoItem)"
+                    aria-hidden="true"
+                  >
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8">
+                      <rect x="3" y="4" width="18" height="16" rx="2.5"></rect>
+                      <circle cx="8.5" cy="9.5" r="1.5"></circle>
+                      <path d="m21 15-4.5-4.5L6 20"></path>
+                    </svg>
+                    <span class="fallback-sub">{{ tieneErrorFoto(productoItem) ? 'Error URL' : 'Sin foto' }}</span>
+                  </div>
                 }
-              </td>
-              <td><strong>L {{ productoItem.precio }}</strong></td>
-              <td>
-                <span
-                  class="estado-badge"
-                  [class.activo]="productoItem.estado === 'activo'"
-                  [class.apartado]="productoItem.estado === 'apartado'"
-                  [class.inactivo]="productoItem.estado === 'inactivo'"
+
+                <div class="prod-mobile-head">
+                  <div class="prod-mobile-codes">
+                    <span class="chip-codigo">{{ productoItem.codigo || 'S/C' }}</span>
+                    @if (productoItem.categoria) {
+                      <span class="category-tag">{{ productoItem.categoria }}</span>
+                    }
+                  </div>
+                  <h4 class="op-card__title">{{ productoItem.nombre }}</h4>
+                </div>
+              </div>
+              <span class="op-card__amount">L {{ productoItem.precio }}</span>
+            </div>
+
+            @if (productoItem.descripcion) {
+              <p class="op-card__sub">{{ productoItem.descripcion }}</p>
+            }
+
+            <div class="op-card__badges">
+              <mio-status-badge
+                [tone]="obtenerTonoEstado(productoItem.estado)"
+                [dot]="productoItem.estado === 'activo'"
+              >
+                {{ obtenerEtiquetaEstado(productoItem.estado) }}
+              </mio-status-badge>
+
+              @if (tienePedidoVinculado(productoItem._id)) {
+                <a routerLink="/pedidos" class="linked-order-note">
+                  Reservado en pedido activo →
+                </a>
+              }
+            </div>
+
+            <div class="op-card__actions prod-mobile-actions">
+              @if (tienePedidoVinculado(productoItem._id)) {
+                <p class="locked-inventory-banner">
+                  Disponibilidad protegida por un pedido activo.
+                </p>
+                <button
+                  type="button"
+                  class="btn-secondary"
+                  (click)="editarProducto(productoItem)"
+                  [disabled]="cargando"
                 >
-                  {{ productoItem.estado }}
-                </span>
-              </td>
-              <td>
-                <button type="button" class="secondary" (click)="editarProducto(productoItem)">
-                  Editar
+                  Editar datos
                 </button>
-                @if (productoItem.estado !== 'activo') {
-                  <button type="button" (click)="cambiarEstado(productoItem, 'activo')">
+                <a routerLink="/pedidos" class="btn-ghost">
+                  Ver pedido
+                </a>
+              } @else {
+                @if (productoItem.estado === 'inactivo') {
+                  <button
+                    type="button"
+                    class="btn-primary"
+                    (click)="cambiarEstado(productoItem, 'activo')"
+                    [disabled]="cargando"
+                  >
                     Activar
                   </button>
                 }
-                @if (productoItem.estado !== 'inactivo') {
-                  <button type="button" class="secondary" (click)="cambiarEstado(productoItem, 'inactivo')">
-                    Inactivar
-                  </button>
+
+                @if (productoItem.estado === 'apartado') {
+                  @if (confirmandoReactivarId !== productoItem._id) {
+                    <button
+                      type="button"
+                      class="btn-secondary"
+                      (click)="solicitarReactivarProducto(productoItem)"
+                      [disabled]="cargando"
+                    >
+                      Liberar reserva
+                    </button>
+                  } @else {
+                    <div class="confirm-inline confirm-inline--full">
+                      <span>¿Liberar apartado y marcar disponible?</span>
+                      <button
+                        type="button"
+                        class="btn-primary btn-small"
+                        (click)="confirmarReactivarProducto(productoItem)"
+                        [disabled]="cargando"
+                      >
+                        Sí, activar
+                      </button>
+                      <button
+                        type="button"
+                        class="btn-secondary btn-small"
+                        (click)="cancelarReactivarProducto()"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  }
                 }
-                @if (productoItem.estado !== 'apartado') {
-                  <button type="button" class="secondary" (click)="cambiarEstado(productoItem, 'apartado')">
+
+                @if (productoItem.estado === 'activo') {
+                  <button
+                    type="button"
+                    class="btn-warning"
+                    (click)="cambiarEstado(productoItem, 'apartado')"
+                    [disabled]="cargando"
+                  >
                     Apartar
                   </button>
                 }
+
+                @if (productoItem.estado !== 'inactivo') {
+                  <button
+                    type="button"
+                    class="btn-ghost"
+                    (click)="cambiarEstado(productoItem, 'inactivo')"
+                    [disabled]="cargando"
+                  >
+                    Inactivar
+                  </button>
+                }
+
                 <button
                   type="button"
-                  class="danger"
-                  (click)="eliminarProducto(productoItem._id)"
+                  class="btn-secondary"
+                  (click)="editarProducto(productoItem)"
+                  [disabled]="cargando"
                 >
-                  Eliminar
+                  Editar
                 </button>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  }
+
+                @if (confirmandoEliminarId !== productoItem._id) {
+                  <button
+                    type="button"
+                    class="btn-danger-ghost"
+                    (click)="solicitarEliminarProducto(productoItem._id)"
+                    [disabled]="cargando"
+                  >
+                    Eliminar
+                  </button>
+                } @else {
+                  <div class="confirm-inline confirm-inline--full">
+                    <span>¿Eliminar producto?</span>
+                    <button
+                      type="button"
+                      class="danger"
+                      (click)="eliminarProducto(productoItem._id)"
+                      [disabled]="cargando"
+                    >
+                      Sí, eliminar
+                    </button>
+                    <button
+                      type="button"
+                      class="btn-secondary"
+                      (click)="cancelarEliminarProducto()"
+                    >
+                      No
+                    </button>
+                  </div>
+                }
+              }
+            </div>
+          </article>
+        }
+      </div>
+    }
+  </section>
 </section>
