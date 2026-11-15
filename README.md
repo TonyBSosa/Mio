@@ -40,6 +40,13 @@ Prototipo publicado con registro/inicio de sesión, clientes, catálogo de produ
 
 El despliegue y la conexión con MongoDB se observaron en los registros de Render compartidos durante la preparación. Las pruebas de servicio usan repositorios simulados; no certifican concurrencia ni integridad de la base real. La validación con tiendas sigue pendiente.
 
+## Preparación de la semana 5 — Pruebas con usuarios
+
+- [Guion, métricas, fichas y ejemplo simulado](docs/pruebas-usuarios.md).
+- [Bitácora de semana 5 y pendientes de cierre](docs/bitacora/semana-5.md).
+
+Versión documental: [semana-5](https://github.com/TonyBSosa/Mio/releases/tag/semana-5). Las sesiones reales siguen pendientes. El ejemplo está identificado como ficticio y no valida las hipótesis; la publicación de la versión no completa el requisito de usuarios reales.
+
 ## Tecnologías y ejecución local
 
 Angular 21 y TypeScript para la interfaz; Node.js, Express 5, Mongoose 9 y MongoDB para la API y persistencia. Se requiere una versión de Node compatible con las dependencias de ambos package.json y npm.
