@@ -36,3 +36,7 @@ El README contiene el token `LEARN-CAP-D03DECFA` y las URLs de aplicación y rep
 - Confirmar commits y documentos en el remoto; publicar etiqueta o release `semana-5` sobre el commit final.
 
 **Estado de entrega: preparación documental terminada; requisito de usuarios reales pendiente.**
+
+## Publicación de la documentación
+
+El primer envío quedó en `incremento-4-publico`, mientras que GitHub muestra `main` por defecto. Se prepara la integración en `main` y la publicación de la versión documental `semana-5`. El release identifica esta preparación; no certifica sesiones con usuarios reales. Las notas anteriores sobre ausencia de etiqueta corresponden a la consulta inicial.
