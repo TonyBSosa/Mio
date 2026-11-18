@@ -5,6 +5,8 @@ const service = require('../src/services/pedidoService');
 const Pedido = require('../src/models/pedidos');
 
 test('venta directa y vinculacion de piezas sin modificar pedidos heredados', async (t) => {
+  t.mock.method(repository, 'transaccion', async fn => fn({}));
+  t.mock.method(repository, 'apartarProductoPorIdYVendedor', async id => ({ _id: id }));
   const vendedor = '507f1f77bcf86cd799439011';
   const clienteId = '507f1f77bcf86cd799439012';
   const productoId = '507f1f77bcf86cd799439013';

@@ -1,0 +1,208 @@
+{
+  "node_count": 1514,
+  "unverified_node_count": 0,
+  "raw_edge_count": 3431,
+  "non_object_edges": 0,
+  "missing_endpoint_edges": 0,
+  "dangling_endpoint_edges": 0,
+  "external_reference_edges": 26,
+  "self_loop_edges": 0,
+  "valid_candidate_edges": 3405,
+  "exact_duplicate_edges": 0,
+  "directed_unique_endpoint_pairs": 3201,
+  "directed_same_endpoint_collapsed_edges": 204,
+  "undirected_unique_endpoint_pairs": 3200,
+  "undirected_same_endpoint_collapsed_edges": 205,
+  "same_endpoint_group_count": 196,
+  "relation_variant_groups": 167,
+  "source_file_variant_groups": 0,
+  "source_location_variant_groups": 29,
+  "context_variant_groups": 0,
+  "post_build_graph_type": "Graph",
+  "post_build_node_count": 1521,
+  "post_build_edge_count": 3226,
+  "post_build_error": "",
+  "producer_suppression": {
+    "path": "C:\\Users\\Tony_\\AppData\\Roaming\\uv\\tools\\graphifyy\\Lib\\site-packages\\graphify\\extract.py",
+    "total_sites": 12,
+    "sites": [
+      {
+        "line": 1907,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids = {n[\"id\"] for n in nodes}"
+      },
+      {
+        "line": 2602,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids = {n[\"id\"] for n in nodes}"
+      },
+      {
+        "line": 2604,
+        "name": "seen_doc_refs",
+        "tuple_arity": 0,
+        "sample": "seen_doc_refs: set[str] = set()"
+      },
+      {
+        "line": 3271,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids: set[str] = {n[\"id\"] for n in nodes}"
+      },
+      {
+        "line": 3418,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids = {n.get(\"id\") for n in nodes}"
+      },
+      {
+        "line": 5168,
+        "name": "seen_keys",
+        "tuple_arity": 0,
+        "sample": "seen_keys: set[tuple] = set()"
+      },
+      {
+        "line": 5354,
+        "name": "seen_keys",
+        "tuple_arity": 0,
+        "sample": "seen_keys: set[tuple] = set()"
+      },
+      {
+        "line": 10157,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids: set[str] = set()"
+      },
+      {
+        "line": 10265,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids: set[str] = set()"
+      },
+      {
+        "line": 10344,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids: set[str] = set()"
+      },
+      {
+        "line": 10869,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids: set[str] = set()"
+      },
+      {
+        "line": 10870,
+        "name": "seen_edges",
+        "tuple_arity": 4,
+        "sample": "seen_edges: set[tuple[str, str, str, str | None]] = set()"
+      }
+    ],
+    "error": ""
+  },
+  "examples": [
+    {
+      "source": "frontend_src_app_shared_ui_modal_modal_modalcomponent",
+      "target": "frontend_src_app_shared_ui_modal_modal_ts_input",
+      "edge_count": 6,
+      "relations": [
+        "references"
+      ],
+      "source_files": [
+        "frontend/src/app/shared/ui/modal/modal.ts"
+      ],
+      "source_locations": [
+        "L231",
+        "L232",
+        "L233",
+        "L234",
+        "L235",
+        "L236"
+      ],
+      "contexts": [
+        "decorator"
+      ]
+    },
+    {
+      "source": "frontend_src_app_shared_ui_pagination_pagination_paginationcomponent",
+      "target": "frontend_src_app_shared_ui_pagination_pagination_ts_input",
+      "edge_count": 5,
+      "relations": [
+        "references"
+      ],
+      "source_files": [
+        "frontend/src/app/shared/ui/pagination/pagination.ts"
+      ],
+      "source_locations": [
+        "L207",
+        "L208",
+        "L209",
+        "L210",
+        "L211"
+      ],
+      "contexts": [
+        "decorator"
+      ]
+    },
+    {
+      "source": "frontend_src_app_shared_ui_page_header_page_header_pageheadercomponent",
+      "target": "frontend_src_app_shared_ui_page_header_page_header_ts_input",
+      "edge_count": 3,
+      "relations": [
+        "references"
+      ],
+      "source_files": [
+        "frontend/src/app/shared/ui/page-header/page-header.ts"
+      ],
+      "source_locations": [
+        "L63",
+        "L64",
+        "L65"
+      ],
+      "contexts": [
+        "decorator"
+      ]
+    },
+    {
+      "source": "backend_src_controllers_authcontroller",
+      "target": "backend_src_controllers_authcontroller_registrar",
+      "edge_count": 2,
+      "relations": [
+        "contains",
+        "indirect_call"
+      ],
+      "source_files": [
+        "backend/src/controllers/authController.js"
+      ],
+      "source_locations": [
+        "L160",
+        "L17"
+      ],
+      "contexts": [
+        "",
+        "collection"
+      ]
+    },
+    {
+      "source": "backend_src_controllers_authcontroller",
+      "target": "backend_src_controllers_authcontroller_login",
+      "edge_count": 2,
+      "relations": [
+        "contains",
+        "indirect_call"
+      ],
+      "source_files": [
+        "backend/src/controllers/authController.js"
+      ],
+      "source_locations": [
+        "L161",
+        "L76"
+      ],
+      "contexts": [
+        "",
+        "collection"
+      ]
+    }
+  ]
+}

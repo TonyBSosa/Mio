@@ -1,13 +1,15 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 
 import { AuthService } from '../../../services/auth.service';
+import { ToastService } from '../../../services/toast.service';
 import { UsuarioService } from '../../../services/usuario.service';
+import { ModalComponent } from '../../../shared/ui/modal/modal';
 
 @Component({
   selector: 'app-usuarios-admin',
-  imports: [FormsModule, RouterModule],
+  imports: [FormsModule, RouterModule, ModalComponent],
   templateUrl: './usuarios.html',
   styleUrl: './usuarios.css',
 })
@@ -22,9 +24,20 @@ export class UsuariosAdmin implements OnInit {
     estado: 'activo',
   };
 
+  formularioAbierto = false;
   editando = false;
   usuarioEditandoId = '';
-  mensaje = '';
+  private readonly toast = inject(ToastService);
+  private _mensaje = '';
+  get mensaje(): string {
+    return this._mensaje;
+  }
+  set mensaje(valor: string) {
+    this._mensaje = valor;
+    if (valor) {
+      this.toast.exito(valor);
+    }
+  }
   error = '';
   cargando = false;
 
@@ -104,6 +117,7 @@ export class UsuariosAdmin implements OnInit {
             }
 
             this.limpiarFormulario();
+            this.formularioAbierto = false;
             this.editando = false;
             this.usuarioEditandoId = '';
             this.mensaje = 'Usuario actualizado correctamente';
@@ -123,6 +137,7 @@ export class UsuariosAdmin implements OnInit {
           this.usuarios.push(usuarioCreado);
           this.usuarios = [...this.usuarios];
           this.limpiarFormulario();
+          this.formularioAbierto = false;
           this.mensaje = 'Usuario creado correctamente';
           this.cargando = false;
           this.detectorCambios.detectChanges();
@@ -137,8 +152,18 @@ export class UsuariosAdmin implements OnInit {
     }
   }
 
+  abrirFormularioNuevo() {
+    this.editando = false;
+    this.usuarioEditandoId = '';
+    this.limpiarFormulario();
+    this.formularioAbierto = true;
+    this.mensaje = '';
+    this.error = '';
+  }
+
   editarUsuario(usuario: any) {
     this.editando = true;
+    this.formularioAbierto = true;
     this.usuarioEditandoId = usuario._id;
     this.usuario = {
       nombre: usuario.nombre,
@@ -149,12 +174,15 @@ export class UsuariosAdmin implements OnInit {
     };
     this.mensaje = '';
     this.error = '';
+    this.detectorCambios.detectChanges();
   }
 
   cancelarEdicion() {
+    this.formularioAbierto = false;
     this.editando = false;
     this.usuarioEditandoId = '';
     this.limpiarFormulario();
+    this.error = '';
   }
 
   eliminarUsuario(id: string) {
@@ -167,7 +195,7 @@ export class UsuariosAdmin implements OnInit {
         this.usuarios = this.usuarios.filter(
           (usuarioItem) => usuarioItem._id !== id
         );
-        this.mensaje = 'Usuario eliminado correctamente';
+        this.mensaje = 'Cuenta dada de baja; se conserva su historial';
         this.cargando = false;
         this.detectorCambios.detectChanges();
       },

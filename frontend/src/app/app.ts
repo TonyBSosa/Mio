@@ -2,6 +2,7 @@ import { Component, HostListener, OnDestroy, OnInit, computed, inject, signal } 
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Subscription, filter } from 'rxjs';
 import { AuthService } from './services/auth.service';
+import { ToastHostComponent } from './shared/ui/toast-host/toast-host';
 
 const RUTAS_VENDEDOR = new Set([
   '/dashboard',
@@ -30,7 +31,7 @@ const TITULOS_RUTA: Record<string, string> = {
 
 @Component({
   selector: 'app-root',
-  imports: [RouterLink, RouterLinkActive, RouterOutlet],
+  imports: [RouterLink, RouterLinkActive, RouterOutlet, ToastHostComponent],
   templateUrl: './app.html',
   styleUrls: ['./app.css'],
 })
@@ -85,16 +86,38 @@ export class App implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.sincronizarEstado(this.router.url);
+    this.authService.iniciarVigilanciaSesion();
     this.routerSub = this.router.events
       .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
       .subscribe((event) => {
         this.sincronizarEstado(event.urlAfterRedirects || event.url);
         this.menuMovilAbierto.set(false);
+        this.authService.iniciarVigilanciaSesion();
       });
   }
 
   ngOnDestroy() {
     this.routerSub?.unsubscribe();
+    this.authService.cancelarTemporizadorExpiracion();
+  }
+
+  @HostListener('document:visibilitychange')
+  onVisibilityChange() {
+    if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+      this.authService.verificarSesionActiva(true);
+      this.sincronizarEstado(this.router.url);
+    }
+  }
+
+  @HostListener('window:storage', ['$event'])
+  onStorageChange(event: StorageEvent) {
+    if (event.key === 'token' && !event.newValue) {
+      this.authService.cancelarTemporizadorExpiracion();
+      this.sincronizarEstado(this.router.url);
+      if (this.esModoWorkspace()) {
+        this.router.navigate(['/login']);
+      }
+    }
   }
 
   @HostListener('document:keydown.escape')

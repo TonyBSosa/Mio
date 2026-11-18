@@ -1,0 +1,62 @@
+✖ reserva atomica de pieza, rollback ante fallo y liberacion al eliminar pedido (1.4126ms)
+✖ proteccion de integridad referencial en productos, clientes, lives y usuarios (2.0937ms)
+✔ resumen soporta ventas directas, resumen general y escape seguro en busquedas publicas (0.9867ms)
+✖ venta directa y vinculacion de piezas sin modificar pedidos heredados (1.4034ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 1
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 605.7818
+
+✖ failing tests:
+
+test at backend\test\integridad-relaciones.test.js:28:1
+✖ reserva atomica de pieza, rollback ante fallo y liberacion al eliminar pedido (1.4126ms)
+  Error: MongoDB no esta conectado
+      at Object.transaccion (D:\VANGUARDIA\MIO\backend\src\repositories\pedidoRepository.js:39:64)
+      at Object.crearPedido (D:\VANGUARDIA\MIO\backend\src\services\pedidoService.js:130:27)
+      at async TestContext.<anonymous> (D:\VANGUARDIA\MIO\backend\test\integridad-relaciones.test.js:54:18)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    status: 503
+  }
+
+test at backend\test\integridad-relaciones.test.js:105:1
+✖ proteccion de integridad referencial en productos, clientes, lives y usuarios (2.0937ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    Comparison {
+  +   status: 503
+  -   status: 409
+    }
+  
+      at async TestContext.<anonymous> (D:\VANGUARDIA\MIO\backend\test\integridad-relaciones.test.js:112:3)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: MongoDB no esta conectado
+        at Object.actualizarPorIdYVendedor (D:\VANGUARDIA\MIO\backend\src\repositories\productoRepository.js:23:64)
+        at Object.actualizarEstadoProducto (D:\VANGUARDIA\MIO\backend\src\services\productoService.js:158:45)
+        at TestContext.<anonymous> (D:\VANGUARDIA\MIO\backend\test\integridad-relaciones.test.js:113:21)
+        at async Test.run (node:internal/test_runner/test:1125:7)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:787:7),
+    expected: { status: 409 },
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at backend\test\pedido-venta-directa.test.js:7:1
+✖ venta directa y vinculacion de piezas sin modificar pedidos heredados (1.4034ms)
+  Error: MongoDB no esta conectado
+      at Object.transaccion (D:\VANGUARDIA\MIO\backend\src\repositories\pedidoRepository.js:39:64)
+      at Object.crearPedido (D:\VANGUARDIA\MIO\backend\src\services\pedidoService.js:130:27)
+      at async TestContext.<anonymous> (D:\VANGUARDIA\MIO\backend\test\pedido-venta-directa.test.js:21:18)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    status: 503
+  }

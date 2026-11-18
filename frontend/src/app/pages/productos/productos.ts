@@ -1,11 +1,13 @@
 import { TitleCasePipe } from '@angular/common';
-import { ChangeDetectorRef, Component, OnInit, Optional } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, Optional, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 
 import { AuthService } from '../../services/auth.service';
 import { PedidoService } from '../../services/pedido.service';
 import { ProductoService } from '../../services/producto.service';
+import { ToastService } from '../../services/toast.service';
+import { ModalComponent } from '../../shared/ui/modal/modal';
 import { PageHeaderComponent } from '../../shared/ui/page-header/page-header';
 import { PaginationComponent, paginarLista } from '../../shared/ui/pagination/pagination';
 import { BadgeTone, StatusBadgeComponent } from '../../shared/ui/status-badge/status-badge';
@@ -18,6 +20,7 @@ export type OrdenProductos = 'reciente' | 'nombre-asc' | 'nombre-desc' | 'precio
     FormsModule,
     RouterModule,
     TitleCasePipe,
+    ModalComponent,
     PageHeaderComponent,
     StatusBadgeComponent,
     PaginationComponent,
@@ -52,7 +55,17 @@ export class Productos implements OnInit {
   confirmandoEliminarId = '';
   confirmandoReactivarId = '';
   formularioExpandido = false;
-  mensaje = '';
+  private readonly toast = inject(ToastService);
+  private _mensaje = '';
+  get mensaje(): string {
+    return this._mensaje;
+  }
+  set mensaje(valor: string) {
+    this._mensaje = valor;
+    if (valor) {
+      this.toast.exito(valor);
+    }
+  }
   error = '';
   cargando = false;
 
@@ -142,9 +155,6 @@ export class Productos implements OnInit {
     this.productoService.listarProductos().subscribe({
       next: (respuesta: any) => {
         this.productos = Array.isArray(respuesta) ? respuesta : [];
-        if (this.productos.length === 0) {
-          this.formularioExpandido = true;
-        }
         this.actualizarCategorias();
         this.filtrarProductos();
         this.cargando = false;
@@ -393,13 +403,12 @@ export class Productos implements OnInit {
     };
     this.mensaje = '';
     this.error = '';
-    if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    this.detectorCambios.detectChanges();
   }
 
   cancelarEdicion() {
     this.cerrarFormulario();
+    this.error = '';
   }
 
   eliminarProducto(id: string) {

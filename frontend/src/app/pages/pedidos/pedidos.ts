@@ -1,13 +1,15 @@
 import { TitleCasePipe } from '@angular/common';
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, Optional, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
 import { AuthService } from '../../services/auth.service';
 import { ClienteService } from '../../services/cliente.service';
 import { LiveService } from '../../services/live.service';
 import { PedidoService } from '../../services/pedido.service';
 import { ProductoService } from '../../services/producto.service';
+import { ToastService } from '../../services/toast.service';
+import { ModalComponent } from '../../shared/ui/modal/modal';
 import { PageHeaderComponent } from '../../shared/ui/page-header/page-header';
 import { PaginationComponent, paginarLista } from '../../shared/ui/pagination/pagination';
 import { StatusBadgeComponent } from '../../shared/ui/status-badge/status-badge';
@@ -24,6 +26,7 @@ export type FiltroOperativoPedidos = '' | 'por-cobrar' | 'por-entregar';
     FormsModule,
     RouterModule,
     TitleCasePipe,
+    ModalComponent,
     PageHeaderComponent,
     StatusBadgeComponent,
     PaginationComponent,
@@ -68,7 +71,17 @@ export class Pedidos implements OnInit {
   pedidoEditandoId = '';
   confirmandoEliminarId = '';
   formularioExpandido = false;
-  mensaje = '';
+  private readonly toast = inject(ToastService);
+  private _mensaje = '';
+  get mensaje(): string {
+    return this._mensaje;
+  }
+  set mensaje(valor: string) {
+    this._mensaje = valor;
+    if (valor) {
+      this.toast.exito(valor);
+    }
+  }
   error = '';
   cargando = false;
 
@@ -80,6 +93,7 @@ export class Pedidos implements OnInit {
     private pedidoService: PedidoService,
     private router: Router,
     private detectorCambios: ChangeDetectorRef,
+    @Optional() private route?: ActivatedRoute,
   ) {}
 
   get pedidosPaginados(): any[] {
@@ -91,6 +105,14 @@ export class Pedidos implements OnInit {
   }
 
   ngOnInit() {
+    const filtroParam = this.route?.snapshot?.queryParamMap?.get('filtro');
+    if (filtroParam === 'por-cobrar' || filtroParam === 'por-entregar') {
+      this.filtroOperativo = filtroParam;
+    }
+    const abrirNuevo = this.route?.snapshot?.queryParamMap?.get('nuevo');
+    if (abrirNuevo === '1') {
+      this.formularioExpandido = true;
+    }
     this.cargarDatosIniciales();
   }
 
@@ -128,9 +150,6 @@ export class Pedidos implements OnInit {
     this.pedidoService.listarPedidos().subscribe({
       next: (respuesta: any) => {
         this.pedidos = Array.isArray(respuesta) ? respuesta : [];
-        if (this.pedidos.length === 0) {
-          this.formularioExpandido = true;
-        }
         this.filtrarPedidos(false);
         this.cargando = false;
         this.detectorCambios.detectChanges();
@@ -476,10 +495,6 @@ export class Pedidos implements OnInit {
     };
     this.mensaje = '';
     this.error = '';
-
-    if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
     this.detectorCambios.detectChanges();
   }
 

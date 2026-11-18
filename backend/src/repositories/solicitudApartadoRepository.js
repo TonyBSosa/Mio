@@ -35,7 +35,7 @@ module.exports = {
     if (!solicitud || solicitud.estado !== 'confirmada' || solicitud.comprobanteRecibidoEn || solicitud.comprobanteActualId || solicitud.pedidoId) {
       throw conflicto('El apartado cambió o tiene un comprobante. Actualizá la lista antes de cancelar.');
     }
-    if (await Pedido.exists({ productoId: solicitud.productoId, vendedorId: solicitud.vendedorId }).session(session) ||
+    if (await Pedido.exists({ canceladoEn: null, productoId: solicitud.productoId, vendedorId: solicitud.vendedorId }).session(session) ||
         await Comprobante.exists({ reservaId: solicitud._id, estado: { $in: ['en_revision', 'aprobado', 'rechazado'] } }).session(session)) {
       throw conflicto('No se puede cancelar un apartado con pago o comprobante recibido.');
     }
@@ -59,7 +59,7 @@ module.exports = {
       if (!solicitud || solicitud.estado !== 'pendiente') {
         throw Object.assign(new Error('La solicitud ya no está pendiente.'), { status: 409 });
       }
-      if (await Pedido.exists({ productoId: solicitud.productoId, vendedorId: filtro.vendedorId }).session(session)) {
+      if (await Pedido.exists({ canceladoEn: null, productoId: solicitud.productoId, vendedorId: filtro.vendedorId }).session(session)) {
         throw Object.assign(new Error('La pieza ya está vinculada a un pedido.'), { status: 409 });
       }
       const producto = await Producto.findOneAndUpdate({

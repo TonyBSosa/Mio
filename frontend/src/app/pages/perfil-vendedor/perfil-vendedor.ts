@@ -1,9 +1,10 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 
 import { AuthService } from '../../services/auth.service';
 import { PerfilVendedorService } from '../../services/perfil-vendedor.service';
+import { ToastService } from '../../services/toast.service';
 import { PageHeaderComponent } from '../../shared/ui/page-header/page-header';
 
 @Component({
@@ -23,7 +24,17 @@ export class PerfilVendedor implements OnInit {
     enlaceLive: '',
   };
 
-  mensaje = '';
+  private readonly toast = inject(ToastService);
+  private _mensaje = '';
+  get mensaje(): string {
+    return this._mensaje;
+  }
+  set mensaje(valor: string) {
+    this._mensaje = valor;
+    if (valor) {
+      this.toast.exito(valor);
+    }
+  }
   error = '';
   cargando = false;
   usuario: any = null;

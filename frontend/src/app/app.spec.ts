@@ -10,6 +10,7 @@ import { Bienvenida } from './pages/bienvenida/bienvenida';
 import { Lives } from './pages/lives/lives';
 import { Clientes } from './pages/clientes/clientes';
 import { Pedidos } from './pages/pedidos/pedidos';
+import { Dashboard } from './pages/dashboard/dashboard';
 import { paginarLista } from './shared/ui/pagination/pagination';
 
 @Component({ standalone: true, template: '<p>Dummy</p>' })
@@ -342,5 +343,59 @@ describe('App', () => {
     expect(comp.paginaActual).toBe(1);
     expect(comp.pedidosFiltrados.length).toBe(12);
     expect(comp.pedidosPaginados.length).toBe(10);
+  });
+
+  it('should compute period balance, actionable pending queues, WhatsApp links, and Live sales series in Dashboard', () => {
+    const fixture = TestBed.createComponent(Dashboard);
+    const comp = fixture.componentInstance;
+
+    const ahora = Date.now();
+    const hace3Dias = new Date(ahora - 72 * 3_600_000).toISOString();
+    const hace1Hora = new Date(ahora - 1 * 3_600_000).toISOString();
+    const hace40Dias = new Date(ahora - 40 * 86_400_000).toISOString();
+
+    comp.clientes = [
+      { _id: 'c1', nombre: 'melissa ochoa', telefono: '99884478' },
+      { _id: 'c2', nombre: 'josefina', telefono: '022622' },
+    ];
+    comp.lives = [
+      { _id: 'l1', nombre: 'Feria juniana', estado: 'activo', fecha: hace1Hora, updatedAt: hace1Hora },
+      { _id: 'l2', nombre: 'Domingo 21', estado: 'finalizado', fecha: hace3Dias },
+    ];
+    comp.liveActivo = comp.lives[0];
+    comp.pedidos = [
+      { _id: 'p1', clienteId: 'c1', liveId: 'l2', producto: 'florero', cantidad: 1, precio: 400, estadoPago: 'pendiente', estadoEntrega: 'pendiente', createdAt: hace3Dias },
+      { _id: 'p2', clienteId: 'c2', liveId: 'l1', producto: 'Sabanas', cantidad: 1, precio: 600, estadoPago: 'pagado', estadoEntrega: 'pendiente', createdAt: hace1Hora },
+      { _id: 'p3', clienteId: '6a2f64c88b2995288647ee1c', liveId: 'l2', producto: 'Bolsa', cantidad: 1, precio: 500, estadoPago: 'pagado', estadoEntrega: 'entregado', createdAt: hace40Dias },
+    ];
+    comp.calcularMetricas();
+
+    // All-time balance
+    expect(comp.balance.total).toBe(1500);
+    expect(comp.balance.cobrado).toBe(1100);
+    expect(comp.balance.porCobrar).toBe(400);
+    expect(comp.balance.porcentaje).toBe(73);
+
+    // Period filter ("7 días") excludes 40-day-old order
+    comp.cambiarPeriodo('semana');
+    expect(comp.balance.total).toBe(1000);
+    expect(comp.balance.cantidad).toBe(2);
+
+    // Pending queues & urgency
+    expect(comp.pendientesCobro.map((p) => p._id)).toEqual(['p1']);
+    expect(comp.pendientesEntrega.map((p) => p._id)).toEqual(['p1', 'p2']);
+    expect(comp.esUrgente(comp.pedidos[0])).toBe(true);
+    expect(comp.siguientePaso?.tipo).toBe('cobro');
+    expect(comp.siguientePaso?.texto).toContain('más de 48 h');
+
+    // WhatsApp link + ObjectId fallback
+    expect(comp.whatsappUrl(comp.pedidos[0], 'cobro')).toContain('https://wa.me/50499884478?text=');
+    expect(comp.whatsappUrl(comp.pedidos[1], 'entrega')).toBeNull();
+    expect(comp.obtenerNombreCliente('6a2f64c88b2995288647ee1c')).toBe('Cliente sin registro');
+
+    // Live active metrics & series
+    expect(comp.estadisticasLiveActivo?.ventas).toBe(600);
+    expect(comp.estadisticasLiveActivo?.pedidos).toBe(1);
+    expect(comp.serieLives.length).toBe(2);
   });
 });

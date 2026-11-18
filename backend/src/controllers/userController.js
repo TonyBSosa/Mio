@@ -1,6 +1,7 @@
 const userService = require("../services/userService");
 
 const responderError = (res, error, mensajeDefault) => {
+  if (error.code === 11000) return res.status(409).json({ mensaje: 'No se pudo guardar el usuario con esos datos' });
   if (error.status) {
     return res.status(error.status).json({
       mensaje: error.mensaje
@@ -8,8 +9,7 @@ const responderError = (res, error, mensajeDefault) => {
   }
 
   return res.status(500).json({
-    mensaje: mensajeDefault,
-    error: error.message
+    mensaje: mensajeDefault
   });
 };
 

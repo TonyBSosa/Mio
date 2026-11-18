@@ -1,0 +1,14 @@
+{
+  "excludes": [
+    ".agents",
+    ".git",
+    ".gitignore",
+    "output",
+    "README.md",
+    "scripts",
+    "skills-lock.json",
+    "tmp"
+  ],
+  "gitignore": true,
+  "scope_note": "Only frontend, backend and docs; all other current top-level entries excluded."
+}

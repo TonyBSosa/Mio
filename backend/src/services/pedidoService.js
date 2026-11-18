@@ -57,14 +57,15 @@ const validarClienteYLive = async (
   clienteId,
   liveId,
   vendedorId,
-  requerirLiveActivo = false
+  requerirLiveActivo = false,
+  session
 ) => {
   validarIdCliente(clienteId);
   if (liveId) validarIdLive(liveId);
 
   const cliente = await pedidoRepository.buscarClientePorIdYVendedor(
     clienteId,
-    vendedorId
+    vendedorId, session
   );
 
   if (!cliente) {
@@ -75,7 +76,7 @@ const validarClienteYLive = async (
 
   const live = await pedidoRepository.buscarLivePorIdYVendedor(
     liveId,
-    vendedorId
+    vendedorId, session
   );
 
   if (!live) {
@@ -125,15 +126,18 @@ const crearPedido = async (data, vendedorId) => {
     validarEstadoEntrega(estadoEntrega);
   }
 
-  await validarClienteYLive(clienteId, liveId, vendedorId, true);
+  if (data.productoId && mongoose.Types.ObjectId.isValid(data.productoId)) {
+    await expiracion.procesar({ productoId: data.productoId, vendedorId });
+  }
 
+  return pedidoRepository.transaccion(async session => {
+  await validarClienteYLive(clienteId, liveId, vendedorId, true, session);
   let pieza;
   if (data.productoId) {
     if (!mongoose.Types.ObjectId.isValid(data.productoId)) {
       throw crearError(400, "ID de producto invalido");
     }
-    await expiracion.procesar({ productoId: data.productoId, vendedorId });
-    pieza = await pedidoRepository.buscarProductoPorIdYVendedor(data.productoId, vendedorId);
+    pieza = await pedidoRepository.buscarProductoPorIdYVendedor(data.productoId, vendedorId, session);
     if (!pieza) throw crearError(404, "Producto no encontrado");
     if (pieza.estado !== "activo" || pieza.reservaSolicitudId) throw crearError(409, "La pieza no esta disponible");
     if (cantidad !== undefined && Number(cantidad) !== 1) {
@@ -142,7 +146,7 @@ const crearPedido = async (data, vendedorId) => {
 
     const piezaApartada = await pedidoRepository.apartarProductoPorIdYVendedor(
       pieza._id || data.productoId,
-      vendedorId
+      vendedorId, session
     );
 
     if (!piezaApartada) {
@@ -150,8 +154,7 @@ const crearPedido = async (data, vendedorId) => {
     }
   }
 
-  try {
-    return await pedidoRepository.crearPedido({
+  return await pedidoRepository.crearPedido({
       clienteId,
       liveId: liveId || undefined,
       productoId: pieza?._id,
@@ -162,13 +165,8 @@ const crearPedido = async (data, vendedorId) => {
       estadoPago,
       estadoEntrega,
       observaciones
-    });
-  } catch (error) {
-    if (pieza?._id) {
-      await pedidoRepository.liberarProductoPorIdYVendedor(pieza._id, vendedorId);
-    }
-    throw error;
-  }
+    }, session);
+  });
 };
 
 const listarPedidos = (vendedorId) => {
@@ -323,22 +321,25 @@ const actualizarEntregaPedido = async (id, estadoEntrega, vendedorId) => {
 const eliminarPedido = async (id, vendedorId) => {
   validarIdPedido(id);
 
-  const pedido = await pedidoRepository.eliminarPorIdYVendedor(id, vendedorId);
+  return pedidoRepository.transaccion(async session => {
+  const pedido = await pedidoRepository.eliminarPorIdYVendedor(id, vendedorId, session);
 
   if (!pedido) {
     throw crearError(404, "Pedido no encontrado");
   }
 
   if (pedido.productoId) {
-    await pedidoRepository.liberarProductoPorIdYVendedor(
+    const liberado = await pedidoRepository.liberarProductoPorIdYVendedor(
       pedido.productoId,
-      vendedorId
+      vendedorId, session
     );
+    if (!liberado) throw crearError(409, "No se pudo liberar la pieza del pedido");
   }
 
   return {
-    mensaje: "Pedido eliminado correctamente"
+    mensaje: "Pedido cancelado correctamente"
   };
+  });
 };
 
 module.exports = {

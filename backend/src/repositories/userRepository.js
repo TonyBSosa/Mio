@@ -5,13 +5,14 @@ const Producto = require("../models/productos");
 const Live = require("../models/lives");
 const Pedido = require("../models/pedidos");
 const PerfilVendedor = require("../models/perfilVendedor");
+const { randomUUID } = require('node:crypto');
 
 const crearUsuario = (data) => {
   return User.create(data);
 };
 
 const listarUsuarios = () => {
-  return User.find().sort({ createdAt: -1 });
+  return User.find({ deletedAt: null }).sort({ createdAt: -1 });
 };
 
 const buscarPorId = (id) => {
@@ -23,21 +24,22 @@ const buscarPorEmail = (email) => {
 };
 
 const actualizarPorId = (id, data) => {
-  return User.findByIdAndUpdate(
-    id,
-    data,
-    { new: true, runValidators: true }
+  const revocar = ['password', 'estado', 'rol', 'email'].some(campo => data[campo] !== undefined);
+  return User.findOneAndUpdate(
+    { _id: id, deletedAt: null },
+    { $set: { ...data, ...(revocar ? { credentialVersion: randomUUID() } : {}) } },
+    { returnDocument: 'after', runValidators: true, writeConcern: { w: 'majority', wtimeout: 5000 } }
   );
 };
 
 const eliminarPorId = (id) => {
-  return User.findByIdAndDelete(id);
+  return User.findOneAndUpdate({ _id: id, deletedAt: null }, {
+    $set: { estado: 'inactivo', deletedAt: new Date(), credentialVersion: randomUUID() }
+  }, { returnDocument: 'after', runValidators: true, writeConcern: { w: 'majority', wtimeout: 5000 } });
 };
 
 const tieneDatosDeTienda = async (vendedorId) => {
-  if (mongoose.connection.readyState !== 1) {
-    return false;
-  }
+  if (mongoose.connection.readyState !== 1) { throw Object.assign(new Error("MongoDB no esta conectado"), { status: 503 }); }
 
   const [tienePedidos, tieneProductos, tieneClientes, tieneLives] =
     await Promise.all([
@@ -51,9 +53,7 @@ const tieneDatosDeTienda = async (vendedorId) => {
 };
 
 const sincronizarEstadoPerfilVendedor = async (vendedorId, activo) => {
-  if (mongoose.connection.readyState !== 1) {
-    return;
-  }
+  if (mongoose.connection.readyState !== 1) { throw Object.assign(new Error("MongoDB no esta conectado"), { status: 503 }); }
 
   await PerfilVendedor.updateOne(
     { vendedorId },
@@ -61,13 +61,6 @@ const sincronizarEstadoPerfilVendedor = async (vendedorId, activo) => {
   );
 };
 
-const eliminarPerfilPorVendedor = async (vendedorId) => {
-  if (mongoose.connection.readyState !== 1) {
-    return;
-  }
-
-  await PerfilVendedor.deleteOne({ vendedorId });
-};
 
 module.exports = {
   crearUsuario,
@@ -77,6 +70,5 @@ module.exports = {
   actualizarPorId,
   eliminarPorId,
   tieneDatosDeTienda,
-  sincronizarEstadoPerfilVendedor,
-  eliminarPerfilPorVendedor
+  sincronizarEstadoPerfilVendedor
 };

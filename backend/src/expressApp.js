@@ -38,4 +38,12 @@ expressApp.use("/api/perfil-vendedor", perfilVendedorRoutes);
 expressApp.use("/api/public/catalogo", catalogoPublicoRoutes);
 expressApp.use("/api/public/explorar", explorarPublicoRoutes);
 
+// Errores de parser y rechazos async no deben responder con stack o texto del motor.
+expressApp.use((error, req, res, next) => {
+  if (res.headersSent) return next(error);
+  const status = error.type === 'entity.parse.failed' ? 400 : error.status === 413 ? 413 : 503;
+  res.status(status).json({ mensaje: status === 400 ? 'Solicitud invalida' :
+    status === 413 ? 'Solicitud demasiado grande' : 'No se pudo procesar la solicitud' });
+});
+
 module.exports = expressApp;

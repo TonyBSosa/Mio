@@ -8,17 +8,13 @@
       type="button"
       class="btn-primary btn-small"
       (click)="alternarFormulario()"
-      [attr.aria-expanded]="formularioExpandido"
+      [attr.aria-expanded]="formularioExpandido || editando"
     >
-      {{ formularioExpandido && !editando ? 'Cerrar formulario' : '+ Nuevo producto' }}
+      + Nuevo producto
     </button>
   </mio-page-header>
 
-  @if (mensaje) {
-    <p class="mensaje exito" role="status" aria-live="polite">{{ mensaje }}</p>
-  }
-
-  @if (error) {
+  @if (error && !(formularioExpandido || editando)) {
     <p class="mensaje error" role="alert">{{ error }}</p>
   }
 
@@ -66,53 +62,43 @@
     </button>
   </div>
 
-  <!-- FORMULARIO DESPLEGABLE DE REGISTRO Y EDICIÓN -->
-  @if (formularioExpandido || editando) {
-    <form class="producto-form" (ngSubmit)="guardarProducto()">
-      <div class="form-head">
-        <div>
-          <h3>{{ editando ? 'Editar producto del catálogo' : 'Registrar nuevo producto' }}</h3>
-          <p class="form-sub">
-            Si dejas el código vacío, MIO asignará un código único automáticamente al guardar.
-          </p>
-        </div>
-        <div class="form-head__end">
-          @if (producto.precio > 0) {
-            <div class="price-preview-chip">
-              <span>Precio</span>
-              <strong>L {{ formatearPrecio(producto.precio) }}</strong>
-            </div>
-          }
-          @if (productos.length > 0) {
-            <button
-              type="button"
-              class="btn-ghost btn-small"
-              (click)="cerrarFormulario()"
-              [disabled]="cargando"
-            >
-              Cerrar
-            </button>
-          }
-        </div>
+  <!-- VENTANA FLOTANTE DE REGISTRO Y EDICIÓN -->
+  <mio-modal
+    [open]="formularioExpandido || editando"
+    [title]="editando ? 'Editar producto del catálogo' : 'Registrar nuevo producto'"
+    subtitle="Si dejas el código vacío, MIO asignará un código único automáticamente al guardar."
+    size="lg"
+    [error]="error"
+    [closeDisabled]="cargando"
+    (closed)="cancelarEdicion()"
+  >
+    @if (producto.precio > 0) {
+      <div modalHeaderExtra class="price-preview-chip">
+        <span>Precio</span>
+        <strong>L {{ formatearPrecio(producto.precio) }}</strong>
       </div>
+    }
 
-      <div class="form-section">
-        <span class="form-section__label">1 · Identificación y precio</span>
-        <div class="prod-grid-4">
-          <div class="form-group">
-            <label for="codigo">Código / SKU</label>
-            <input
-              id="codigo"
-              name="codigo"
-              type="text"
-              maxlength="30"
-              autocorrect="off"
-              autocapitalize="characters"
-              spellcheck="false"
-              placeholder="Ej. PROD-001 (opcional)"
-              [(ngModel)]="producto.codigo"
-            />
-          </div>
+    @if (formularioExpandido || editando) {
+      <form class="producto-form" (ngSubmit)="guardarProducto()">
+        <div class="form-section">
+          <span class="form-section__label">1 · Identificación y precio</span>
+          <div class="prod-grid-4">
+            <div class="form-group">
+              <label for="codigo">Código / SKU</label>
+              <input
+                id="codigo"
+                name="codigo"
+                type="text"
+                maxlength="30"
+                autocorrect="off"
+                autocapitalize="characters"
+                spellcheck="false"
+                placeholder="Ej. PROD-001 (opcional)"
+                [(ngModel)]="producto.codigo"
+                autofocus
+              />
+            </div>
 
           <div class="form-group">
             <label for="nombre">Nombre del producto *</label>
@@ -243,6 +229,7 @@
       </div>
     </form>
   }
+  </mio-modal>
 
   <!-- BARRA UNIFICADA DE BÚSQUEDA, FILTROS Y LISTADO -->
   <section id="catalogo-listado" class="catalog-section" aria-labelledby="productos-table-heading">

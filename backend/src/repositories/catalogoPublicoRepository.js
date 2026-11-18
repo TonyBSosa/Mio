@@ -5,9 +5,7 @@ const Producto = require("../models/productos");
 const User = require("../models/users");
 
 const buscarVendedorPorId = async (vendedorId) => {
-  if (mongoose.connection.readyState !== 1) {
-    return null;
-  }
+  if (mongoose.connection.readyState !== 1) { throw Object.assign(new Error("MongoDB no esta conectado"), { status: 503 }); }
 
   return User.findById(vendedorId);
 };

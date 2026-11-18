@@ -1,6 +1,6 @@
 require("dotenv").config();
 
-const bcrypt = require("bcryptjs");
+const { hashPassword, validarPassword } = require('../services/passwordPolicy');
 const mongoose = require("mongoose");
 
 const User = require("../models/users");
@@ -19,20 +19,22 @@ const crearAdmin = async () => {
       process.exit(1);
     }
 
+    validarPassword(ADMIN_PASSWORD);
+    const emailNormalizado = ADMIN_EMAIL.trim().toLowerCase();
     await mongoose.connect(MONGO_URI);
 
-    const adminExiste = await User.findOne({ email: ADMIN_EMAIL });
+    const adminExiste = await User.findOne({ email: emailNormalizado });
 
     if (adminExiste) {
       console.log("Ya existe un usuario con ese email");
       process.exit(0);
     }
 
-    const passwordHasheado = await bcrypt.hash(ADMIN_PASSWORD, 10);
+    const passwordHasheado = await hashPassword(ADMIN_PASSWORD);
 
     await User.create({
       nombre: ADMIN_NOMBRE,
-      email: ADMIN_EMAIL,
+      email: emailNormalizado,
       password: passwordHasheado,
       rol: "admin",
       estado: "activo"
@@ -41,7 +43,7 @@ const crearAdmin = async () => {
     console.log("Admin creado correctamente");
     process.exit(0);
   } catch (error) {
-    console.log("Error al crear admin:", error.message);
+    console.log(error.status === 400 ? error.mensaje : 'No se pudo crear el administrador');
     process.exit(1);
   }
 };

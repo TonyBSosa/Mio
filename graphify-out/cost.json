@@ -1,0 +1,14 @@
+{
+  "runs": [
+    {
+      "date": "2026-11-18T20:31:04.633950+00:00",
+      "input_tokens": null,
+      "output_tokens": null,
+      "files": 205,
+      "usage_status": "not exposed by host agents"
+    }
+  ],
+  "total_input_tokens": 0,
+  "total_output_tokens": 0,
+  "usage_note": "Semantic token usage unavailable; total_* fields include only measured counts and are incomplete."
+}

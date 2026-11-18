@@ -1,0 +1,55 @@
+
+> backend@1.0.0 test
+> node --test
+
+✖ HTTP: roles desde base, propiedad de tienda, logout, caducidad y recuperacion de un uso (38.9049ms)
+✔ comprobantes: decodificación real, firmas, tamaño y re-encodeado sin metadatos (46.1526ms)
+✔ adaptador Supabase: bucket privado, upload, firma temporal, borrado y fallo seguro (35.2597ms)
+﹣ MongoDB real + almacenamiento simulado: comprobantes y contabilidad (0.5917ms) # SKIP
+﹣ MongoDB real: ciclo de vencimiento con reloj inyectable (0.6805ms) # SKIP
+✔ reserva atomica de pieza, rollback ante fallo y liberacion al eliminar pedido (2.7183ms)
+✔ proteccion de integridad referencial en productos, clientes, lives y usuarios (0.893ms)
+✔ resumen soporta ventas directas, resumen general y escape seguro en busquedas publicas (0.7111ms)
+(node:22564) [MONGOOSE] Warning: Mongoose: `Document.prototype.validateSync()` is deprecated and will be removed in Mongoose 10. Use `Document.prototype.validate()` instead.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ venta directa y vinculacion de piezas sin modificar pedidos heredados (9.956ms)
+✔ codigos de piezas: compatibilidad, validacion y conflictos (3.6738ms)
+﹣ MongoDB real aislado: persistencia, roles, rechazo, transacciones y concurrencia (0.6591ms) # SKIP
+✖ solicitudes HTTP: creación segura, duplicados concurrentes, aislamiento y compatibilidad (41.3317ms)
+✔ Mongo: índice parcial único y espera de su construcción antes de crear (1.9203ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 8
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 3
+ℹ todo 0
+ℹ duration_ms 1774.5169
+
+✖ failing tests:
+
+test at test\auth-permisos.test.js:13:1
+✖ HTTP: roles desde base, propiedad de tienda, logout, caducidad y recuperacion de un uso (38.9049ms)
+  [TypeError: fetch failed] {
+    [cause]: Error: connect EACCES 127.0.0.1:56500
+        at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1645:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 56500
+    }
+  }
+
+test at test\solicitudes-apartado.test.js:15:1
+✖ solicitudes HTTP: creación segura, duplicados concurrentes, aislamiento y compatibilidad (41.3317ms)
+  [TypeError: fetch failed] {
+    [cause]: Error: connect EACCES 127.0.0.1:56502
+        at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1645:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 56502
+    }
+  }

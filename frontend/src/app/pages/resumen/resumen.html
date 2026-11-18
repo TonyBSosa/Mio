@@ -12,17 +12,10 @@
     </a>
   </mio-page-header>
 
-  @if (mensaje) {
-    <div class="alert alert-success" role="status" aria-live="polite">
-      <span>{{ mensaje }}</span>
-      <button type="button" class="alert-dismiss" (click)="mensaje = ''" aria-label="Cerrar aviso">×</button>
-    </div>
-  }
-
   @if (error) {
-    <div class="alert alert-error" role="alert">
+    <div class="mensaje error resumen-alert" role="alert">
       <span>{{ error }}</span>
-      <button type="button" class="alert-dismiss" (click)="error = ''" aria-label="Cerrar error">×</button>
+      <button type="button" class="seg-btn resumen-alert__close" (click)="error = ''" aria-label="Cerrar error">×</button>
     </div>
   }
 
@@ -303,6 +296,178 @@
           </table>
         </div>
       </article>
+    </section>
+  }
+
+  <!-- Comparativa completa y paginada de transmisiones -->
+  @if (lives.length > 0) {
+    <section id="comparativa-lives" class="panel-card comparativa-card" aria-labelledby="comparativa-lives-titulo">
+      <div class="panel-card-header comparativa-head">
+        <div>
+          <span class="section-kicker">Histórico de eventos Live</span>
+          <h3 id="comparativa-lives-titulo" class="section-title">Comparativa por transmisión</h3>
+        </div>
+        <span class="comparativa-count tabular-nums">
+          {{ comparativaLivesFiltrada.length }} de {{ lives.length }}
+          {{ lives.length === 1 ? 'transmisión' : 'transmisiones' }}
+        </span>
+      </div>
+
+      <div class="comparativa-toolbar" role="search" aria-label="Filtrar y ordenar transmisiones">
+        <div class="form-group comparativa-search">
+          <label for="comparativa-busqueda">Buscar transmisión</label>
+          <input
+            id="comparativa-busqueda"
+            type="search"
+            placeholder="Nombre del Live..."
+            [(ngModel)]="busquedaLive"
+            (ngModelChange)="reiniciarPaginaComparativa()"
+            name="busquedaLive"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="comparativa-estado">Estado</label>
+          <select
+            id="comparativa-estado"
+            [(ngModel)]="filtroEstadoLive"
+            (ngModelChange)="reiniciarPaginaComparativa()"
+            name="filtroEstadoLive"
+          >
+            <option value="todos">Todos los estados</option>
+            <option value="activo">En vivo</option>
+            <option value="finalizado">Finalizado</option>
+            <option value="programado">Programado</option>
+            <option value="pausado">Pausado</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="comparativa-orden">Ordenar por</label>
+          <select
+            id="comparativa-orden"
+            [(ngModel)]="ordenLives"
+            (ngModelChange)="reiniciarPaginaComparativa()"
+            name="ordenLives"
+          >
+            <option value="ventas">Mayor venta</option>
+            <option value="recientes">Más recientes</option>
+            <option value="pedidos">Más pedidos</option>
+            <option value="pendiente">Mayor saldo pendiente</option>
+          </select>
+        </div>
+
+        <label class="comparativa-toggle">
+          <input
+            type="checkbox"
+            [(ngModel)]="soloConVentas"
+            (ngModelChange)="reiniciarPaginaComparativa()"
+            name="soloConVentas"
+          />
+          <span>Solo con ventas</span>
+        </label>
+      </div>
+
+      @if (paginacionComparativa.itemsPagina.length === 0) {
+        <div class="comparativa-empty">
+          <p>No hay transmisiones que coincidan con los filtros seleccionados.</p>
+          @if (hayFiltrosComparativa) {
+            <button type="button" class="btn-secondary btn-sm" (click)="limpiarFiltrosComparativa()">
+              Limpiar filtros
+            </button>
+          }
+        </div>
+      } @else {
+        <div
+          tabindex="0"
+          role="region"
+          aria-labelledby="comparativa-lives-titulo"
+          class="comparativa-table-wrapper"
+        >
+          <table class="comparativa-table">
+            <thead>
+              <tr>
+                <th scope="col">Transmisión</th>
+                <th scope="col">Ventas</th>
+                <th scope="col">Cobro</th>
+                <th scope="col" class="col-num">Pedidos</th>
+                <th scope="col" class="col-num">Detalle</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (fila of paginacionComparativa.itemsPagina; track fila.id) {
+                <tr [class.comparativa-row--activa]="fila.id === liveId">
+                  <th scope="row">
+                    <div class="comparativa-live-cell">
+                      <span class="comparativa-live-name">{{ fila.nombre }}</span>
+                      <div class="comparativa-live-meta">
+                        <span>{{ fila.fechaTexto }}</span>
+                        <mio-status-badge
+                          [tone]="obtenerTonoEstadoLive(fila.estado)"
+                          [dot]="fila.estado === 'activo'"
+                        >
+                          {{ obtenerEtiquetaEstadoLive(fila.estado) }}
+                        </mio-status-badge>
+                      </div>
+                    </div>
+                  </th>
+                  <td class="comparativa-bar-cell">
+                    <div class="comparativa-sales-wrap">
+                      <strong class="tabular-nums">L {{ formatearMonto(fila.totalVendido) }}</strong>
+                      <div class="comparativa-bar-track" aria-hidden="true">
+                        <div
+                          class="comparativa-bar-fill"
+                          [style.width.%]="anchoBarraComparativa(fila.totalVendido)"
+                        ></div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="comparativa-cobro-cell">
+                    @if (fila.totalVendido > 0) {
+                      <div class="comparativa-cobro-wrap">
+                        <span class="tabular-nums comparativa-cobro-pct">{{ fila.porcentajeCobrado }}% cobrado</span>
+                        @if (fila.pendientePago > 0) {
+                          <span class="tabular-nums text-warn comparativa-cobro-sub">
+                            Pendiente L {{ formatearMonto(fila.pendientePago) }}
+                          </span>
+                        } @else {
+                          <span class="text-ok comparativa-cobro-sub">Al día</span>
+                        }
+                      </div>
+                    } @else {
+                      <span class="comparativa-cobro-sub">Sin ventas</span>
+                    }
+                  </td>
+                  <td class="col-num tabular-nums">
+                    <strong>{{ fila.pedidos }}</strong>
+                  </td>
+                  <td class="col-num comparativa-action-cell">
+                    <button
+                      type="button"
+                      class="btn-secondary btn-sm"
+                      [disabled]="fila.id === liveId"
+                      (click)="seleccionarDesdeComparativa(fila.id)"
+                    >
+                      {{ fila.id === liveId ? 'Viendo' : 'Ver resumen' }}
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <mio-pagination
+          [totalItems]="comparativaLivesFiltrada.length"
+          [page]="paginacionComparativa.paginaSegura"
+          [pageSize]="porPaginaLives"
+          [opcionesTamano]="[8, 15, 30]"
+          itemLabel="transmisiones"
+          (pageChange)="paginaLives = $event"
+          (pageSizeChange)="porPaginaLives = $event"
+        />
+      }
     </section>
   }
 </div>

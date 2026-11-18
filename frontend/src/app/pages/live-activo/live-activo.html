@@ -8,10 +8,6 @@
     <a class="btn-ghost btn-small" routerLink="/lives">Eventos Live</a>
   </mio-page-header>
 
-  @if (mensaje) {
-    <p class="mensaje exito" role="status" aria-live="polite">{{ mensaje }}</p>
-  }
-
   @if (error) {
     <p class="mensaje error" role="alert">{{ error }}</p>
   }
@@ -398,7 +394,7 @@
         <div class="cabin-orders-header">
           <div>
             <h3>Pedidos de este Live ({{ pedidosDelLive.length }})</h3>
-            <p>Actualiza cobros y entregas con un toque conforme avanzas.</p>
+            <p>Cobra, entrega o edita cualquier registro al instante sin cortar la transmisión.</p>
           </div>
           <a class="btn-secondary btn-small" routerLink="/pedidos">Ver todos →</a>
         </div>
@@ -409,132 +405,340 @@
             <p>Usa el formulario de captura rápida para asignar la primera pieza en vivo.</p>
           </div>
         } @else {
-          <!-- Tabla en escritorio (>= 768px) -->
-          <div
-            class="table-wrapper desktop-table-view"
-            tabindex="0"
-            role="region"
-            aria-label="Tabla de pedidos del Live activo"
-          >
-            <table>
-              <thead>
-                <tr>
-                  <th>Compradora</th>
-                  <th>Producto</th>
-                  <th>Total</th>
-                  <th>Pago</th>
-                  <th>Entrega</th>
-                  <th>Acciones en vivo</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (item of pedidosDelLive; track item._id) {
-                  <tr>
-                    <td>
-                      <strong>{{ obtenerNombreCliente(item.clienteId) }}</strong>
-                    </td>
-                    <td>
-                      <div>{{ item.producto }} <span class="cell-sub">× {{ item.cantidad }}</span></div>
-                      @if (item.observaciones) {
-                        <div class="cell-sub">{{ item.observaciones }}</div>
-                      }
-                    </td>
-                    <td>
-                      <strong>L {{ calcularTotal(item) }}</strong>
-                    </td>
-                    <td>
-                      <mio-status-badge [tone]="item.estadoPago === 'pagado' ? 'success' : 'warning'">
-                        {{ item.estadoPago === 'pagado' ? 'Pagado' : 'Pendiente' }}
-                      </mio-status-badge>
-                    </td>
-                    <td>
-                      <mio-status-badge [tone]="item.estadoEntrega === 'entregado' ? 'success' : 'warning'">
-                        {{ item.estadoEntrega === 'entregado' ? 'Entregado' : 'Por entregar' }}
-                      </mio-status-badge>
-                    </td>
-                    <td>
-                      <div class="table-actions">
-                        @if (item.estadoPago === 'pendiente') {
-                          <button type="button" class="btn-primary btn-small" (click)="marcarPagado(item)">
-                            Pagado
-                          </button>
-                        } @else {
-                          <button type="button" class="btn-ghost btn-small" (click)="marcarPendientePago(item)">
-                            Pendiente
-                          </button>
-                        }
+          <div class="live-orders-filters" role="group" aria-label="Filtrar pedidos del Live">
+            <button
+              type="button"
+              class="seg-btn live-filter-pill"
+              [class.live-filter-pill--active]="filtroPedidosLive === 'todos'"
+              [attr.aria-pressed]="filtroPedidosLive === 'todos'"
+              (click)="cambiarFiltroPedidosLive('todos')"
+            >
+              Todos
+              <span class="live-filter-pill__count">{{ pedidosDelLive.length }}</span>
+            </button>
+            <button
+              type="button"
+              class="seg-btn live-filter-pill"
+              [class.live-filter-pill--active]="filtroPedidosLive === 'por-cobrar'"
+              [attr.aria-pressed]="filtroPedidosLive === 'por-cobrar'"
+              (click)="cambiarFiltroPedidosLive('por-cobrar')"
+            >
+              Por cobrar
+              <span class="live-filter-pill__count">{{ totalPorCobrarLive }}</span>
+            </button>
+            <button
+              type="button"
+              class="seg-btn live-filter-pill"
+              [class.live-filter-pill--active]="filtroPedidosLive === 'por-entregar'"
+              [attr.aria-pressed]="filtroPedidosLive === 'por-entregar'"
+              (click)="cambiarFiltroPedidosLive('por-entregar')"
+            >
+              Por entregar
+              <span class="live-filter-pill__count">{{ totalPorEntregarLive }}</span>
+            </button>
+          </div>
 
-                        @if (item.estadoEntrega === 'pendiente') {
-                          <button type="button" class="btn-secondary btn-small" (click)="marcarEntregado(item)">
-                            Entregado
-                          </button>
+          @if (pedidosDelLiveFiltrados.length === 0) {
+            <div class="empty-orders-box empty-orders-box--compact">
+              <h4>Todo al día en este filtro</h4>
+              <p>No hay pedidos pendientes en esta vista.</p>
+            </div>
+          } @else {
+            <div class="live-orders-card" role="region" aria-label="Listado de pedidos del Live activo">
+              <ul class="live-orders-list">
+                @for (item of paginacionPedidosLive.itemsPagina; track item._id) {
+                  <li
+                    class="live-order-row"
+                    [class.live-order-row--done]="item.estadoPago === 'pagado' && item.estadoEntrega === 'entregado'"
+                  >
+                    <div class="live-order-row__main">
+                      <div class="live-order-row__top">
+                        @if (esClienteSinRegistro(item.clienteId)) {
+                          <span class="live-order-client live-order-client--muted">Cliente sin registro</span>
                         } @else {
-                          <button type="button" class="btn-ghost btn-small" (click)="marcarPendienteEntrega(item)">
-                            Por entregar
-                          </button>
+                          <strong class="live-order-client">{{ obtenerNombreCliente(item.clienteId) | titlecase }}</strong>
+                        }
+                        <span class="live-order-sep" aria-hidden="true">·</span>
+                        <span class="live-order-product">{{ item.producto }}</span>
+                        <span class="live-order-qty">× {{ item.cantidad }}</span>
+                      </div>
+
+                      <div class="live-order-row__meta">
+                        <mio-status-badge [tone]="item.estadoPago === 'pagado' ? 'success' : 'warning'">
+                          {{ item.estadoPago === 'pagado' ? 'Pagado' : 'Pendiente' }}
+                        </mio-status-badge>
+                        <mio-status-badge [tone]="item.estadoEntrega === 'entregado' ? 'success' : 'warning'">
+                          {{ item.estadoEntrega === 'entregado' ? 'Entregado' : 'Por entregar' }}
+                        </mio-status-badge>
+                        @if (item.observaciones) {
+                          <span class="live-order-note" [attr.title]="item.observaciones">{{ item.observaciones }}</span>
                         }
                       </div>
-                    </td>
-                  </tr>
+                    </div>
+
+                    <div class="live-order-row__aside">
+                      <strong class="live-order-amount">L {{ formatearMonto(calcularTotal(item)) }}</strong>
+
+                      @if (confirmandoEliminarId === item._id) {
+                        <div class="live-order-confirm">
+                          <span>¿Eliminar?</span>
+                          <button type="button" class="btn-danger-ghost btn-small" (click)="eliminarPedido(item._id)">
+                            Sí
+                          </button>
+                          <button type="button" class="btn-secondary btn-small" (click)="cancelarEliminarPedido()">
+                            No
+                          </button>
+                        </div>
+                      } @else {
+                        <div class="live-order-actions">
+                          @if (item.estadoPago === 'pendiente') {
+                            <button
+                              type="button"
+                              class="btn-primary live-quick-btn"
+                              (click)="marcarPagado(item)"
+                            >
+                              Cobrar
+                            </button>
+                          } @else if (item.estadoEntrega === 'pendiente') {
+                            <button
+                              type="button"
+                              class="btn-secondary live-quick-btn"
+                              (click)="marcarEntregado(item)"
+                            >
+                              Entregar
+                            </button>
+                          } @else {
+                            <span class="live-done-tag" aria-label="Pedido pagado y entregado">✓ Listo</span>
+                          }
+
+                          <button
+                            type="button"
+                            class="seg-btn live-icon-btn"
+                            [disabled]="!!item.reservaSolicitudId"
+                            [attr.title]="item.reservaSolicitudId ? 'Pedido de reserva (no editable)' : 'Editar pedido'"
+                            [attr.aria-label]="'Editar pedido de ' + obtenerNombreCliente(item.clienteId)"
+                            (click)="abrirEdicionPedido(item)"
+                          >
+                            <svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                              <path d="M13.5 3.5a2.1 2.1 0 0 1 3 3L7 16l-4 1 1-4 9.5-9.5Z" />
+                            </svg>
+                          </button>
+
+                          <button
+                            type="button"
+                            class="seg-btn live-icon-btn"
+                            [attr.popovertarget]="'live-ped-menu-' + item._id"
+                            [style.anchor-name]="'--live-ped-' + item._id"
+                            aria-label="Más acciones"
+                            title="Más acciones"
+                          >
+                            <svg viewBox="0 0 20 20" width="15" height="15" fill="currentColor" aria-hidden="true">
+                              <circle cx="4.5" cy="10" r="1.5" />
+                              <circle cx="10" cy="10" r="1.5" />
+                              <circle cx="15.5" cy="10" r="1.5" />
+                            </svg>
+                          </button>
+
+                          <div
+                            [id]="'live-ped-menu-' + item._id"
+                            popover="auto"
+                            class="live-row-popover"
+                            [style.position-anchor]="'--live-ped-' + item._id"
+                          >
+                            @if (item.estadoPago === 'pagado') {
+                              <button
+                                type="button"
+                                class="live-popover-item"
+                                (click)="marcarPendientePago(item, 'live-ped-menu-' + item._id)"
+                              >
+                                Marcar pago pendiente
+                              </button>
+                            } @else {
+                              <button
+                                type="button"
+                                class="live-popover-item"
+                                (click)="marcarPagado(item, 'live-ped-menu-' + item._id)"
+                              >
+                                Marcar como pagado
+                              </button>
+                            }
+
+                            @if (item.estadoEntrega === 'entregado') {
+                              <button
+                                type="button"
+                                class="live-popover-item"
+                                (click)="marcarPendienteEntrega(item, 'live-ped-menu-' + item._id)"
+                              >
+                                Marcar por entregar
+                              </button>
+                            } @else {
+                              <button
+                                type="button"
+                                class="live-popover-item"
+                                (click)="marcarEntregado(item, 'live-ped-menu-' + item._id)"
+                              >
+                                Marcar como entregado
+                              </button>
+                            }
+
+                            @if (!item.reservaSolicitudId) {
+                              <button
+                                type="button"
+                                class="live-popover-item"
+                                (click)="abrirEdicionPedido(item, 'live-ped-menu-' + item._id)"
+                              >
+                                Editar detalles
+                              </button>
+                              <button
+                                type="button"
+                                class="live-popover-item live-popover-item--danger"
+                                (click)="solicitarEliminarPedido(item._id, 'live-ped-menu-' + item._id)"
+                              >
+                                Eliminar pedido
+                              </button>
+                            }
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  </li>
                 }
-              </tbody>
-            </table>
-          </div>
+              </ul>
+            </div>
 
-          <!-- Tarjetas táctiles en móvil (< 768px) -->
-          <div class="mobile-cards-view" role="region" aria-label="Tarjetas de pedidos del Live">
-            @for (item of pedidosDelLive; track item._id) {
-              <article
-                class="op-card"
-                [class.op-card--pending]="item.estadoPago === 'pendiente' || item.estadoEntrega === 'pendiente'"
-              >
-                <div class="op-card__head">
-                  <div>
-                    <h4 class="op-card__title">{{ obtenerNombreCliente(item.clienteId) }}</h4>
-                    <p class="op-card__sub">{{ item.producto }} × {{ item.cantidad }}</p>
-                  </div>
-                  <span class="op-card__amount">L {{ calcularTotal(item) }}</span>
-                </div>
-
-                @if (item.observaciones) {
-                  <p class="op-card__sub">Nota: {{ item.observaciones }}</p>
-                }
-
-                <div class="op-card__badges">
-                  <mio-status-badge [tone]="item.estadoPago === 'pagado' ? 'success' : 'warning'">
-                    Pago: {{ item.estadoPago === 'pagado' ? 'Pagado' : 'Pendiente' }}
-                  </mio-status-badge>
-                  <mio-status-badge [tone]="item.estadoEntrega === 'entregado' ? 'success' : 'warning'">
-                    Entrega: {{ item.estadoEntrega === 'entregado' ? 'Entregado' : 'Por entregar' }}
-                  </mio-status-badge>
-                </div>
-
-                <div class="op-card__actions">
-                  @if (item.estadoPago === 'pendiente') {
-                    <button type="button" class="btn-primary" (click)="marcarPagado(item)">
-                      Cobrar (Pagado)
-                    </button>
-                  } @else {
-                    <button type="button" class="btn-ghost" (click)="marcarPendientePago(item)">
-                      Pago pendiente
-                    </button>
-                  }
-
-                  @if (item.estadoEntrega === 'pendiente') {
-                    <button type="button" class="btn-secondary" (click)="marcarEntregado(item)">
-                      Marcar entregado
-                    </button>
-                  } @else {
-                    <button type="button" class="btn-ghost" (click)="marcarPendienteEntrega(item)">
-                      Por entregar
-                    </button>
-                  }
-                </div>
-              </article>
-            }
-          </div>
+            <mio-pagination
+              [totalItems]="pedidosDelLiveFiltrados.length"
+              [page]="paginacionPedidosLive.paginaSegura"
+              [pageSize]="porPaginaPedidosLive"
+              [opcionesTamano]="[8, 15, 30]"
+              itemLabel="pedidos"
+              (pageChange)="paginaPedidosLive = $event"
+              (pageSizeChange)="porPaginaPedidosLive = $event"
+            />
+          }
         }
       </section>
     </div>
+
+    <!-- VENTANA FLOTANTE PARA EDITAR PEDIDO DURANTE EL LIVE -->
+    <mio-modal
+      [open]="editandoPedido"
+      title="Editar pedido del Live"
+      subtitle="Ajusta cliente, producto, cantidad, precio o estados en tiempo real sin detener tu transmisión."
+      size="md"
+      [error]="errorEdicion"
+      [closeDisabled]="guardandoEdicion"
+      (closed)="cerrarEdicionPedido()"
+    >
+      <div modalHeaderExtra class="cabin-total-badge">
+        <span>Total</span>
+        <strong>L {{ formatearMonto(calcularTotal(pedidoEdicion)) }}</strong>
+      </div>
+
+      @if (editandoPedido) {
+        <form class="pedido-form live-edit-form" (ngSubmit)="guardarEdicionPedido()">
+          <div class="form-group">
+            <label for="live-edit-cliente">Cliente *</label>
+            <select
+              id="live-edit-cliente"
+              name="editClienteId"
+              [(ngModel)]="pedidoEdicion.clienteId"
+              autofocus
+              required
+            >
+              <option value="">Seleccione un cliente</option>
+              @for (c of clientes; track c._id) {
+                <option [value]="c._id">
+                  {{ c.nombre }}{{ c.telefono ? ' — ' + c.telefono : '' }}
+                </option>
+              }
+            </select>
+          </div>
+
+          <div class="live-edit-grid-3">
+            <div class="form-group">
+              <label for="live-edit-producto">Producto *</label>
+              <input
+                id="live-edit-producto"
+                name="editProducto"
+                type="text"
+                [(ngModel)]="pedidoEdicion.producto"
+                [readonly]="!!pedidoEditandoProductoId"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="live-edit-cantidad">Cantidad *</label>
+              <input
+                id="live-edit-cantidad"
+                name="editCantidad"
+                type="number"
+                min="1"
+                [(ngModel)]="pedidoEdicion.cantidad"
+                [readonly]="!!pedidoEditandoProductoId"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="live-edit-precio">Precio unitario (L) *</label>
+              <input
+                id="live-edit-precio"
+                name="editPrecio"
+                type="number"
+                min="0"
+                step="0.01"
+                [(ngModel)]="pedidoEdicion.precio"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="cabin-grid-2">
+            <div class="form-group">
+              <label for="live-edit-pago">Estado de pago</label>
+              <select id="live-edit-pago" name="editEstadoPago" [(ngModel)]="pedidoEdicion.estadoPago">
+                <option value="pendiente">Pendiente de cobro</option>
+                <option value="pagado">Pagado</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="live-edit-entrega">Estado de entrega</label>
+              <select id="live-edit-entrega" name="editEstadoEntrega" [(ngModel)]="pedidoEdicion.estadoEntrega">
+                <option value="pendiente">Por entregar</option>
+                <option value="entregado">Entregado</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="live-edit-obs">Observaciones</label>
+            <input
+              id="live-edit-obs"
+              name="editObservaciones"
+              type="text"
+              placeholder="Ej. Cambio de talla, entrega mañana..."
+              [(ngModel)]="pedidoEdicion.observaciones"
+            />
+          </div>
+
+          <div class="live-edit-actions">
+            <button type="submit" class="btn-primary" [disabled]="guardandoEdicion">
+              {{ guardandoEdicion ? 'Guardando...' : 'Guardar cambios' }}
+            </button>
+            <button
+              type="button"
+              class="btn-secondary"
+              (click)="cerrarEdicionPedido()"
+              [disabled]="guardandoEdicion"
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      }
+    </mio-modal>
   }
 </div>

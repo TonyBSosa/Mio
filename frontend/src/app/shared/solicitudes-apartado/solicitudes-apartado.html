@@ -13,7 +13,7 @@
     </div>
   }
   @if (gestionError()) { <p role="alert" class="gestion-error">{{ gestionError() }}</p> }
-  @if (mensaje()) { <p role="status">{{ mensaje() }}</p> }
+  @if (mensaje()) { <span class="sr-only" role="status">{{ mensaje() }}</span> }
   @if (cargando()) {
     <p role="status">Cargando solicitudes…</p>
   } @else if (error()) {

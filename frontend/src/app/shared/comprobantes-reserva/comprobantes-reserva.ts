@@ -3,6 +3,7 @@ import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Comprobante, ComprobanteService, HistorialComprobantes } from '../../services/comprobante.service';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'mio-comprobantes-reserva',
@@ -16,6 +17,7 @@ export class ComprobantesReserva implements OnInit, OnDestroy {
   @Output() actualizado = new EventEmitter<void>();
   @ViewChild('archivoInput') archivoInput?: ElementRef<HTMLInputElement>;
   private readonly service = inject(ComprobanteService);
+  private readonly toast = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
   readonly historial = signal<HistorialComprobantes | null>(null);
   readonly cargando = signal(false);
@@ -65,7 +67,9 @@ export class ComprobantesReserva implements OnInit, OnDestroy {
     this.service.subir(this.reservaId, this.archivo).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.limpiarSeleccion(); this.ocupada.set(false);
-        this.mensaje.set('Comprobante recibido. El pago queda pendiente de revisión del vendedor.');
+        const msg = 'Comprobante recibido. El pago queda pendiente de revisión del vendedor.';
+        this.mensaje.set(msg);
+        this.toast.exito(msg);
         this.cargar(); this.actualizado.emit();
       },
       error: e => {
@@ -94,7 +98,9 @@ export class ComprobantesReserva implements OnInit, OnDestroy {
     this.service.revisar(this.reservaId, decision.id, decision.accion, this.motivo.trim()).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.ocupada.set(false); this.decision.set(null); this.imagen.set('');
-        this.mensaje.set(decision.accion === 'aprobar' ? 'Pago aprobado y registrado.' : 'Comprobante rechazado. El motivo queda en el historial.');
+        const msg = decision.accion === 'aprobar' ? 'Pago aprobado y registrado.' : 'Comprobante rechazado. El motivo queda en el historial.';
+        this.mensaje.set(msg);
+        this.toast.exito(msg);
         this.cargar(); this.actualizado.emit();
       },
       error: e => { this.ocupada.set(false); this.error.set(e.error?.mensaje || 'No pudimos confirmar la revisión. Actualizá antes de reintentar.'); },

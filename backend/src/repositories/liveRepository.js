@@ -53,9 +53,7 @@ const eliminarPorIdYVendedor = (id, vendedorId) => {
 };
 
 const tienePedidosAsociados = async (liveId, vendedorId) => {
-  if (mongoose.connection.readyState !== 1) {
-    return false;
-  }
+  if (mongoose.connection.readyState !== 1) { throw Object.assign(new Error("MongoDB no esta conectado"), { status: 503 }); }
 
   const pedido = await Pedido.exists({
     liveId,

@@ -1,4 +1,5 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { TitleCasePipe } from '@angular/common';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 
@@ -8,12 +9,27 @@ import { LiveService } from '../../services/live.service';
 import { PedidoService } from '../../services/pedido.service';
 import { ProductoService } from '../../services/producto.service';
 import { ResumenService } from '../../services/resumen.service';
+import { ToastService } from '../../services/toast.service';
+import { ModalComponent } from '../../shared/ui/modal/modal';
 import { PageHeaderComponent } from '../../shared/ui/page-header/page-header';
+import { PaginationComponent, paginarLista } from '../../shared/ui/pagination/pagination';
 import { StatusBadgeComponent } from '../../shared/ui/status-badge/status-badge';
+
+const OBJECT_ID_REGEX = /^[a-f0-9]{24}$/i;
+
+export type FiltroPedidosLive = 'todos' | 'por-cobrar' | 'por-entregar';
 
 @Component({
   selector: 'app-live-activo',
-  imports: [FormsModule, RouterModule, PageHeaderComponent, StatusBadgeComponent],
+  imports: [
+    FormsModule,
+    RouterModule,
+    TitleCasePipe,
+    ModalComponent,
+    PageHeaderComponent,
+    PaginationComponent,
+    StatusBadgeComponent,
+  ],
   templateUrl: './live-activo.html',
   styleUrl: './live-activo.css',
 })
@@ -46,7 +62,37 @@ export class LiveActivo implements OnInit {
 
   productoSeleccionadoId = '';
   accionConfirmando: '' | 'finalizar' | 'cancelar' = '';
-  mensaje = '';
+  filtroPedidosLive: FiltroPedidosLive = 'todos';
+  paginaPedidosLive = 1;
+  porPaginaPedidosLive = 8;
+
+  editandoPedido = false;
+  guardandoEdicion = false;
+  errorEdicion = '';
+  pedidoEditandoId = '';
+  pedidoEditandoProductoId = '';
+  confirmandoEliminarId = '';
+  pedidoEdicion = {
+    clienteId: '',
+    producto: '',
+    cantidad: 1,
+    precio: 0,
+    estadoPago: 'pendiente',
+    estadoEntrega: 'pendiente',
+    observaciones: '',
+  };
+
+  private readonly toast = inject(ToastService);
+  private _mensaje = '';
+  get mensaje(): string {
+    return this._mensaje;
+  }
+  set mensaje(valor: string) {
+    this._mensaje = valor;
+    if (valor) {
+      this.toast.exito(valor);
+    }
+  }
   error = '';
   cargando = false;
 
@@ -348,19 +394,182 @@ export class LiveActivo implements OnInit {
     });
   }
 
-  marcarPagado(pedido: any) {
+  get totalPorCobrarLive(): number {
+    return this.pedidosDelLive.filter((p) => p.estadoPago === 'pendiente').length;
+  }
+
+  get totalPorEntregarLive(): number {
+    return this.pedidosDelLive.filter((p) => p.estadoEntrega === 'pendiente').length;
+  }
+
+  get pedidosDelLiveFiltrados(): any[] {
+    if (this.filtroPedidosLive === 'por-cobrar') {
+      return this.pedidosDelLive.filter((p) => p.estadoPago === 'pendiente');
+    }
+    if (this.filtroPedidosLive === 'por-entregar') {
+      return this.pedidosDelLive.filter((p) => p.estadoEntrega === 'pendiente');
+    }
+    return this.pedidosDelLive;
+  }
+
+  get paginacionPedidosLive() {
+    return paginarLista(
+      this.pedidosDelLiveFiltrados,
+      this.paginaPedidosLive,
+      this.porPaginaPedidosLive,
+    );
+  }
+
+  cambiarFiltroPedidosLive(filtro: FiltroPedidosLive) {
+    this.filtroPedidosLive = filtro;
+    this.paginaPedidosLive = 1;
+  }
+
+  cerrarPopover(popoverId: string) {
+    const el = typeof document !== 'undefined' ? document.getElementById(popoverId) : null;
+    if (el && typeof (el as any).hidePopover === 'function') {
+      try {
+        (el as any).hidePopover();
+      } catch {
+        // Ignorar si ya estaba cerrado
+      }
+    }
+  }
+
+  abrirEdicionPedido(item: any, popoverId?: string) {
+    if (popoverId) this.cerrarPopover(popoverId);
+    if (this.cargando || item?.reservaSolicitudId) return;
+
+    this.confirmandoEliminarId = '';
+    this.errorEdicion = '';
+    this.pedidoEditandoId = item._id;
+    this.pedidoEditandoProductoId = this.obtenerId(item.productoId) || '';
+    this.pedidoEdicion = {
+      clienteId: this.obtenerId(item.clienteId) || '',
+      producto: item.producto || '',
+      cantidad: Number(item.cantidad) || 1,
+      precio: item.precio !== undefined ? Number(item.precio) : 0,
+      estadoPago: item.estadoPago || 'pendiente',
+      estadoEntrega: item.estadoEntrega || 'pendiente',
+      observaciones: item.observaciones || '',
+    };
+    this.editandoPedido = true;
+    this.detectorCambios.detectChanges();
+  }
+
+  cerrarEdicionPedido() {
+    if (this.guardandoEdicion) return;
+    this.editandoPedido = false;
+    this.errorEdicion = '';
+    this.pedidoEditandoId = '';
+    this.pedidoEditandoProductoId = '';
+  }
+
+  guardarEdicionPedido() {
+    this.errorEdicion = '';
+
+    if (!this.pedidoEdicion.clienteId) {
+      this.errorEdicion = 'Debe seleccionar un cliente';
+      return;
+    }
+
+    if (!this.pedidoEdicion.producto.trim()) {
+      this.errorEdicion = 'El nombre del producto es obligatorio';
+      return;
+    }
+
+    if (Number(this.pedidoEdicion.cantidad) <= 0) {
+      this.errorEdicion = 'La cantidad debe ser mayor a 0';
+      return;
+    }
+
+    if (Number(this.pedidoEdicion.precio) < 0) {
+      this.errorEdicion = 'El precio no puede ser negativo';
+      return;
+    }
+
+    this.guardandoEdicion = true;
+    const payload: any = {
+      clienteId: this.pedidoEdicion.clienteId,
+      liveId: this.liveActivo?._id || '',
+      producto: this.pedidoEdicion.producto.trim(),
+      cantidad: Number(this.pedidoEdicion.cantidad),
+      precio: Number(this.pedidoEdicion.precio),
+      estadoPago: this.pedidoEdicion.estadoPago,
+      estadoEntrega: this.pedidoEdicion.estadoEntrega,
+      observaciones: this.pedidoEdicion.observaciones.trim(),
+    };
+
+    if (this.pedidoEditandoProductoId) {
+      payload.productoId = this.pedidoEditandoProductoId;
+    }
+
+    this.pedidoService.actualizarPedido(this.pedidoEditandoId, payload).subscribe({
+      next: (pedidoActualizado: any) => {
+        this.reemplazarPedido(pedidoActualizado);
+        this.consultarResumen();
+        this.guardandoEdicion = false;
+        this.cerrarEdicionPedido();
+        this.mensaje = 'Pedido actualizado correctamente';
+        this.detectorCambios.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error al actualizar pedido en vivo', error);
+        this.errorEdicion =
+          error.error?.mensaje || error.error?.error || 'No se pudo actualizar el pedido';
+        this.guardandoEdicion = false;
+        this.detectorCambios.detectChanges();
+      },
+    });
+  }
+
+  solicitarEliminarPedido(id: string, popoverId?: string) {
+    if (popoverId) this.cerrarPopover(popoverId);
+    this.confirmandoEliminarId = id;
+  }
+
+  cancelarEliminarPedido() {
+    this.confirmandoEliminarId = '';
+  }
+
+  eliminarPedido(id: string) {
+    this.confirmandoEliminarId = '';
+    this.error = '';
+
+    this.pedidoService.eliminarPedido(id).subscribe({
+      next: () => {
+        this.pedidos = this.pedidos.filter((p) => p._id !== id);
+        this.filtrarPedidosDelLive();
+        this.listarProductos();
+        this.consultarResumen();
+        this.mensaje = 'Pedido eliminado correctamente';
+        this.detectorCambios.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error al eliminar pedido en vivo', error);
+        this.error = error.error?.mensaje || 'No se pudo eliminar el pedido';
+        this.detectorCambios.detectChanges();
+      },
+    });
+  }
+
+  marcarPagado(pedido: any, popoverId?: string) {
+    if (popoverId) this.cerrarPopover(popoverId);
     this.actualizarPago(pedido, 'pagado');
   }
 
-  marcarPendientePago(pedido: any) {
+  marcarPendientePago(pedido: any, popoverId?: string) {
+    if (popoverId) this.cerrarPopover(popoverId);
     this.actualizarPago(pedido, 'pendiente');
   }
 
-  marcarEntregado(pedido: any) {
+  marcarEntregado(pedido: any, popoverId?: string) {
+    if (popoverId) this.cerrarPopover(popoverId);
     this.actualizarEntrega(pedido, 'entregado');
   }
 
-  marcarPendienteEntrega(pedido: any) {
+  marcarPendienteEntrega(pedido: any, popoverId?: string) {
+    if (popoverId) this.cerrarPopover(popoverId);
     this.actualizarEntrega(pedido, 'pendiente');
   }
 
@@ -496,15 +705,34 @@ export class LiveActivo implements OnInit {
     });
   }
 
-  obtenerNombreCliente(clienteId: any) {
-    if (clienteId && clienteId.nombre) {
+  obtenerNombreCliente(clienteId: any): string {
+    if (clienteId && typeof clienteId === 'object' && clienteId.nombre) {
       return clienteId.nombre;
     }
 
     const id = this.obtenerId(clienteId);
     const cliente = this.clientes.find((clienteItem) => clienteItem._id === id);
+    if (cliente?.nombre) {
+      return cliente.nombre;
+    }
 
-    return cliente ? cliente.nombre : id;
+    if (!id || OBJECT_ID_REGEX.test(String(id))) {
+      return 'Cliente sin registro';
+    }
+
+    return String(id);
+  }
+
+  esClienteSinRegistro(clienteId: any): boolean {
+    return this.obtenerNombreCliente(clienteId) === 'Cliente sin registro';
+  }
+
+  formatearMonto(valor: number): string {
+    const numero = Number(valor) || 0;
+    return numero.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
   }
 
   obtenerId(valor: any) {

@@ -1,10 +1,12 @@
 import { TitleCasePipe } from '@angular/common';
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 
 import { AuthService } from '../../services/auth.service';
 import { ClienteService } from '../../services/cliente.service';
+import { ToastService } from '../../services/toast.service';
+import { ModalComponent } from '../../shared/ui/modal/modal';
 import { PageHeaderComponent } from '../../shared/ui/page-header/page-header';
 import { PaginationComponent, paginarLista } from '../../shared/ui/pagination/pagination';
 
@@ -13,7 +15,14 @@ const CODIGO_PAIS_DEFAULT = '504';
 @Component({
   selector: 'app-clientes',
   standalone: true,
-  imports: [FormsModule, RouterModule, TitleCasePipe, PageHeaderComponent, PaginationComponent],
+  imports: [
+    FormsModule,
+    RouterModule,
+    TitleCasePipe,
+    ModalComponent,
+    PageHeaderComponent,
+    PaginationComponent,
+  ],
   templateUrl: './clientes.html',
   styleUrls: ['./clientes.css'],
 })
@@ -36,7 +45,17 @@ export class Clientes implements OnInit {
   clienteEditandoId = '';
   confirmandoEliminarId = '';
   formularioExpandido = false;
-  mensaje = '';
+  private readonly toast = inject(ToastService);
+  private _mensaje = '';
+  get mensaje(): string {
+    return this._mensaje;
+  }
+  set mensaje(valor: string) {
+    this._mensaje = valor;
+    if (valor) {
+      this.toast.exito(valor);
+    }
+  }
   error = '';
   cargando = false;
 
@@ -59,9 +78,6 @@ export class Clientes implements OnInit {
     this.clienteService.listarClientes().subscribe({
       next: (respuesta: any) => {
         this.clientes = Array.isArray(respuesta) ? respuesta : [];
-        if (this.clientes.length === 0) {
-          this.formularioExpandido = true;
-        }
         this.filtrarClientes();
         this.cargando = false;
         this.detectorCambios.detectChanges();
@@ -270,13 +286,12 @@ export class Clientes implements OnInit {
     };
     this.mensaje = '';
     this.error = '';
-    if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    this.detectorCambios.detectChanges();
   }
 
   cancelarEdicion() {
     this.cerrarFormulario();
+    this.error = '';
   }
 
   eliminarCliente(id: string) {

@@ -19,16 +19,14 @@ const buscarPorIdYVendedor = (id, vendedorId) => {
   });
 };
 
-const actualizarPorIdYVendedor = (id, vendedorId, data) => {
-  return Producto.findOneAndUpdate(
-    {
-      _id: id,
-      vendedorId,
-      reservaSolicitudId: null
-    },
-    data,
-    { new: true, runValidators: true }
-  );
+const actualizarPorIdYVendedor = async (id, vendedorId, data) => {
+ if (mongoose.connection.readyState !== 1) throw Object.assign(new Error('MongoDB no esta conectado'), { status: 503 });
+ return mongoose.connection.transaction(async session => {
+  const producto = await Producto.findOneAndUpdate({ _id: id, vendedorId, reservaSolicitudId: null }, { $inc: { __v: 1 } }, { new: true, session });
+  if (!producto) return null;
+  if (data.estado !== undefined && await Pedido.exists({ productoId: id, vendedorId, canceladoEn: null }).session(session)) throw Object.assign(new Error('No se puede cambiar la disponibilidad de una pieza vinculada a un pedido'), { status: 409 });
+  return Producto.findOneAndUpdate({ _id: id, vendedorId, reservaSolicitudId: null }, data, { new: true, runValidators: true, session });
+ }, { readConcern: { level: 'snapshot' }, writeConcern: { w: 'majority' } });
 };
 
 const eliminarPorIdYVendedor = (id, vendedorId) => {
@@ -40,9 +38,7 @@ const eliminarPorIdYVendedor = (id, vendedorId) => {
 };
 
 const tienePedidosAsociados = async (productoId, vendedorId) => {
-  if (mongoose.connection.readyState !== 1) {
-    return false;
-  }
+  if (mongoose.connection.readyState !== 1) { throw Object.assign(new Error("MongoDB no esta conectado"), { status: 503 }); }
 
   const pedido = await Pedido.exists({
     productoId,

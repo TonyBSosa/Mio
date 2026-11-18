@@ -70,7 +70,7 @@
       <div class="form-group">
         <div class="label-row">
           <label for="register-password">Contraseña</label>
-          <span class="field-hint">Mínimo 10 caracteres</span>
+          <span class="field-hint">Mínimo 15 caracteres</span>
         </div>
         <div class="password-input-wrap">
           <input
@@ -78,10 +78,10 @@
             [type]="mostrarPassword ? 'text' : 'password'"
             name="password"
             autocomplete="new-password"
-            placeholder="10 a 128 caracteres"
+            placeholder="15 caracteres como mínimo; máximo 72 bytes UTF-8"
             [(ngModel)]="password"
-            minlength="10"
-            maxlength="128"
+            minlength="15"
+            maxlength="72"
             [disabled]="cargando"
             required
           />

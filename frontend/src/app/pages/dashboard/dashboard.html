@@ -1,22 +1,56 @@
 <div class="dashboard-page">
   <mio-page-header
     kicker="Centro de operaciones"
-    [title]="'Hola, ' + (usuario?.nombre || 'Mi tienda')"
+    [title]="saludoTitulo"
     subtitle="Revisa tus pendientes de hoy, controla tu transmisión y gestiona pedidos al instante."
   >
-    <a class="btn-secondary btn-small" routerLink="/resumen">Ver cierres</a>
-    <a class="btn-primary btn-small" routerLink="/pedidos">+ Gestionar pedidos</a>
+    <div class="periodo-switcher" role="group" aria-label="Periodo del balance">
+      @for (p of periodos; track p.clave) {
+        <button
+          type="button"
+          class="seg-btn periodo-btn"
+          [class.periodo-btn--activo]="periodo === p.clave"
+          [attr.aria-pressed]="periodo === p.clave"
+          (click)="cambiarPeriodo(p.clave)"
+        >
+          {{ p.etiqueta }}
+        </button>
+      }
+    </div>
+    <a class="btn-primary btn-small" routerLink="/pedidos" [queryParams]="{ nuevo: '1' }">+ Pedido</a>
   </mio-page-header>
-
-  @if (mensaje) {
-    <p class="mensaje exito" role="status" aria-live="polite">{{ mensaje }}</p>
-  }
 
   @if (error) {
     <p class="mensaje error" role="alert">{{ error }}</p>
   }
 
-  <!-- CONTROL DE TRANSMISIÓN EN VIVO (Compacto y diferenciado) -->
+  <!-- Siguiente paso sugerido -->
+  @if (!cargando) {
+    @if (siguientePaso; as paso) {
+      <div class="next-step-strip" [attr.data-tipo]="paso.tipo" role="status">
+        <span class="next-step__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 3L5 14h6l-1 7 8-11h-6l1-7z" />
+          </svg>
+        </span>
+        <p class="next-step__text"><strong>Siguiente paso:</strong> {{ paso.texto }}</p>
+        <a class="next-step__cta" routerLink="/pedidos" [queryParams]="{ filtro: paso.filtro }">
+          {{ paso.cta }} →
+        </a>
+      </div>
+    } @else if (pedidos.length > 0) {
+      <div class="next-step-strip next-step-strip--ok" role="status">
+        <span class="next-step__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12.5l4.5 4.5L19 7.5" />
+          </svg>
+        </span>
+        <p class="next-step__text"><strong>Todo al día.</strong> No tienes pedidos pendientes de cobro ni de entrega.</p>
+      </div>
+    }
+  }
+
+  <!-- Control de transmisión en vivo -->
   @if (liveActivo) {
     <section class="live-control-strip live-control-strip--active" aria-label="Transmisión en vivo activa">
       <div class="live-strip__main">
@@ -31,13 +65,33 @@
           }
         </div>
 
+        @if (estadisticasLiveActivo; as liveStats) {
+          <dl class="live-strip__metrics" aria-label="Resumen de la transmisión actual">
+            <div class="live-metric">
+              <dt>Vendido en este Live</dt>
+              <dd>L {{ formatearMonto(liveStats.ventas) }}</dd>
+            </div>
+            <div class="live-metric">
+              <dt>Pedidos</dt>
+              <dd>{{ liveStats.pedidos }}</dd>
+            </div>
+          </dl>
+        }
+
         <a class="btn-live live-strip__cta" routerLink="/live-activo">
           Entrar a Cabina Live →
         </a>
       </div>
 
+      @if (estadisticasLiveActivo?.sospechoso) {
+        <p class="live-strip__warning" role="alert">
+          <strong>Este Live lleva más de {{ estadisticasLiveActivo?.horasAbierto }} h abierto.</strong>
+          ¿Olvidaste finalizarlo? Si ya terminó, ciérralo para mantener tus reportes al día.
+        </p>
+      }
+
       <div class="live-strip__controls">
-        <span class="live-strip__controls-label">Control de emisión:</span>
+        <span class="live-strip__controls-label">Control de emisión</span>
         <div class="live-strip__btns">
           <button
             type="button"
@@ -55,14 +109,30 @@
           >
             Finalizar
           </button>
+
           <button
             type="button"
-            class="btn-danger-ghost btn-small"
-            (click)="solicitarConfirmacionLive('cancelar')"
-            [disabled]="cargando"
+            class="seg-btn live-more-btn"
+            popovertarget="live-more-popover"
+            aria-label="Más opciones de transmisión"
+            title="Más opciones"
           >
-            Cancelar
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+              <circle cx="5" cy="12" r="1.5" />
+              <circle cx="12" cy="12" r="1.5" />
+              <circle cx="19" cy="12" r="1.5" />
+            </svg>
           </button>
+          <div id="live-more-popover" #liveMorePopover popover="auto" class="action-popover">
+            <button
+              type="button"
+              class="seg-btn action-popover__item action-popover__item--danger"
+              (click)="cerrarPopover(liveMorePopover); solicitarConfirmacionLive('cancelar')"
+              [disabled]="cargando"
+            >
+              Cancelar transmisión
+            </button>
+          </div>
         </div>
 
         @if (accionLiveConfirmando === 'finalizar') {
@@ -95,7 +165,7 @@
       <div class="go-live-strip__copy">
         <mio-status-badge tone="neutral">Fuera del aire</mio-status-badge>
         <div>
-          <h3>¿Lista para transmitir en vivo?</h3>
+          <h3>¿Listo para transmitir en vivo?</h3>
           <p>Selecciona un evento programado o pausado para abrir la cabina de ventas.</p>
         </div>
       </div>
@@ -135,54 +205,136 @@
     <p class="estado-carga" role="status">Actualizando indicadores de tu tienda...</p>
   }
 
-  <!-- BLOQUES PRINCIPALES: 1. ¿QUÉ TENGO PENDIENTE? + 2. ¿CUÁNTO HE VENDIDO Y COBRADO? -->
+  <!-- Bloques principales: 1. Pendientes accionables + 2. Balance comercial -->
   <div class="ops-primary-grid">
-    <!-- 1. ¿QUÉ TENGO PENDIENTE? -->
+    <!-- 1. ¿Qué tengo pendiente? -->
     <section class="ops-panel ops-panel--urgent" aria-labelledby="heading-pendientes">
       <div class="ops-panel__header">
         <div>
-          <span class="ops-panel__eyebrow">1 · Prioridad inmediata</span>
+          <span class="ops-panel__eyebrow">Prioridad inmediata</span>
           <h3 id="heading-pendientes">¿Qué tengo pendiente?</h3>
         </div>
-        <a class="ops-panel__link" routerLink="/pedidos">Resolver en Pedidos →</a>
+        <a
+          class="ops-panel__link"
+          routerLink="/pedidos"
+          [queryParams]="{ filtro: vistaPendientes === 'cobro' ? 'por-cobrar' : 'por-entregar' }"
+        >
+          Resolver en Pedidos →
+        </a>
       </div>
 
-      <div class="urgent-cards">
-        <article class="urgent-card" [class.urgent-card--alert]="totalPendienteEntrega > 0">
-          <div class="urgent-card__top">
-            <span class="urgent-card__label">Pendientes de entrega</span>
-            <mio-status-badge [tone]="totalPendienteEntrega > 0 ? 'warning' : 'success'">
-              {{ totalPendienteEntrega > 0 ? 'Por despachar' : 'Al día' }}
-            </mio-status-badge>
-          </div>
-          <strong class="urgent-card__value">{{ totalPendienteEntrega }}</strong>
-          <p class="urgent-card__meta">
-            {{ cantidadPedidosEntregados }} entregados de {{ totalPedidos }} pedidos registrados
-          </p>
-          <a class="urgent-card__action" routerLink="/pedidos">Ver entregas pendientes →</a>
-        </article>
-
-        <article class="urgent-card" [class.urgent-card--alert]="totalPendientePago > 0">
-          <div class="urgent-card__top">
-            <span class="urgent-card__label">Pendiente de cobro</span>
-            <mio-status-badge [tone]="totalPendientePago > 0 ? 'warning' : 'success'">
-              {{ cantidadPedidosPendientesPago }} {{ cantidadPedidosPendientesPago === 1 ? 'pedido' : 'pedidos' }}
-            </mio-status-badge>
-          </div>
-          <strong class="urgent-card__value">L {{ totalPendientePago }}</strong>
-          <p class="urgent-card__meta">
-            Importe por confirmar pago o transferencia
-          </p>
-          <a class="urgent-card__action" routerLink="/pedidos">Confirmar pagos →</a>
-        </article>
+      <div class="pend-tabs" role="tablist" aria-label="Tipo de pendientes">
+        <button
+          type="button"
+          role="tab"
+          class="seg-btn pend-tab"
+          [class.pend-tab--active]="vistaPendientes === 'cobro'"
+          [attr.aria-selected]="vistaPendientes === 'cobro'"
+          (click)="cambiarVistaPendientes('cobro')"
+        >
+          Por cobrar
+          <span class="pend-tab__count">{{ pendientesCobro.length }}</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          class="seg-btn pend-tab"
+          [class.pend-tab--active]="vistaPendientes === 'entrega'"
+          [attr.aria-selected]="vistaPendientes === 'entrega'"
+          (click)="cambiarVistaPendientes('entrega')"
+        >
+          Por entregar
+          <span class="pend-tab__count">{{ pendientesEntrega.length }}</span>
+        </button>
       </div>
+
+      @if (vistaPendientes === 'cobro' && pendientesCobro.length > 0) {
+        <p class="pend-summary">
+          <strong>L {{ formatearMonto(montoPorCobrar) }}</strong> por confirmar en
+          {{ pendientesCobro.length }} {{ plural(pendientesCobro.length, 'pedido', 'pedidos') }}
+        </p>
+      } @else if (vistaPendientes === 'entrega' && pendientesEntrega.length > 0) {
+        <p class="pend-summary">
+          <strong>{{ pendientesEntrega.length }}</strong>
+          {{ plural(pendientesEntrega.length, 'pedido pendiente', 'pedidos pendientes') }} de despacho
+          ({{ cantidadPedidosEntregados }} entregados de {{ totalPedidos }})
+        </p>
+      }
+
+      @if (pendientesVisibles.length > 0) {
+        <ul class="pend-list">
+          @for (p of pendientesVisibles; track p._id || $index) {
+            <li class="pend-item" [class.pend-item--urgente]="esUrgente(p)">
+              <span class="pend-avatar" aria-hidden="true">{{ iniciales(obtenerNombreCliente(p.clienteId)) }}</span>
+
+              <div class="pend-item__info">
+                <span class="pend-item__name">{{ obtenerNombreCliente(p.clienteId) | titlecase }}</span>
+                <span class="pend-item__meta">
+                  {{ hace(p) }}
+                  @if (p.producto) {
+                    · {{ p.producto }}
+                  }
+                  @if (esUrgente(p)) {
+                    <span class="pend-urgent-tag">+48 h</span>
+                  }
+                </span>
+              </div>
+
+              <span class="pend-item__amount">L {{ formatearMonto(totalPedido(p)) }}</span>
+
+              <div class="pend-item__actions">
+                @if (whatsappUrl(p, vistaPendientes); as waUrl) {
+                  <a
+                    class="pend-wa-btn"
+                    [href]="waUrl"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    [attr.aria-label]="'Escribir por WhatsApp a ' + obtenerNombreCliente(p.clienteId)"
+                    title="Recordar por WhatsApp"
+                  >
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z" />
+                      <path d="M9 8.5c.3 2.8 2.7 5.2 5.5 5.5l1.2-1.4-2-1-.8.7c-.9-.4-1.7-1.2-2.1-2.1l.7-.8-1-2z" />
+                    </svg>
+                  </a>
+                }
+                <button
+                  type="button"
+                  class="btn-primary btn-small pend-resolve-btn"
+                  (click)="resolverPendiente(p)"
+                  [disabled]="resolviendoPedidoId === p._id"
+                >
+                  {{ vistaPendientes === 'cobro' ? 'Cobrar' : 'Entregar' }}
+                </button>
+              </div>
+            </li>
+          }
+        </ul>
+
+        @if (pendientesActuales.length > pendientesVisibles.length) {
+          <a
+            class="pend-more-link"
+            routerLink="/pedidos"
+            [queryParams]="{ filtro: vistaPendientes === 'cobro' ? 'por-cobrar' : 'por-entregar' }"
+          >
+            Ver los {{ pendientesActuales.length }} pendientes →
+          </a>
+        }
+      } @else {
+        <div class="pend-empty">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 12.5l4.5 4.5L19 7.5" />
+          </svg>
+          <p>{{ vistaPendientes === 'cobro' ? 'No tienes pagos por confirmar.' : 'No tienes entregas pendientes.' }}</p>
+        </div>
+      }
     </section>
 
-    <!-- 2. ¿CUÁNTO HE VENDIDO Y COBRADO? -->
+    <!-- 2. Balance comercial -->
     <section class="ops-panel ops-panel--finance" aria-labelledby="heading-finanzas">
       <div class="ops-panel__header">
         <div>
-          <span class="ops-panel__eyebrow">2 · Balance comercial</span>
+          <span class="ops-panel__eyebrow">Balance comercial</span>
           <h3 id="heading-finanzas">¿Cuánto he vendido y cobrado?</h3>
         </div>
         <a class="ops-panel__link" routerLink="/resumen">Ver cierre por Live →</a>
@@ -190,53 +342,101 @@
 
       <div class="finance-summary">
         <div class="finance-hero">
-          <span class="finance-hero__label">Total vendido acumulado</span>
-          <strong class="finance-hero__amount">L {{ totalVendido }}</strong>
-          <span class="finance-hero__sub">En {{ totalPedidos }} {{ totalPedidos === 1 ? 'pedido registrado' : 'pedidos registrados' }}</span>
+          <span class="finance-hero__label">{{ etiquetaPeriodo }}</span>
+          <strong class="finance-hero__amount">L {{ formatearMonto(balance.total) }}</strong>
+          <div class="finance-hero__meta">
+            <span>En {{ balance.cantidad }} {{ plural(balance.cantidad, 'pedido registrado', 'pedidos registrados') }}</span>
+            @if (balance.variacion !== null) {
+              <span class="finance-delta" [class.finance-delta--down]="balance.variacion < 0">
+                {{ balance.variacion >= 0 ? '▲' : '▼' }} {{ balance.variacionAbs }}% vs. periodo anterior
+              </span>
+            }
+          </div>
+
+          <div class="finance-progress" role="img" [attr.aria-label]="balance.porcentaje + '% cobrado'">
+            <div class="finance-progress__bar" [style.width.%]="balance.porcentaje"></div>
+          </div>
+          <span class="finance-progress__label">{{ balance.porcentaje }}% cobrado</span>
         </div>
 
         <div class="finance-breakdown">
           <div class="finance-stat finance-stat--collected">
             <span class="finance-stat__label">Cobrado (Pagado)</span>
-            <strong class="finance-stat__value">L {{ totalPagado }}</strong>
+            <strong class="finance-stat__value">L {{ formatearMonto(balance.cobrado) }}</strong>
           </div>
           <div class="finance-stat finance-stat--pending">
             <span class="finance-stat__label">Por cobrar</span>
-            <strong class="finance-stat__value">L {{ totalPendientePago }}</strong>
+            <strong class="finance-stat__value">L {{ formatearMonto(balance.porCobrar) }}</strong>
           </div>
         </div>
       </div>
     </section>
   </div>
 
-  <!-- 3. ¿QUÉ NECESITO HACER AHORA? (Accesos rápidos a operaciones implementadas) -->
+  <!-- 3. Operación directa -->
   <section class="ops-actions-section" aria-labelledby="heading-acciones">
     <div class="ops-section-head">
-      <span class="ops-panel__eyebrow">3 · Operación directa</span>
+      <span class="ops-panel__eyebrow">Operación directa</span>
       <h3 id="heading-acciones">¿Qué necesito hacer ahora?</h3>
     </div>
 
     <div class="quick-actions-grid">
-      <a class="quick-action-card" routerLink="/pedidos">
-        <span class="quick-action-card__title">Registrar o cobrar pedido</span>
-        <span class="quick-action-card__desc">Apartar pieza, actualizar pago o marcar entrega</span>
+      <a class="quick-action-card quick-action-card--primary" routerLink="/pedidos" [queryParams]="{ nuevo: '1' }">
+        <span class="quick-action-card__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 4h12v16l-3-2-3 2-3-2-3 2V4z" />
+            <path d="M9 9h6M9 13h4" />
+          </svg>
+        </span>
+        <span class="quick-action-card__body">
+          <span class="quick-action-card__title">Registrar o cobrar pedido</span>
+          <span class="quick-action-card__desc">Apartar producto, actualizar pago o marcar entrega</span>
+        </span>
       </a>
+
       <a class="quick-action-card" routerLink="/productos">
-        <span class="quick-action-card__title">Cargar pieza al catálogo</span>
-        <span class="quick-action-card__desc">{{ totalProductos }} piezas registradas en inventario</span>
+        <span class="quick-action-card__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 8l9-5 9 5v8l-9 5-9-5V8z" />
+            <path d="M3 8l9 5 9-5M12 13v8" />
+          </svg>
+        </span>
+        <span class="quick-action-card__body">
+          <span class="quick-action-card__title">Cargar producto al catálogo</span>
+          <span class="quick-action-card__desc">{{ totalProductos }} {{ plural(totalProductos, 'artículo registrado', 'artículos registrados') }} en inventario</span>
+        </span>
       </a>
+
       <a class="quick-action-card" routerLink="/clientes">
-        <span class="quick-action-card__title">Consultar o agregar cliente</span>
-        <span class="quick-action-card__desc">{{ totalClientes }} compradoras en tu directorio</span>
+        <span class="quick-action-card__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="9" cy="8" r="3.5" />
+            <path d="M3 20c.5-3.5 3-5.5 6-5.5s5.5 2 6 5.5" />
+            <path d="M16 5.5a3 3 0 0 1 0 5.5M18 14.8c1.7.7 2.7 2.3 3 4.2" />
+          </svg>
+        </span>
+        <span class="quick-action-card__body">
+          <span class="quick-action-card__title">Consultar o agregar cliente</span>
+          <span class="quick-action-card__desc">{{ totalClientes }} {{ plural(totalClientes, 'cliente', 'clientes') }} en tu directorio</span>
+        </span>
       </a>
+
       <a class="quick-action-card" routerLink="/lives">
-        <span class="quick-action-card__title">Programar evento Live</span>
-        <span class="quick-action-card__desc">{{ totalLives }} transmisiones en tu historial</span>
+        <span class="quick-action-card__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="2" />
+            <path d="M7.8 7.8a6 6 0 0 0 0 8.4M16.2 7.8a6 6 0 0 1 0 8.4M4.9 4.9a10 10 0 0 0 0 14.2M19.1 4.9a10 10 0 0 1 0 14.2" />
+          </svg>
+        </span>
+        <span class="quick-action-card__body">
+          <span class="quick-action-card__title">Programar evento Live</span>
+          <span class="quick-action-card__desc">{{ totalLives }} {{ plural(totalLives, 'transmisión', 'transmisiones') }} en tu historial</span>
+        </span>
       </a>
     </div>
   </section>
 
-  <!-- MÉTRICAS SECUNDARIAS Y DESTACADOS (Jerarquía visual reducida) -->
+  <!-- 4. Métricas secundarias, destacados y ventas por transmisión -->
   <section class="secondary-insights" aria-label="Resumen de catálogo y destacados">
     <div class="secondary-counts">
       <div class="mini-stat">
@@ -259,17 +459,98 @@
 
     <div class="highlights-strip">
       <article class="highlight-item">
-        <span>Live con más ventas</span>
+        <span>Mejor transmisión</span>
         <strong>{{ topLive }}</strong>
       </article>
       <article class="highlight-item">
         <span>Artículo más vendido</span>
-        <strong>{{ topArticulo }}</strong>
+        <strong>{{ topArticulo | titlecase }}</strong>
       </article>
       <article class="highlight-item">
         <span>Cliente más frecuente</span>
-        <strong>{{ topCliente }}</strong>
+        <strong>{{ topCliente | titlecase }}</strong>
       </article>
     </div>
+
+    @if (serieLivesCompleta.length > 1) {
+      <div class="sales-chart-card" aria-label="Ventas por transmisión">
+        <div class="sc-head">
+          <div class="sc-title">
+            <span class="ops-panel__eyebrow">Ventas por transmisión</span>
+            <span class="sc-meta">{{ resumenSerieLives }}</span>
+          </div>
+
+          <div class="sc-ctrls">
+            <div class="periodo-switcher" role="group" aria-label="Ordenar gráfica de transmisiones">
+              <button
+                type="button"
+                class="seg-btn periodo-btn"
+                [class.periodo-btn--activo]="modoSerieLives === 'recientes'"
+                [attr.aria-pressed]="modoSerieLives === 'recientes'"
+                (click)="cambiarModoSerieLives('recientes')"
+              >
+                Recientes
+              </button>
+              <button
+                type="button"
+                class="seg-btn periodo-btn"
+                [class.periodo-btn--activo]="modoSerieLives === 'top'"
+                [attr.aria-pressed]="modoSerieLives === 'top'"
+                (click)="cambiarModoSerieLives('top')"
+              >
+                Top ventas
+              </button>
+            </div>
+
+            @if (totalPaginasSerieLives > 1) {
+              <div class="periodo-switcher" role="group" aria-label="Navegar bloque de transmisiones">
+                <button
+                  type="button"
+                  class="seg-btn periodo-btn"
+                  [disabled]="!puedeMoverSerieIzquierda"
+                  (click)="moverSerieLivesIzquierda()"
+                  [attr.aria-label]="modoSerieLives === 'recientes' ? 'Ver transmisiones anteriores' : 'Ver posiciones anteriores'"
+                  [attr.title]="modoSerieLives === 'recientes' ? 'Ver transmisiones anteriores' : 'Ver posiciones anteriores'"
+                >
+                  ←
+                </button>
+                <button
+                  type="button"
+                  class="seg-btn periodo-btn"
+                  [disabled]="!puedeMoverSerieDerecha"
+                  (click)="moverSerieLivesDerecha()"
+                  [attr.aria-label]="modoSerieLives === 'recientes' ? 'Ver transmisiones más recientes' : 'Ver siguientes posiciones'"
+                  [attr.title]="modoSerieLives === 'recientes' ? 'Ver transmisiones más recientes' : 'Ver siguientes posiciones'"
+                >
+                  →
+                </button>
+              </div>
+            }
+
+            <a class="ops-panel__link" routerLink="/resumen" fragment="comparativa-lives">
+              Ver todas →
+            </a>
+          </div>
+        </div>
+
+        <div class="sales-chart__bars">
+          @for (pt of serieLives; track pt.id) {
+            <a
+              class="sales-bar"
+              [routerLink]="['/resumen']"
+              [queryParams]="{ liveId: pt.id }"
+              [attr.title]="pt.etiqueta + ': L ' + formatearMonto(pt.monto) + ' (' + pt.pedidos + ' ' + plural(pt.pedidos, 'pedido', 'pedidos') + ')'"
+              [attr.aria-label]="'Ver resumen de ' + pt.etiqueta + ': L ' + formatearMonto(pt.monto) + ', ' + pt.pedidos + ' ' + plural(pt.pedidos, 'pedido', 'pedidos')"
+            >
+              <span class="sales-bar__value">L {{ pt.monto.toLocaleString('en-US', { maximumFractionDigits: 0 }) }}</span>
+              <span class="sales-bar__track">
+                <span class="sales-bar__fill" [style.height.%]="alturaBarra(pt.monto)"></span>
+              </span>
+              <span class="sales-bar__label">{{ pt.etiqueta }}</span>
+            </a>
+          }
+        </div>
+      </div>
+    }
   </section>
 </div>

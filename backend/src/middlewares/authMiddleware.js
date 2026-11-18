@@ -1,43 +1,20 @@
 const Sesion = require('../models/sesion');
-const jwt = require("jsonwebtoken");
-
-const User = require("../models/users");
-
-const protegerRuta = async (req, res, next) => {
+const jwt = require('jsonwebtoken');
+const User = require('../models/users');
+const { version, vigente } = require('../services/credentialService');
+module.exports = async (req, res, next) => {
+  const rechazar = () => res.status(401).json({ mensaje: 'Sesion invalida o vencida' });
   try {
     const authorization = req.headers.authorization;
-
-    if (!authorization || !authorization.startsWith("Bearer ")) {
-      return res.status(401).json({
-        mensaje: "Token no enviado"
-      });
-    }
-
-    const token = authorization.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (!decoded.sid || !await Sesion.exists({ _id: decoded.sid, usuarioId: decoded.id, expiresAt: { $gt: new Date() } })) return res.status(401).json({ mensaje: 'Sesion vencida o revocada' });
-    req.sesionId = decoded.sid;
+    if (typeof authorization !== 'string' || !authorization.startsWith('Bearer ')) return rechazar();
+    const decoded = jwt.verify(authorization.slice(7), process.env.JWT_SECRET, { algorithms: ['HS256'] });
+    if (!decoded.sid || !decoded.id) return rechazar();
     const usuario = await User.findById(decoded.id);
-
-    if (!usuario) {
-      return res.status(401).json({
-        mensaje: "Usuario no encontrado para este token"
-      });
-    }
-
-    if (usuario.estado !== "activo") {
-      return res.status(403).json({
-        mensaje: "Usuario inactivo"
-      });
-    }
-
+    if (!vigente(usuario) || (decoded.cv ?? null) !== version(usuario)) return rechazar();
+    if (!await Sesion.exists({ _id: decoded.sid, usuarioId: decoded.id,
+      credentialVersion: version(usuario), expiresAt: { $gt: new Date() } })) return rechazar();
+    req.sesionId = decoded.sid;
     req.usuario = usuario;
     next();
-  } catch (error) {
-    res.status(401).json({
-      mensaje: "Token invalido"
-    });
-  }
+  } catch { return rechazar(); }
 };
-
-module.exports = protegerRuta;

@@ -20,7 +20,7 @@ const expirarUna = async (id, corte = reloj.ahora()) => {
     const solicitud = await Solicitud.findOne(filtro).session(session).lean();
     if (!solicitud) return null; // Otro proceso ya venció/revisó esta reserva.
     const producto = await Producto.findOne({ _id: solicitud.productoId, vendedorId: solicitud.vendedorId }).session(session).lean();
-    const tienePedido = await Pedido.exists({ productoId: solicitud.productoId, vendedorId: solicitud.vendedorId }).session(session);
+    const tienePedido = await Pedido.exists({ canceladoEn: null, productoId: solicitud.productoId, vendedorId: solicitud.vendedorId }).session(session);
     let inventarioLiberado = false;
     let motivoLiberacion = 'referencia_distinta_o_producto_ausente';
     if (tienePedido) motivoLiberacion = 'pedido_asociado';

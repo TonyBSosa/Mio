@@ -119,18 +119,6 @@ const actualizarProducto = async (id, data, vendedorId) => {
   if (estado !== undefined) {
     validarEstadoProducto(estado);
 
-    if (estado === "activo" || estado === "inactivo") {
-      const tienePedidos = await productoRepository.tienePedidosAsociados?.(
-        id,
-        vendedorId
-      );
-      if (tienePedidos) {
-        throw crearError(
-          409,
-          "No se puede cambiar la disponibilidad de una pieza vinculada a un pedido"
-        );
-      }
-    }
   }
 
   const datosActualizar = {};
@@ -166,18 +154,6 @@ const actualizarEstadoProducto = async (id, estado, vendedorId) => {
 
   validarEstadoProducto(estado);
 
-  if (estado === "activo" || estado === "inactivo") {
-    const tienePedidos = await productoRepository.tienePedidosAsociados?.(
-      id,
-      vendedorId
-    );
-    if (tienePedidos) {
-      throw crearError(
-        409,
-        "No se puede cambiar la disponibilidad de una pieza vinculada a un pedido"
-      );
-    }
-  }
 
   const producto = await productoRepository.actualizarPorIdYVendedor(
     id,
@@ -195,7 +171,7 @@ const actualizarEstadoProducto = async (id, estado, vendedorId) => {
 const eliminarProducto = async (id, vendedorId) => {
   validarIdProducto(id);
 
-  const tienePedidos = await productoRepository.tienePedidosAsociados?.(
+  const tienePedidos = await productoRepository.tienePedidosAsociados(
     id,
     vendedorId
   );

@@ -22,20 +22,24 @@
   color: var(--ink);
 }
 
-/* Formulario */
-.usuario-form {
-  padding: 24px;
-  margin-bottom: 24px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md, 12px);
-  box-shadow: var(--shadow-xs);
+.page-header__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
-.usuario-form h3 {
-  margin: 0 0 20px;
-  font-size: 18px;
-  color: var(--ink);
+.page-header__actions button {
+  margin: 0;
+}
+
+/* Formulario en ventana flotante */
+.usuario-form {
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
 }
 
 .form-grid {

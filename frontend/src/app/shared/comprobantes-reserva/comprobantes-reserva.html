@@ -1,6 +1,6 @@
 <section class="comprobantes" aria-label="Comprobantes de la reserva" [attr.aria-busy]="cargando() || ocupada()">
   @if (error()) { <p role="alert" class="error-comprobante">{{ error() }}</p> }
-  @if (mensaje()) { <p role="status">{{ mensaje() }}</p> }
+  @if (mensaje()) { <span class="sr-only" role="status">{{ mensaje() }}</span> }
   @if (cargando()) { <p role="status">Consultando comprobantes…</p> }
   @else if (historial(); as info) {
     @if (vista === 'cliente' && !info.almacenamientoConfigurado) { <p>La recepción de comprobantes todavía no está configurada en este entorno.</p> }

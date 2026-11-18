@@ -153,7 +153,7 @@ const revisar = async (id, comprobanteId, usuario, accion, motivo) => {
         }
         const pieza = await Producto.exists({ _id: reserva.productoId, vendedorId: usuario._id, estado: 'apartado', reservaSolicitudId: reserva._id }).session(session);
         if (!pieza || !Number.isFinite(reserva.precioConfirmado)) throw error(409, 'La reserva perdió su bloqueo o no tiene precio confirmado. Requiere revisión.');
-        if (await Pedido.exists({ productoId: reserva.productoId, vendedorId: usuario._id }).session(session)) throw error(409, 'El artículo ya tiene un pedido asociado.');
+        if (await Pedido.exists({ canceladoEn: null, productoId: reserva.productoId, vendedorId: usuario._id }).session(session)) throw error(409, 'El artículo ya tiene un pedido asociado.');
         const cliente = await Cliente.findOneAndUpdate({ vendedorId: usuario._id, usuarioId: reserva.compradorId }, { $setOnInsert: {
           nombre: reserva.compradorNombre, vendedorId: usuario._id, usuarioId: reserva.compradorId,
         } }, { session, upsert: true, returnDocument: 'after', runValidators: true });

@@ -21,7 +21,7 @@ import { environment } from '../../../environments/environment';
               Ingresa tu correo registrado. Si la cuenta existe, te enviaremos un enlace para
               restablecer tu contraseña.
             } @else {
-              Define tu nueva contraseña segura (de 10 a 128 caracteres).
+              Define tu nueva contraseña: mínimo 15 caracteres y máximo 72 bytes UTF-8.
             }
           </p>
         </div>
@@ -61,10 +61,10 @@ import { environment } from '../../../environments/environment';
                   [type]="mostrarPassword ? 'text' : 'password'"
                   name="password"
                   autocomplete="new-password"
-                  placeholder="Mínimo 10 caracteres"
+                  placeholder="Mínimo 15 caracteres"
                   [(ngModel)]="password"
-                  minlength="10"
-                  maxlength="128"
+                  minlength="15"
+                  maxlength="72"
                   [disabled]="cargando"
                   required
                 />
@@ -77,7 +77,7 @@ import { environment } from '../../../environments/environment';
                   {{ mostrarPassword ? 'Ocultar' : 'Mostrar' }}
                 </button>
               </div>
-              <p class="field-hint">Entre 10 y 128 caracteres.</p>
+              <p class="field-hint">Al menos 15 caracteres; máximo 72 bytes UTF-8.</p>
             </div>
           }
 
@@ -118,9 +118,9 @@ export class Recuperar {
       return;
     }
 
-    if (this.token && (!this.password || this.password.length < 10)) {
+    if (this.token && (!this.password || [...this.password].length < 15 || new TextEncoder().encode(this.password).length > 72)) {
       this.esError = true;
-      this.mensaje = 'La nueva contraseña debe tener entre 10 y 128 caracteres.';
+      this.mensaje = 'La nueva contraseña necesita al menos 15 caracteres y como máximo 72 bytes UTF-8.';
       return;
     }
 

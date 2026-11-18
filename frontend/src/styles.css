@@ -28,24 +28,24 @@
     --brand-soft: #e3f3ee;
     --brand-border: #a7daca;
 
-    /* Señal de transmisión en vivo (Carmesí Broadcast) */
-    --live: #d92644;
-    --live-hover: #b81d37;
-    --live-soft: #fcecee;
-    --live-border: #f5b7c2;
+    /* Señal de transmisión en vivo (Carmesí Broadcast sobrio) */
+    --live: #c9332b;
+    --live-hover: #a82720;
+    --live-soft: #f9efee;
+    --live-border: #e3c4c1;
 
-    /* Estados semánticos */
+    /* Estados semánticos (Equilibrio cálido con piedra mineral y esmeralda) */
     --success: #157347;
     --success-soft: #e6f4ed;
     --success-border: #a9dfc2;
 
-    --warning: #b45309;
-    --warning-soft: #fef3c7;
-    --warning-border: #fcd34d;
+    --warning: #a3520c;
+    --warning-soft: #faf1e2;
+    --warning-border: #e2c79d;
 
-    --danger: #be123c;
-    --danger-soft: #ffe4e6;
-    --danger-border: #fda4af;
+    --danger: #b42318;
+    --danger-soft: #f9f0ef;
+    --danger-border: #e2c5c2;
 
     /* Bordes y divisores */
     --border: #d5ddd9;
@@ -297,6 +297,21 @@
     background-color: var(--surface);
     box-shadow: var(--shadow-xs);
     margin-block-end: var(--space-6);
+  }
+
+  .app-content dialog.mio-modal :is(
+    .cliente-form,
+    .producto-form,
+    .pedido-form,
+    .live-form,
+    .usuario-form
+  ) {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background-color: transparent;
+    box-shadow: none;
+    margin-block-end: 0;
   }
 
   .app-content :is(
@@ -683,14 +698,16 @@
   .app-content :is(.live-active-card, .live-header, .catalogo-live-activo, .live-control-strip--active) {
     border: 1px solid var(--live-border);
     border-inline-start: 4px solid var(--live);
-    background-color: var(--live-soft);
+    background: linear-gradient(120deg, var(--surface) 45%, var(--live-soft) 100%);
+    box-shadow: var(--shadow-sm);
     border-radius: var(--radius-md);
   }
 
   .app-content .live-control-strip--paused {
     border: 1px solid var(--warning-border);
     border-inline-start: 4px solid var(--warning);
-    background-color: var(--warning-soft);
+    background: linear-gradient(120deg, var(--surface) 45%, var(--warning-soft) 100%);
+    box-shadow: var(--shadow-sm);
     border-radius: var(--radius-md);
   }
 
@@ -1081,6 +1098,15 @@
       display: grid;
       gap: var(--space-3);
     }
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
   @media (forced-colors: active) {

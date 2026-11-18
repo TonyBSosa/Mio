@@ -3,6 +3,7 @@ import { DatePipe, DecimalPipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ConfiguracionReserva, SolicitudApartado, SolicitudApartadoService } from '../../services/solicitud-apartado.service';
 import { AuthService } from '../../services/auth.service';
+import { ToastService } from '../../services/toast.service';
 import { ComprobantesReserva } from '../comprobantes-reserva/comprobantes-reserva';
 
 @Component({
@@ -15,6 +16,7 @@ export class SolicitudesApartado implements OnInit {
   @Input() vista: 'cliente' | 'vendedor' = 'cliente';
   private readonly service = inject(SolicitudApartadoService);
   private readonly auth = inject(AuthService);
+  private readonly toast = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
   readonly solicitudes = signal<SolicitudApartado[]>([]);
   readonly cargando = signal(false);
@@ -48,7 +50,13 @@ export class SolicitudesApartado implements OnInit {
     this.gestionError.set('');
     this.mensaje.set('');
     this.service.guardarPlazo(Number(valor)).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: config => { this.configuracion.set(config); this.guardando.set(false); this.mensaje.set('Plazo guardado para futuras reservas.'); },
+      next: config => {
+        this.configuracion.set(config);
+        this.guardando.set(false);
+        const msg = 'Plazo guardado para futuras reservas.';
+        this.mensaje.set(msg);
+        this.toast.exito(msg);
+      },
       error: () => {
         this.guardando.set(false);
         if (selector) selector.value = String(this.configuracion()?.plazoReservaDias || 3);
@@ -76,7 +84,9 @@ export class SolicitudesApartado implements OnInit {
           : lista.map(s => s._id === actualizada._id ? actualizada : s));
         this.guardando.set(false);
         this.decision.set(null);
-        this.mensaje.set(actualizada.estado === 'rechazada' ? 'Solicitud rechazada y eliminada.' : 'Reserva de prueba confirmada. El artículo quedó bloqueado.');
+        const msg = actualizada.estado === 'rechazada' ? 'Solicitud rechazada y eliminada.' : 'Reserva de prueba confirmada. El artículo quedó bloqueado.';
+        this.mensaje.set(msg);
+        this.toast.exito(msg);
       },
       error: error => {
         this.guardando.set(false);
@@ -100,7 +110,9 @@ export class SolicitudesApartado implements OnInit {
     this.service.cancelar(id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.solicitudes.update(lista => lista.filter(s => s._id !== id));
-        this.cancelacion.set(null); this.guardando.set(false); this.mensaje.set('Apartado cancelado.');
+        this.cancelacion.set(null); this.guardando.set(false);
+        this.mensaje.set('Apartado cancelado.');
+        this.toast.exito('Apartado cancelado.');
       },
       error: error => {
         this.guardando.set(false);

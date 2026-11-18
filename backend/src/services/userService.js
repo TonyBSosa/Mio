@@ -1,4 +1,4 @@
-const bcrypt = require("bcryptjs");
+const { hashPassword, validarPassword } = require('./passwordPolicy');
 const mongoose = require("mongoose");
 
 const userRepository = require("../repositories/userRepository");
@@ -40,6 +40,7 @@ const crearUsuario = async (data) => {
   if (!nombreLimpio || !emailNormalizado || !password) {
     throw crearError(400, "Nombre, email y password son obligatorios");
   }
+  validarPassword(password);
 
   if (rol !== undefined) {
     validarRolUsuario(rol);
@@ -52,10 +53,10 @@ const crearUsuario = async (data) => {
   const usuarioExiste = await userRepository.buscarPorEmail(emailNormalizado);
 
   if (usuarioExiste) {
-    throw crearError(400, "Ya existe un usuario con ese email");
+    throw crearError(409, "No se pudo guardar el usuario con esos datos");
   }
 
-  const passwordHasheado = await bcrypt.hash(password, 10);
+  const passwordHasheado = await hashPassword(password);
   const usuario = await userRepository.crearUsuario({
     nombre: nombreLimpio,
     email: emailNormalizado,
@@ -82,7 +83,7 @@ const obtenerUsuarioPorId = async (id) => {
 
   const usuario = await userRepository.buscarPorId(id);
 
-  if (!usuario) {
+  if (!usuario || usuario.deletedAt) {
     throw crearError(404, "Usuario no encontrado");
   }
 
@@ -130,7 +131,7 @@ const actualizarUsuario = async (id, data, adminId) => {
     datosActualizar.email = emailNormalizado;
   }
 
-  if (password) datosActualizar.password = await bcrypt.hash(password, 10);
+  if (password !== undefined) datosActualizar.password = await hashPassword(password);
 
   const usuario = await userRepository.actualizarPorId(id, datosActualizar);
 
@@ -182,25 +183,15 @@ const eliminarUsuario = async (id, adminId) => {
     throw crearError(400, "No puedes eliminar tu propio usuario");
   }
 
-  const tieneDatos = await userRepository.tieneDatosDeTienda?.(id);
-
-  if (tieneDatos) {
-    throw crearError(
-      409,
-      "No se puede eliminar un vendedor con registros asociados. Inactívalo en su lugar."
-    );
-  }
-
+  // Baja lógica incluso con relaciones: conservar usuario, tienda e historial.
   const usuario = await userRepository.eliminarPorId(id);
 
   if (!usuario) {
     throw crearError(404, "Usuario no encontrado");
   }
 
-  await userRepository.eliminarPerfilPorVendedor?.(id);
-
   return {
-    mensaje: "Usuario eliminado correctamente"
+    mensaje: "Cuenta dada de baja; se conserva su historial"
   };
 };
 

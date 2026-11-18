@@ -35,6 +35,7 @@ test("reserva atomica de pieza, rollback ante fallo y liberacion al eliminar ped
     estado: "activo"
   }));
 
+  t.mock.method(pedidoRepository, "transaccion", async fn => fn({}));
   let apartadoLlamado = 0;
   let liberadoLlamado = 0;
 
@@ -74,7 +75,7 @@ test("reserva atomica de pieza, rollback ante fallo y liberacion al eliminar ped
     { status: 409 }
   );
 
-  // Si falla crearPedido despues de apartar -> libera la pieza automaticamente
+  // Si falla crearPedido, MongoDB revierte la transaccion sin liberacion compensatoria
   pedidoRepository.apartarProductoPorIdYVendedor = async () => ({
     _id: PRODUCTO_ID,
     estado: "apartado"
@@ -90,7 +91,7 @@ test("reserva atomica de pieza, rollback ante fallo y liberacion al eliminar ped
     ),
     /Fallo de escritura/
   );
-  assert.equal(liberadoLlamado, 1);
+  assert.equal(liberadoLlamado, 0);
 
   // Al eliminar un pedido vinculado a una pieza -> libera la pieza
   t.mock.method(pedidoRepository, "eliminarPorIdYVendedor", async () => ({
@@ -99,10 +100,11 @@ test("reserva atomica de pieza, rollback ante fallo y liberacion al eliminar ped
   }));
 
   await pedidoService.eliminarPedido(PEDIDO_ID, VENDEDOR_ID);
-  assert.equal(liberadoLlamado, 2);
+  assert.equal(liberadoLlamado, 1);
 });
 
 test("proteccion de integridad referencial en productos, clientes, lives y usuarios", async (t) => {
+  t.mock.method(productoRepository, "actualizarPorIdYVendedor", async () => { throw Object.assign(new Error("Pedido asociado"), { status: 409 }); });
   // Producto con pedidos no se puede eliminar ni reactivar
   t.mock.method(productoRepository, "tienePedidosAsociados", async () => true);
   await assert.rejects(
@@ -147,10 +149,9 @@ test("proteccion de integridad referencial en productos, clientes, lives y usuar
     userService.actualizarEstadoUsuario(ADMIN_ID, "inactivo", ADMIN_ID),
     { status: 400 }
   );
-  t.mock.method(userRepository, "tieneDatosDeTienda", async () => true);
-  await assert.rejects(userService.eliminarUsuario(VENDEDOR_ID, ADMIN_ID), {
-    status: 409
-  });
+  // La baja ahora conserva las relaciones en vez de impedirla o borrar documentos.
+  t.mock.method(userRepository, "eliminarPorId", async () => ({ _id: VENDEDOR_ID, estado: 'inactivo', deletedAt: new Date() }));
+  assert.match((await userService.eliminarUsuario(VENDEDOR_ID, ADMIN_ID)).mensaje, /historial/);
 });
 
 test("resumen soporta ventas directas, resumen general y escape seguro en busquedas publicas", async (t) => {

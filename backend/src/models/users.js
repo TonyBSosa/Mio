@@ -2,6 +2,8 @@ const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
   {
+    credentialVersion: { type: String },
+    deletedAt: { type: Date, default: null },
     nombre: {
       type: String,
       required: true,
@@ -43,6 +45,7 @@ const userSchema = new mongoose.Schema(
 userSchema.set("toJSON", {
   transform: (document, returnedObject) => {
     delete returnedObject.password;
+    delete returnedObject.credentialVersion;
     return returnedObject;
   }
 });

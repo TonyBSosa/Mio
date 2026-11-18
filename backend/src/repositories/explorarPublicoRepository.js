@@ -8,9 +8,7 @@ const escaparRegex = (texto) => {
 };
 
 const listarVendedoresUsuariosActivos = async () => {
-  if (mongoose.connection.readyState !== 1) {
-    return [];
-  }
+  if (mongoose.connection.readyState !== 1) { throw Object.assign(new Error("MongoDB no esta conectado"), { status: 503 }); }
 
   return User.find({
     rol: "vendedor",

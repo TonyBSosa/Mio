@@ -1,9 +1,11 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 
 import { AuthService } from '../../services/auth.service';
 import { LiveService } from '../../services/live.service';
+import { ToastService } from '../../services/toast.service';
+import { ModalComponent } from '../../shared/ui/modal/modal';
 import { PageHeaderComponent } from '../../shared/ui/page-header/page-header';
 import { PaginationComponent, paginarLista } from '../../shared/ui/pagination/pagination';
 import { BadgeTone, StatusBadgeComponent } from '../../shared/ui/status-badge/status-badge';
@@ -12,7 +14,14 @@ export type FiltroLives = 'todos' | 'proximos' | 'historial';
 
 @Component({
   selector: 'app-lives',
-  imports: [FormsModule, RouterModule, PageHeaderComponent, StatusBadgeComponent, PaginationComponent],
+  imports: [
+    FormsModule,
+    RouterModule,
+    ModalComponent,
+    PageHeaderComponent,
+    StatusBadgeComponent,
+    PaginationComponent,
+  ],
   templateUrl: './lives.html',
   styleUrl: './lives.css',
 })
@@ -33,7 +42,17 @@ export class Lives implements OnInit {
   editando = false;
   liveEditandoId = '';
   confirmandoAccion: { id: string; tipo: 'cancelado' | 'finalizado' | 'eliminar' } | null = null;
-  mensaje = '';
+  private readonly toast = inject(ToastService);
+  private _mensaje = '';
+  get mensaje(): string {
+    return this._mensaje;
+  }
+  set mensaje(valor: string) {
+    this._mensaje = valor;
+    if (valor) {
+      this.toast.exito(valor);
+    }
+  }
   error = '';
   cargando = false;
 
@@ -102,7 +121,7 @@ export class Lives implements OnInit {
     this.editando = false;
     this.liveEditandoId = '';
     this.limpiarFormulario();
-    this.formularioAbierto = !this.formularioAbierto;
+    this.formularioAbierto = true;
     this.mensaje = '';
     this.error = '';
   }
@@ -132,9 +151,6 @@ export class Lives implements OnInit {
     this.liveService.listarLives().subscribe({
       next: (respuesta: any) => {
         this.lives = Array.isArray(respuesta) ? respuesta : [];
-        if (this.lives.length === 0) {
-          this.formularioAbierto = true;
-        }
         this.cargando = false;
         this.detectorCambios.detectChanges();
       },
@@ -216,13 +232,12 @@ export class Lives implements OnInit {
     };
     this.mensaje = '';
     this.error = '';
-    if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    this.detectorCambios.detectChanges();
   }
 
   cancelarEdicion() {
     this.cerrarFormulario();
+    this.error = '';
   }
 
   solicitarConfirmacion(

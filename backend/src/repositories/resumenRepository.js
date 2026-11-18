@@ -10,6 +10,7 @@ const buscarLivePorIdYVendedor = (liveId, vendedorId) => {
 
 const listarPedidosPorLiveYVendedor = (liveId, vendedorId) => {
   return Pedido.find({
+    canceladoEn: null,
     liveId,
     vendedorId
   });
@@ -17,6 +18,7 @@ const listarPedidosPorLiveYVendedor = (liveId, vendedorId) => {
 
 const listarPedidosDirectosPorVendedor = (vendedorId) => {
   return Pedido.find({
+    canceladoEn: null,
     vendedorId,
     $or: [{ liveId: null }, { liveId: { $exists: false } }]
   });
@@ -24,6 +26,7 @@ const listarPedidosDirectosPorVendedor = (vendedorId) => {
 
 const listarTodosPedidosPorVendedor = (vendedorId) => {
   return Pedido.find({
+    canceladoEn: null,
     vendedorId
   });
 };

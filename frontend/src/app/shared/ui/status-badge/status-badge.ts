@@ -23,6 +23,7 @@ export type BadgeTone = 'neutral' | 'brand' | 'live' | 'success' | 'warning' | '
       font-size: var(--text-xs);
       font-weight: 650;
       line-height: 1.3;
+      white-space: nowrap;
       border: 1px solid var(--border);
       background-color: var(--surface-subtle);
       color: var(--ink-secondary);

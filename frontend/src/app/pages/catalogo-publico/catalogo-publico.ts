@@ -7,6 +7,7 @@ import { CatalogoPublicoService } from '../../services/catalogo-publico.service'
 import { StatusBadgeComponent } from '../../shared/ui/status-badge/status-badge';
 import { AuthService } from '../../services/auth.service';
 import { SolicitudApartadoService } from '../../services/solicitud-apartado.service';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-catalogo-publico',
@@ -27,7 +28,17 @@ export class CatalogoPublico implements OnInit {
   filtroCategoria = '';
   filtroPrecioMaximo: any = '';
   filtrosAbiertos = false;
-  mensaje = '';
+  private readonly toast = inject(ToastService);
+  private _mensaje = '';
+  get mensaje(): string {
+    return this._mensaje;
+  }
+  set mensaje(valor: string) {
+    this._mensaje = valor;
+    if (valor) {
+      this.toast.exito(valor);
+    }
+  }
   error = '';
   cargando = false;
   vendedorId = '';

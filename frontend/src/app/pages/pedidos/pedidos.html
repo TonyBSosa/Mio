@@ -8,9 +8,9 @@
       type="button"
       class="btn-primary btn-small"
       (click)="alternarFormulario()"
-      [attr.aria-expanded]="formularioExpandido"
+      [attr.aria-expanded]="formularioExpandido || editando"
     >
-      {{ formularioExpandido && !editando ? 'Cerrar formulario' : '+ Nuevo pedido' }}
+      + Nuevo pedido
     </button>
   </mio-page-header>
 
@@ -33,11 +33,7 @@
     </div>
   }
 
-  @if (mensaje) {
-    <p class="mensaje exito" role="status" aria-live="polite">{{ mensaje }}</p>
-  }
-
-  @if (error) {
+  @if (error && !(formularioExpandido || editando)) {
     <p class="mensaje error" role="alert">{{ error }}</p>
   }
 
@@ -82,48 +78,38 @@
     </div>
   </div>
 
-  <!-- FORMULARIO DESPLEGABLE DE REGISTRO / EDICIÓN -->
-  @if (formularioExpandido || editando) {
-    <form (ngSubmit)="guardarPedido()" class="pedido-form">
-      <div class="form-header-row">
-        <div>
-          <h3>{{ editando ? 'Editar pedido seleccionado' : 'Registrar nuevo pedido' }}</h3>
-          <p class="form-subtitle">
-            Selecciona un artículo del catálogo para apartarlo automáticamente o ingresa un producto manual.
-          </p>
-        </div>
-        <div class="form-header-end">
-          @if (pedido.precio > 0 || pedido.producto) {
-            <div class="form-total-preview">
-              <span>Importe estimado</span>
-              <strong>L {{ formatearMonto(calcularTotal(pedido)) }}</strong>
-            </div>
-          }
-          @if (pedidos.length > 0) {
-            <button
-              type="button"
-              class="btn-ghost btn-small"
-              (click)="cerrarFormulario()"
-              [disabled]="cargando"
-            >
-              Cerrar
-            </button>
-          }
-        </div>
+  <!-- VENTANA FLOTANTE DE REGISTRO / EDICIÓN -->
+  <mio-modal
+    [open]="formularioExpandido || editando"
+    [title]="editando ? 'Editar pedido seleccionado' : 'Registrar nuevo pedido'"
+    subtitle="Selecciona un artículo del catálogo para apartarlo automáticamente o ingresa un producto manual."
+    size="lg"
+    [error]="error"
+    [closeDisabled]="cargando"
+    (closed)="cancelarEdicion()"
+  >
+    @if (pedido.precio > 0 || pedido.producto) {
+      <div modalHeaderExtra class="form-total-preview">
+        <span>Importe estimado</span>
+        <strong>L {{ formatearMonto(calcularTotal(pedido)) }}</strong>
       </div>
+    }
 
-      <!-- Bloque 1: Cliente y Origen -->
-      <div class="form-section">
-        <span class="form-section__title">1 · Cliente y origen de la venta</span>
-        <div class="form-grid-2">
-          <div class="form-group">
-            <label for="pedido-cliente">Cliente *</label>
-            <select
-              id="pedido-cliente"
-              [(ngModel)]="pedido.clienteId"
-              name="clienteId"
-              required
-            >
+    @if (formularioExpandido || editando) {
+      <form (ngSubmit)="guardarPedido()" class="pedido-form">
+        <!-- Bloque 1: Cliente y Origen -->
+        <div class="form-section">
+          <span class="form-section__title">1 · Cliente y origen de la venta</span>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="pedido-cliente">Cliente *</label>
+              <select
+                id="pedido-cliente"
+                [(ngModel)]="pedido.clienteId"
+                name="clienteId"
+                autofocus
+                required
+              >
               <option value="">Seleccione un cliente</option>
               @for (cliente of clientes; track cliente._id) {
                 <option [value]="cliente._id">
@@ -337,6 +323,7 @@
       </div>
     </form>
   }
+  </mio-modal>
 
   <!-- BARRA UNIFICADA DE FILTROS + LISTADO PAGINADO -->
   <section id="listado-pedidos" class="pedidos-list-section" aria-label="Listado y filtrado de pedidos">

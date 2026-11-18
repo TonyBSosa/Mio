@@ -12,7 +12,7 @@ const crearMapaUsuarios = (usuarios = []) => {
 
 const esVendedorVisible = (vendedorId, mapaUsuarios) => {
   if (!mapaUsuarios || mapaUsuarios.size === 0) {
-    return true;
+    return false;
   }
   return mapaUsuarios.has(String(vendedorId));
 };
@@ -54,7 +54,7 @@ const formatearEvento = (live, perfiles, mapaUsuarios) => {
 const listarVendedores = async () => {
   const [perfiles, usuariosActivos] = await Promise.all([
     explorarPublicoRepository.listarPerfilesActivos(),
-    explorarPublicoRepository.listarVendedoresUsuariosActivos?.() || []
+    explorarPublicoRepository.listarVendedoresUsuariosActivos()
   ]);
 
   const mapaUsuarios = crearMapaUsuarios(usuariosActivos);
@@ -68,7 +68,7 @@ const listarEventos = async () => {
   const [perfiles, eventos, usuariosActivos] = await Promise.all([
     explorarPublicoRepository.listarPerfilesActivos(),
     explorarPublicoRepository.listarEventosPublicos(),
-    explorarPublicoRepository.listarVendedoresUsuariosActivos?.() || []
+    explorarPublicoRepository.listarVendedoresUsuariosActivos()
   ]);
 
   const mapaUsuarios = crearMapaUsuarios(usuariosActivos);
@@ -93,7 +93,7 @@ const buscar = async (texto) => {
       explorarPublicoRepository.buscarPerfiles(textoLimpio),
       explorarPublicoRepository.buscarEventos(textoLimpio),
       explorarPublicoRepository.listarPerfilesActivos(),
-      explorarPublicoRepository.listarVendedoresUsuariosActivos?.() || []
+      explorarPublicoRepository.listarVendedoresUsuariosActivos()
     ]);
 
   const mapaUsuarios = crearMapaUsuarios(usuariosActivos);

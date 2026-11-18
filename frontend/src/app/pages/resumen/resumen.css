@@ -8,6 +8,40 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* === Avisos de estado === */
+.resumen-alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-block-end: 0 !important;
+}
+
+.resumen-alert__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 28px;
+  block-size: 28px;
+  min-block-size: 28px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: var(--radius-xs) !important;
+  background: transparent !important;
+  color: currentColor !important;
+  font-size: 1.125rem !important;
+  line-height: 1 !important;
+  opacity: 0.75;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.resumen-alert__close:hover {
+  opacity: 1;
+  background: rgba(18, 28, 25, 0.08) !important;
+}
+
 /* === Panel de filtro de alcance === */
 .resumen-filter-panel {
   margin-bottom: 0;
@@ -405,5 +439,324 @@
   .balance-table th,
   .balance-table td {
     padding: 0.75rem;
+  }
+}
+
+/* === Comparativa paginada de transmisiones === */
+.comparativa-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.comparativa-head {
+  align-items: center;
+}
+
+.comparativa-count {
+  font-size: var(--text-xs);
+  font-weight: 650;
+  color: var(--muted);
+}
+
+.comparativa-toolbar {
+  display: grid;
+  grid-template-columns: minmax(200px, 1.4fr) repeat(2, minmax(150px, 1fr)) auto;
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.comparativa-toolbar .form-group {
+  margin: 0;
+  min-inline-size: 0;
+}
+
+.comparativa-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-block-size: 2.5rem;
+  padding: 0 0.75rem;
+  margin: 0;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--canvas);
+  font-size: var(--text-xs);
+  font-weight: 650;
+  color: var(--ink-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.comparativa-toggle input {
+  inline-size: auto;
+  min-block-size: auto;
+  margin: 0;
+  accent-color: var(--brand);
+}
+
+.comparativa-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--border-strong);
+  background: var(--canvas);
+  text-align: center;
+  color: var(--ink-secondary);
+  font-size: var(--text-sm);
+}
+
+.comparativa-empty p {
+  margin: 0;
+}
+
+.comparativa-table-wrapper {
+  overflow: auto;
+  max-inline-size: 100%;
+  max-block-size: min(560px, 75vh);
+  container-type: inline-size;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.comparativa-table-wrapper:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.comparativa-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 0;
+  --label-2: "Ventas";
+  --label-3: "Cobro";
+  --label-4: "Pedidos";
+}
+
+.comparativa-table th,
+.comparativa-table td {
+  padding: 0.8rem 0.95rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+  background: var(--surface);
+}
+
+.comparativa-table tbody tr:last-child th,
+.comparativa-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.comparativa-table thead {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 2;
+}
+
+.comparativa-table thead th {
+  background: var(--canvas);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.comparativa-table thead th.col-num {
+  text-align: right;
+}
+
+.comparativa-table tbody th {
+  position: sticky;
+  inset-inline-start: 0;
+  z-index: 1;
+  text-align: left;
+  min-inline-size: 190px;
+}
+
+.comparativa-row--activa th,
+.comparativa-row--activa td {
+  background: var(--brand-soft);
+}
+
+.comparativa-live-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-inline-size: 0;
+}
+
+.comparativa-live-name {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.comparativa-live-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.comparativa-bar-cell {
+  min-inline-size: 170px;
+}
+
+.comparativa-sales-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.comparativa-sales-wrap strong {
+  font-size: var(--text-sm);
+  color: var(--ink);
+}
+
+.comparativa-bar-track {
+  inline-size: 100%;
+  block-size: 7px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-subtle);
+  overflow: hidden;
+}
+
+.comparativa-bar-fill {
+  block-size: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--brand);
+  transition: width 260ms var(--ease-out);
+}
+
+.comparativa-cobro-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.comparativa-cobro-pct {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.comparativa-cobro-sub {
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+.comparativa-action-cell button {
+  margin: 0;
+  white-space: nowrap;
+}
+
+@container (width < 640px) {
+  .comparativa-table-wrapper {
+    border: 0;
+    max-block-size: none;
+    overflow: visible;
+  }
+
+  .comparativa-table,
+  .comparativa-table thead,
+  .comparativa-table tbody,
+  .comparativa-table tr,
+  .comparativa-table th,
+  .comparativa-table td {
+    display: block;
+  }
+
+  .comparativa-table thead {
+    display: none;
+  }
+
+  .comparativa-table tbody {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .comparativa-table tr {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+
+  .comparativa-table tbody th {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 2;
+    background: var(--canvas);
+    min-inline-size: 0;
+  }
+
+  .comparativa-row--activa th {
+    background: var(--brand-soft);
+  }
+
+  .comparativa-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    text-align: right;
+    min-inline-size: 0;
+  }
+
+  .comparativa-table td:nth-child(2)::before {
+    content: var(--label-2);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    color: var(--muted);
+  }
+
+  .comparativa-table td:nth-child(3)::before {
+    content: var(--label-3);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    color: var(--muted);
+  }
+
+  .comparativa-table td:nth-child(4)::before {
+    content: var(--label-4);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    color: var(--muted);
+  }
+
+  .comparativa-sales-wrap {
+    flex: 1;
+    max-inline-size: 65%;
+    align-items: flex-end;
+  }
+
+  .comparativa-action-cell {
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 900px) {
+  .comparativa-toolbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .comparativa-toolbar {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .comparativa-bar-fill {
+    transition: none;
   }
 }

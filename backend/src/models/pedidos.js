@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 
 const pedidoSchema = new mongoose.Schema(
   {
+    canceladoEn: { type: Date, default: null },
     reservaSolicitudId: { type: mongoose.Schema.Types.ObjectId, ref: 'SolicitudApartado', immutable: true },
     comprobanteId: { type: mongoose.Schema.Types.ObjectId, ref: 'Comprobante', immutable: true },
     clienteId: {

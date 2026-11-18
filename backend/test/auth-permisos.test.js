@@ -15,6 +15,7 @@ test('HTTP: roles desde base, propiedad de tienda, logout, caducidad y recuperac
   const usuario = { _id: id, rol: 'vendedor', estado: 'activo' };
   let activa = true;
   t.mock.method(User, 'findById', async () => usuario);
+  t.mock.method(User, 'exists', async () => true);
   t.mock.method(Sesion, 'exists', async () => activa);
   t.mock.method(Sesion, 'deleteOne', async () => { activa = false; });
   t.mock.method(Producto, 'find', filtro => {
@@ -55,13 +56,18 @@ test('HTTP: roles desde base, propiedad de tienda, logout, caducidad y recuperac
   assert.equal(JSON.stringify(await respuesta.json()).includes(enviado),false);
   assert.equal(reset.tokenHash,Recuperacion.hashToken(enviado));
   let disponible = true;
+  t.mock.method(Recuperacion, 'findOne', async () => disponible ? reset : null);
   t.mock.method(Recuperacion,'findOneAndDelete',async filtro=>{
     assert.equal(filtro.tokenHash,reset.tokenHash);
     assert.ok(filtro.expiresAt.$gt instanceof Date);
     if (!disponible) return null;
     disponible=false; return reset;
   });
-  t.mock.method(User,'updateOne',async(filtro,data)=>{assert.equal(await bcrypt.compare('nueva-clave-123',data.$set.password),true);});
+  t.mock.method(User,'findOneAndUpdate',async(filtro,data)=>{
+    assert.equal(await bcrypt.compare('nueva-clave-123',data.$set.password),true);
+    Object.assign(usuario, data.$set);
+    return usuario;
+  });
   t.mock.method(Sesion,'deleteMany',async()=>{activa=false;});
   t.mock.method(Recuperacion,'deleteMany',async()=>{});
   assert.equal((await request('/auth/reset-password','POST',{token:enviado,password:'nueva-clave-123'})).status,200);
