@@ -1,3 +1,4 @@
+import { TitleCasePipe } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -8,16 +9,31 @@ import { LiveService } from '../../services/live.service';
 import { PedidoService } from '../../services/pedido.service';
 import { ProductoService } from '../../services/producto.service';
 import { PageHeaderComponent } from '../../shared/ui/page-header/page-header';
+import { PaginationComponent, paginarLista } from '../../shared/ui/pagination/pagination';
 import { StatusBadgeComponent } from '../../shared/ui/status-badge/status-badge';
+import { SolicitudesApartado } from '../../shared/solicitudes-apartado/solicitudes-apartado';
+
+const OBJECT_ID_REGEX = /^[a-f0-9]{24}$/i;
+
+export type FiltroOperativoPedidos = '' | 'por-cobrar' | 'por-entregar';
 
 @Component({
   selector: 'app-pedidos',
   standalone: true,
-  imports: [FormsModule, RouterModule, PageHeaderComponent, StatusBadgeComponent],
+  imports: [
+    FormsModule,
+    RouterModule,
+    TitleCasePipe,
+    PageHeaderComponent,
+    StatusBadgeComponent,
+    PaginationComponent,
+    SolicitudesApartado,
+  ],
   templateUrl: './pedidos.html',
   styleUrl: './pedidos.css',
 })
 export class Pedidos implements OnInit {
+  solicitudesAbiertas = false;
   pedidos: any[] = [];
   pedidosFiltrados: any[] = [];
   clientes: any[] = [];
@@ -28,6 +44,10 @@ export class Pedidos implements OnInit {
   filtroLiveId = '';
   filtroClienteId = '';
   filtroProducto = '';
+  filtroOperativo: FiltroOperativoPedidos = '';
+
+  paginaActual = 1;
+  elementosPorPagina = 10;
 
   busquedaPieza = '';
   piezaSeleccionada: any = null;
@@ -47,7 +67,7 @@ export class Pedidos implements OnInit {
   editando = false;
   pedidoEditandoId = '';
   confirmandoEliminarId = '';
-  formularioExpandido = true;
+  formularioExpandido = false;
   mensaje = '';
   error = '';
   cargando = false;
@@ -61,6 +81,14 @@ export class Pedidos implements OnInit {
     private router: Router,
     private detectorCambios: ChangeDetectorRef,
   ) {}
+
+  get pedidosPaginados(): any[] {
+    const res = paginarLista(this.pedidosFiltrados, this.paginaActual, this.elementosPorPagina);
+    if (res.paginaSegura !== this.paginaActual) {
+      this.paginaActual = res.paginaSegura;
+    }
+    return res.itemsPagina;
+  }
 
   ngOnInit() {
     this.cargarDatosIniciales();
@@ -100,7 +128,10 @@ export class Pedidos implements OnInit {
     this.pedidoService.listarPedidos().subscribe({
       next: (respuesta: any) => {
         this.pedidos = Array.isArray(respuesta) ? respuesta : [];
-        this.filtrarPedidos();
+        if (this.pedidos.length === 0) {
+          this.formularioExpandido = true;
+        }
+        this.filtrarPedidos(false);
         this.cargando = false;
         this.detectorCambios.detectChanges();
       },
@@ -117,7 +148,7 @@ export class Pedidos implements OnInit {
     this.clienteService.listarClientes().subscribe({
       next: (respuesta: any) => {
         this.clientes = Array.isArray(respuesta) ? respuesta : [];
-        this.filtrarPedidos();
+        this.filtrarPedidos(false);
         this.detectorCambios.detectChanges();
       },
       error: (error) => {
@@ -131,7 +162,7 @@ export class Pedidos implements OnInit {
     this.liveService.listarLives().subscribe({
       next: (respuesta: any) => {
         this.lives = Array.isArray(respuesta) ? respuesta : [];
-        this.filtrarPedidos();
+        this.filtrarPedidos(false);
         this.detectorCambios.detectChanges();
       },
       error: (error) => {
@@ -148,7 +179,7 @@ export class Pedidos implements OnInit {
         if (this.editando && this.pedido.productoId) {
           this.piezaSeleccionada =
             this.productos.find(
-              (p) => String(this.obtenerId(p._id)) === String(this.pedido.productoId)
+              (p) => String(this.obtenerId(p._id)) === String(this.pedido.productoId),
             ) || null;
         }
         this.detectorCambios.detectChanges();
@@ -160,8 +191,19 @@ export class Pedidos implements OnInit {
     });
   }
 
+  cerrarPopover(popoverId: string) {
+    const el = typeof document !== 'undefined' ? document.getElementById(popoverId) : null;
+    if (el && typeof (el as any).hidePopover === 'function') {
+      try {
+        (el as any).hidePopover();
+      } catch {
+        // Ignorar si ya estaba cerrado
+      }
+    }
+  }
+
   get piezasDisponibles(): any[] {
-    const texto = this.busquedaPieza.trim().toLowerCase();
+    const texto = this.normalizar(this.busquedaPieza);
     return this.productos.filter((p) => {
       if (p.estado !== 'activo') {
         return false;
@@ -169,8 +211,8 @@ export class Pedidos implements OnInit {
       if (!texto) {
         return true;
       }
-      const cod = String(p.codigo || '').toLowerCase();
-      const nom = String(p.nombre || '').toLowerCase();
+      const cod = this.normalizar(String(p.codigo || ''));
+      const nom = this.normalizar(String(p.nombre || ''));
       return cod.includes(texto) || nom.includes(texto);
     });
   }
@@ -280,37 +322,31 @@ export class Pedidos implements OnInit {
         payload.cantidad = Number(this.pedido.cantidad || 1);
       }
 
-      this.pedidoService
-        .actualizarPedido(this.pedidoEditandoId, payload)
-        .subscribe({
-          next: (pedidoActualizado: any) => {
-            const index = this.pedidos.findIndex(
-              (pedidoItem) => pedidoItem._id === this.pedidoEditandoId
-            );
+      this.pedidoService.actualizarPedido(this.pedidoEditandoId, payload).subscribe({
+        next: (pedidoActualizado: any) => {
+          const index = this.pedidos.findIndex(
+            (pedidoItem) => pedidoItem._id === this.pedidoEditandoId,
+          );
 
-            if (index !== -1) {
-              this.pedidos[index] = pedidoActualizado;
-              this.pedidos = [...this.pedidos];
-              this.filtrarPedidos();
-            }
+          if (index !== -1) {
+            this.pedidos[index] = pedidoActualizado;
+            this.pedidos = [...this.pedidos];
+            this.filtrarPedidos(false);
+          }
 
-            this.limpiarFormulario();
-            this.editando = false;
-            this.pedidoEditandoId = '';
-            this.mensaje = 'Pedido actualizado correctamente';
-            this.cargando = false;
-            this.detectorCambios.detectChanges();
-          },
-          error: (error) => {
-            console.error('Error al actualizar pedido', error);
-            this.error =
-              error.error?.mensaje ||
-              error.error?.error ||
-              'Error al actualizar pedido';
-            this.cargando = false;
-            this.detectorCambios.detectChanges();
-          },
-        });
+          this.cerrarFormulario();
+          this.mensaje = 'Pedido actualizado correctamente';
+          this.cargando = false;
+          this.detectorCambios.detectChanges();
+        },
+        error: (error) => {
+          console.error('Error al actualizar pedido', error);
+          this.error =
+            error.error?.mensaje || error.error?.error || 'Error al actualizar pedido';
+          this.cargando = false;
+          this.detectorCambios.detectChanges();
+        },
+      });
     } else {
       const payload: any = {
         clienteId: this.pedido.clienteId,
@@ -332,10 +368,9 @@ export class Pedidos implements OnInit {
 
       this.pedidoService.crearPedido(payload).subscribe({
         next: (pedidoCreado: any) => {
-          this.pedidos.unshift(pedidoCreado);
-          this.pedidos = [...this.pedidos];
-          this.filtrarPedidos();
-          this.limpiarFormulario();
+          this.pedidos = [pedidoCreado, ...this.pedidos];
+          this.filtrarPedidos(true);
+          this.cerrarFormulario();
           this.mensaje = 'Pedido registrado correctamente';
           this.cargando = false;
           this.listarProductos();
@@ -344,9 +379,7 @@ export class Pedidos implements OnInit {
         error: (error) => {
           console.error('Error al crear pedido', error);
           this.error =
-            error.error?.mensaje ||
-            error.error?.error ||
-            'Error al crear pedido';
+            error.error?.mensaje || error.error?.error || 'Error al crear pedido';
           this.cargando = false;
           this.detectorCambios.detectChanges();
         },
@@ -355,10 +388,15 @@ export class Pedidos implements OnInit {
   }
 
   get totalImporteFiltrado(): number {
-    return this.pedidosFiltrados.reduce(
-      (acc, p) => acc + this.calcularTotal(p),
-      0
-    );
+    return this.pedidosFiltrados.reduce((acc, p) => acc + this.calcularTotal(p), 0);
+  }
+
+  get totalPendientesPago(): number {
+    return this.pedidos.filter((p) => p.estadoPago === 'pendiente').length;
+  }
+
+  get totalPendientesEntrega(): number {
+    return this.pedidos.filter((p) => p.estadoEntrega === 'pendiente').length;
   }
 
   get pendientesPagoFiltrados(): number {
@@ -371,15 +409,40 @@ export class Pedidos implements OnInit {
 
   get tieneFiltrosActivos(): boolean {
     return Boolean(
-      this.filtroLiveId || this.filtroClienteId || this.filtroProducto.trim()
+      this.filtroLiveId ||
+        this.filtroClienteId ||
+        this.filtroProducto.trim() ||
+        this.filtroOperativo,
     );
   }
 
-  alternarFormulario() {
-    this.formularioExpandido = !this.formularioExpandido;
+  seleccionarKpiOperativo(filtro: FiltroOperativoPedidos) {
+    this.filtroOperativo = this.filtroOperativo === filtro ? '' : filtro;
+    this.filtrarPedidos(true);
   }
 
-  solicitarEliminarPedido(id: string) {
+  alternarFormulario() {
+    if (this.formularioExpandido) {
+      this.cerrarFormulario();
+    } else {
+      this.editando = false;
+      this.pedidoEditandoId = '';
+      this.limpiarFormulario();
+      this.formularioExpandido = true;
+      this.mensaje = '';
+      this.error = '';
+    }
+  }
+
+  cerrarFormulario() {
+    this.formularioExpandido = false;
+    this.editando = false;
+    this.pedidoEditandoId = '';
+    this.limpiarFormulario();
+  }
+
+  solicitarEliminarPedido(id: string, popoverId?: string) {
+    if (popoverId) this.cerrarPopover(popoverId);
     this.confirmandoEliminarId = id;
   }
 
@@ -387,8 +450,9 @@ export class Pedidos implements OnInit {
     this.confirmandoEliminarId = '';
   }
 
-  editarPedido(pedido: any) {
-    if (this.cargando) return;
+  editarPedido(pedido: any, popoverId?: string) {
+    if (popoverId) this.cerrarPopover(popoverId);
+    if (this.cargando || pedido.reservaSolicitudId) return;
     this.editando = true;
     this.formularioExpandido = true;
     this.confirmandoEliminarId = '';
@@ -420,9 +484,7 @@ export class Pedidos implements OnInit {
   }
 
   cancelarEdicion() {
-    this.editando = false;
-    this.pedidoEditandoId = '';
-    this.limpiarFormulario();
+    this.cerrarFormulario();
     this.mensaje = '';
     this.error = '';
     this.detectorCambios.detectChanges();
@@ -438,7 +500,7 @@ export class Pedidos implements OnInit {
     this.pedidoService.eliminarPedido(id).subscribe({
       next: () => {
         this.pedidos = this.pedidos.filter((pedidoItem) => pedidoItem._id !== id);
-        this.filtrarPedidos();
+        this.filtrarPedidos(false);
         this.listarProductos();
         this.mensaje = 'Pedido eliminado correctamente';
         this.cargando = false;
@@ -453,19 +515,23 @@ export class Pedidos implements OnInit {
     });
   }
 
-  marcarPagado(pedido: any) {
+  marcarPagado(pedido: any, popoverId?: string) {
+    if (popoverId) this.cerrarPopover(popoverId);
     this.actualizarPago(pedido, 'pagado');
   }
 
-  marcarPendientePago(pedido: any) {
+  marcarPendientePago(pedido: any, popoverId?: string) {
+    if (popoverId) this.cerrarPopover(popoverId);
     this.actualizarPago(pedido, 'pendiente');
   }
 
-  marcarEntregado(pedido: any) {
+  marcarEntregado(pedido: any, popoverId?: string) {
+    if (popoverId) this.cerrarPopover(popoverId);
     this.actualizarEntrega(pedido, 'entregado');
   }
 
-  marcarPendienteEntrega(pedido: any) {
+  marcarPendienteEntrega(pedido: any, popoverId?: string) {
+    if (popoverId) this.cerrarPopover(popoverId);
     this.actualizarEntrega(pedido, 'pendiente');
   }
 
@@ -477,14 +543,12 @@ export class Pedidos implements OnInit {
 
     this.pedidoService.marcarPago(pedido._id, estadoPago).subscribe({
       next: (pedidoActualizado: any) => {
-        const index = this.pedidos.findIndex(
-          (pedidoItem) => pedidoItem._id === pedido._id
-        );
+        const index = this.pedidos.findIndex((pedidoItem) => pedidoItem._id === pedido._id);
 
         if (index !== -1) {
           this.pedidos[index] = pedidoActualizado;
           this.pedidos = [...this.pedidos];
-          this.filtrarPedidos();
+          this.filtrarPedidos(false);
         }
 
         this.mensaje = 'Estado de pago actualizado correctamente';
@@ -508,14 +572,12 @@ export class Pedidos implements OnInit {
 
     this.pedidoService.marcarEntrega(pedido._id, estadoEntrega).subscribe({
       next: (pedidoActualizado: any) => {
-        const index = this.pedidos.findIndex(
-          (pedidoItem) => pedidoItem._id === pedido._id
-        );
+        const index = this.pedidos.findIndex((pedidoItem) => pedidoItem._id === pedido._id);
 
         if (index !== -1) {
           this.pedidos[index] = pedidoActualizado;
           this.pedidos = [...this.pedidos];
-          this.filtrarPedidos();
+          this.filtrarPedidos(false);
         }
 
         this.mensaje = 'Estado de entrega actualizado correctamente';
@@ -531,13 +593,15 @@ export class Pedidos implements OnInit {
     });
   }
 
-  filtrarPedidos() {
-    const textoProducto = this.filtroProducto.trim().toLowerCase();
+  filtrarPedidos(reiniciarPagina = true) {
+    const q = this.normalizar(this.filtroProducto);
 
     this.pedidosFiltrados = this.pedidos.filter((pedidoItem) => {
       const pedidoLiveId = String(this.obtenerId(pedidoItem.liveId) || '');
       const pedidoClienteId = String(this.obtenerId(pedidoItem.clienteId) || '');
-      const producto = String(pedidoItem.producto || '').toLowerCase();
+      const producto = this.normalizar(String(pedidoItem.producto || ''));
+      const notas = this.normalizar(String(pedidoItem.observaciones || ''));
+      const clienteNom = this.normalizar(this.obtenerNombreCliente(pedidoItem.clienteId));
 
       let coincideLive = true;
       if (this.filtroLiveId === 'directa') {
@@ -549,41 +613,75 @@ export class Pedidos implements OnInit {
       const coincideCliente =
         !this.filtroClienteId || pedidoClienteId === String(this.filtroClienteId);
 
-      const cod = this.obtenerCodigoPieza(pedidoItem).toLowerCase();
-      const coincideProducto =
-        !textoProducto || producto.includes(textoProducto) || cod.includes(textoProducto);
+      const cod = this.normalizar(this.obtenerCodigoPieza(pedidoItem));
+      const coincideTexto =
+        !q ||
+        producto.includes(q) ||
+        cod.includes(q) ||
+        clienteNom.includes(q) ||
+        notas.includes(q);
 
-      return coincideLive && coincideCliente && coincideProducto;
+      let coincideOperativo = true;
+      if (this.filtroOperativo === 'por-cobrar') {
+        coincideOperativo = pedidoItem.estadoPago === 'pendiente';
+      } else if (this.filtroOperativo === 'por-entregar') {
+        coincideOperativo = pedidoItem.estadoEntrega === 'pendiente';
+      }
+
+      return coincideLive && coincideCliente && coincideTexto && coincideOperativo;
     });
+
+    if (reiniciarPagina) {
+      this.paginaActual = 1;
+    } else {
+      const totalPaginas = Math.max(
+        1,
+        Math.ceil(this.pedidosFiltrados.length / Math.max(1, this.elementosPorPagina)),
+      );
+      if (this.paginaActual > totalPaginas) {
+        this.paginaActual = totalPaginas;
+      }
+    }
   }
 
   limpiarFiltros() {
     this.filtroLiveId = '';
     this.filtroClienteId = '';
     this.filtroProducto = '';
-    this.filtrarPedidos();
+    this.filtroOperativo = '';
+    this.filtrarPedidos(true);
   }
 
-  obtenerNombreCliente(clienteId: any) {
+  esClienteSinRegistro(clienteId: any): boolean {
+    if (clienteId && clienteId.nombre) return false;
+    const id = String(this.obtenerId(clienteId) || '').trim();
+    if (!id) return true;
+    const cliente = this.clientes.find((c) => String(c._id) === id);
+    return !cliente && OBJECT_ID_REGEX.test(id);
+  }
+
+  obtenerNombreCliente(clienteId: any): string {
     if (clienteId && clienteId.nombre) {
       return clienteId.nombre;
     }
 
-    const id = this.obtenerId(clienteId);
-    const cliente = this.clientes.find((clienteItem) => String(clienteItem._id) === String(id));
+    const id = String(this.obtenerId(clienteId) || '').trim();
+    const cliente = this.clientes.find((clienteItem) => String(clienteItem._id) === id);
 
-    return cliente ? cliente.nombre : (id || 'Sin cliente');
+    if (cliente) return cliente.nombre;
+    if (!id || OBJECT_ID_REGEX.test(id)) return 'Cliente sin registro';
+    return id;
   }
 
-  obtenerNombreLive(liveId: any) {
-    if (!liveId) return 'Venta directa (sin Live)';
+  obtenerNombreLive(liveId: any): string {
+    if (!liveId) return 'Venta directa';
     if (liveId && liveId.nombre) {
       return liveId.nombre;
     }
 
     const id = this.obtenerId(liveId);
     const live = this.lives.find(
-      (liveItem) => String(this.obtenerId(liveItem._id)) === String(id)
+      (liveItem) => String(this.obtenerId(liveItem._id)) === String(id),
     );
 
     if (live) {
@@ -594,7 +692,7 @@ export class Pedidos implements OnInit {
       return this.liveActivo.nombre;
     }
 
-    return 'Live no encontrado';
+    return 'Transmisión anterior';
   }
 
   obtenerCodigoPieza(pedidoItem: any): string {
@@ -608,10 +706,19 @@ export class Pedidos implements OnInit {
     return valor && valor._id ? valor._id : valor;
   }
 
-  calcularTotal(pedido: any) {
+  calcularTotal(pedido: any): number {
     const cant = Number(pedido?.cantidad) || 0;
     const prec = Number(pedido?.precio) || 0;
     return cant * prec;
+  }
+
+  formatearMonto(valor: any): string {
+    const n = Number(valor ?? 0);
+    if (Number.isNaN(n)) return '0.00';
+    return n.toLocaleString('es-HN', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
   }
 
   limpiarFormulario() {
@@ -632,5 +739,13 @@ export class Pedidos implements OnInit {
 
   cerrarSesion() {
     this.authService.logout();
+  }
+
+  private normalizar(valor: string): string {
+    return valor
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
   }
 }

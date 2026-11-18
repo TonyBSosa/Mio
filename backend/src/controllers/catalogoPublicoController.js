@@ -3,7 +3,7 @@ const catalogoPublicoService = require("../services/catalogoPublicoService");
 const responderError = (res, error, mensajeDefault) => {
   if (error.status) {
     return res.status(error.status).json({
-      mensaje: error.mensaje
+      mensaje: error.mensaje || error.message
     });
   }
 
@@ -15,6 +15,7 @@ const responderError = (res, error, mensajeDefault) => {
 
 const obtenerCatalogo = async (req, res) => {
   try {
+    res.set('Cache-Control', 'no-store');
     const catalogo = await catalogoPublicoService.obtenerCatalogo(
       req.params.vendedorId
     );

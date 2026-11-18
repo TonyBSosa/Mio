@@ -1,116 +1,62 @@
 <section class="cliente-page">
-  <header class="cliente-header">
-    <div>
-      <h2>Encuentra tu próxima tienda favorita</h2>
-      @if (usuario) {
-        <p>Bienvenido, {{ usuario.nombre }}</p>
-      } @else {
-        <p>Descubre eventos activos y catalogos publicos.</p>
-      }
-    </div>
-
-    <div class="header-actions">
-      @if (usuario) {
-        <button type="button" (click)="cerrarSesion()">Cerrar sesión</button>
-      }
-    </div>
+  <header class="explorar-header">
+    <p class="eyebrow">EXPLORA MIO</p>
+    <h1>Tu próxima tienda favorita está aquí.</h1>
+    <p>Encuentra algo para ti entre tiendas, catálogos y ventas en vivo.</p>
   </header>
 
-  <form class="buscador-explorar" (ngSubmit)="ejecutarBusqueda()">
-    <input
-      type="search"
-      name="textoBusqueda"
-      placeholder="Buscar tiendas o eventos…"
-      aria-label="Buscar tiendas o eventos Live"
-      [(ngModel)]="textoBusqueda"
-    >
-    <button type="submit">Buscar</button>
-    @if (textoBusqueda) {
-      <button type="button" class="btn-limpiar" (click)="limpiarBusqueda()">Limpiar</button>
-    }
+  <form class="buscador-explorar" role="search" (ngSubmit)="ejecutarBusqueda()">
+    <label for="buscar-tiendas">¿Qué estás buscando?</label>
+    <div class="buscador-controles">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg>
+      <input id="buscar-tiendas" type="search" name="textoBusqueda" placeholder="Nombre de una tienda o evento…" [(ngModel)]="textoBusqueda">
+      <button type="submit">Buscar</button>
+      @if (textoBusqueda) { <button type="button" class="btn-limpiar" (click)="limpiarBusqueda()">Limpiar</button> }
+    </div>
   </form>
 
-  @if (mensaje) {
-    <p class="mensaje exito" role="status">{{ mensaje }}</p>
-  }
+  @if (error) { <p class="mensaje error" role="alert">{{ error }}</p> }
+  @if (cargando) { <p class="carga" role="status">Cargando tiendas y eventos…</p> }
 
-  @if (error) {
-    <p class="mensaje error" role="alert">{{ error }}</p>
-  }
-
-  @if (cargando) {
-    <p role="status" aria-live="polite">Cargando…</p>
-  }
-
-  <section class="seccion">
-    <p class="section-label">Eventos activos</p>
-
-    @if (eventosActivos.length === 0 && !cargando) {
-      <p>No hay eventos activos en este momento.</p>
-    }
-
-    <div class="grid">
+  <section class="seccion" aria-labelledby="en-vivo">
+    <div class="seccion-titulo"><h2 id="en-vivo">En vivo ahora</h2><span class="cantidad">{{ eventosActivos.length }}</span></div>
+    @if (!cargando && !eventosActivos.length) { <p class="vacio">No hay eventos en vivo por ahora. Puedes explorar las tiendas más abajo.</p> }
+    <div class="eventos-grid">
       @for (evento of eventosActivos; track evento._id) {
-        <article class="card live-card">
-          <span>EN VIVO</span>
+        <article class="evento-card">
+          <div class="evento-cabecera"><span class="live-badge"><i aria-hidden="true"></i>EN VIVO</span><span class="tienda-evento">{{ evento.nombrePublico }}</span></div>
           <h3>{{ evento.nombre }}</h3>
-          <p>{{ evento.descripcion }}</p>
-          <p>{{ mostrarFecha(evento.fecha) }}</p>
-          <small>{{ evento.nombrePublico }}</small>
-          <div>
-            <a [routerLink]="'/catalogo/' + evento.vendedorId">Ver catálogo</a>
-            <button type="button" disabled title="Disponible en una próxima versión">
-              Seguimiento · Próximamente
-            </button>
-          </div>
+          @if (evento.descripcion) { <p class="descripcion">{{ evento.descripcion }}</p> }
+          <p class="fecha">{{ mostrarFecha(evento.fecha) }}</p>
+          <a class="catalogo-link" [routerLink]="['/catalogo', evento.vendedorId]" [attr.aria-label]="'Ver catálogo de ' + evento.nombrePublico">Ver catálogo <span aria-hidden="true">↗</span></a>
         </article>
       }
     </div>
   </section>
 
-  <section class="seccion">
-    <p class="section-label">Próximos eventos</p>
-
-    @if (eventosProgramados.length === 0 && !cargando) {
-      <p>No hay eventos programados.</p>
-    }
-
-    <div class="grid">
-      @for (evento of eventosProgramados; track evento._id) {
-        <article class="card">
-          <h3>{{ evento.nombre }}</h3>
-          <p>{{ evento.descripcion }}</p>
-          <p>{{ mostrarFecha(evento.fecha) }}</p>
-          <small>{{ evento.nombrePublico }}</small>
-          <div>
-            <a [routerLink]="'/catalogo/' + evento.vendedorId">Ver catálogo</a>
-            <button type="button" disabled title="Disponible en una próxima versión">
-              Seguimiento · Próximamente
-            </button>
-          </div>
-        </article>
-      }
-    </div>
-  </section>
-
-  <section class="seccion">
-    <p class="section-label">Vendedores disponibles</p>
-
-    @if (vendedores.length === 0 && !cargando) {
-      <p>No hay vendedores disponibles.</p>
-    }
-
-    <div class="grid">
+  <section class="seccion" aria-labelledby="tiendas">
+    <div class="seccion-titulo"><h2 id="tiendas">Tiendas para explorar</h2><span class="cantidad">{{ vendedores.length }}</span></div>
+    <p class="seccion-intro">Entra a una tienda y descubre lo que tiene disponible.</p>
+    @if (!cargando && !vendedores.length) { <p class="vacio">No encontramos tiendas. Prueba con otro nombre o limpia la búsqueda.</p> }
+    <div class="tiendas-grid">
       @for (vendedor of vendedores; track vendedor.vendedorId) {
-        <article class="card">
-          <h3>{{ vendedor.nombrePublico || 'Vendedor' }}</h3>
-          <p>{{ vendedor.descripcion }}</p>
-          <div>
-            <a [routerLink]="'/catalogo/' + vendedor.vendedorId">Ver catálogo</a>
-            <button type="button" disabled title="Disponible en una próxima versión">
-              Seguimiento · Próximamente
-            </button>
-          </div>
+        <a class="tienda-card" [routerLink]="['/catalogo', vendedor.vendedorId]">
+          <span class="tienda-avatar" aria-hidden="true">{{ inicialesTienda(vendedor.nombrePublico) }}</span>
+          <div class="tienda-info"><h3>{{ vendedor.nombrePublico || 'Tienda MIO' }}</h3><p>{{ vendedor.descripcion || 'Explora los productos de esta tienda.' }}</p><span class="tienda-cta">Explorar tienda <span aria-hidden="true">→</span></span></div>
+        </a>
+      }
+    </div>
+  </section>
+
+  <section class="seccion" aria-labelledby="proximos">
+    <div class="seccion-titulo"><h2 id="proximos">Próximos eventos</h2><span class="cantidad">{{ eventosProgramados.length }}</span></div>
+    @if (!cargando && !eventosProgramados.length) { <p class="vacio">Todavía no hay eventos programados.</p> }
+    <div class="agenda">
+      @for (evento of eventosProgramados; track evento._id) {
+        <article class="agenda-item">
+          <div class="agenda-fecha"><span>PROGRAMADO</span><p>{{ mostrarFecha(evento.fecha) }}</p></div>
+          <div class="agenda-info"><h3>{{ evento.nombre }}</h3><p>{{ evento.nombrePublico }}@if (evento.descripcion) { · {{ evento.descripcion }} }</p></div>
+          <a class="agenda-link" [routerLink]="['/catalogo', evento.vendedorId]" [attr.aria-label]="'Ver catálogo de ' + evento.nombrePublico">Ver catálogo <span aria-hidden="true">→</span></a>
         </article>
       }
     </div>

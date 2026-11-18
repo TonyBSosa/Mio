@@ -2,9 +2,16 @@
   <mio-page-header
     kicker="Agenda de transmisiones"
     title="Eventos Live"
-    subtitle="Programa tus próximas sesiones de venta en vivo, administra estados de transmisión y entra a tu cabina."
+    subtitle="Programa tus sesiones de venta en vivo, gestiona el estado de transmisión y accede a tu cabina."
   >
-    <a class="btn-live btn-small" routerLink="/live-activo">Cabina Live activo →</a>
+    <button
+      type="button"
+      class="btn-primary btn-small"
+      (click)="abrirFormularioNuevo()"
+      [attr.aria-expanded]="formularioAbierto"
+    >
+      {{ formularioAbierto && !editando ? 'Cerrar formulario' : '+ Programar Live' }}
+    </button>
   </mio-page-header>
 
   @if (mensaje) {
@@ -15,82 +22,239 @@
     <p class="mensaje error" role="alert">{{ error }}</p>
   }
 
-  <form (ngSubmit)="guardarLive()" class="live-form">
-    <div class="live-form__header">
-      <div>
-        <h3>{{ editando ? 'Editar evento Live' : 'Programar nuevo Live' }}</h3>
-        <p class="live-form__sub">
-          Define el título, fecha y enfoque de tu próxima transmisión para vincular pedidos.
-        </p>
+  <!-- FORMULARIO DESPLEGABLE PARA PROGRAMAR O EDITAR -->
+  @if (formularioAbierto) {
+    <form (ngSubmit)="guardarLive()" class="live-form">
+      <div class="live-form__header">
+        <div>
+          <h3>{{ editando ? 'Editar evento Live' : 'Programar nuevo Live' }}</h3>
+          <p class="live-form__sub">
+            Define el título, fecha y enfoque de tu transmisión para vincular pedidos.
+          </p>
+        </div>
+        @if (lives.length > 0) {
+          <button
+            type="button"
+            class="btn-ghost btn-small"
+            (click)="cerrarFormulario()"
+            [disabled]="cargando"
+          >
+            Cerrar
+          </button>
+        }
       </div>
-    </div>
 
-    <div class="live-form__grid">
+      <div class="live-form__grid">
+        <div class="form-group">
+          <label for="live-nombre">Nombre del evento *</label>
+          <input
+            id="live-nombre"
+            type="text"
+            placeholder="Ej. Especial de Temporada en Vivo"
+            [(ngModel)]="live.nombre"
+            name="nombre"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="live-fecha">Fecha y hora programada</label>
+          <input
+            id="live-fecha"
+            type="datetime-local"
+            [(ngModel)]="live.fecha"
+            name="fecha"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="live-estado">Estado inicial</label>
+          <select id="live-estado" [(ngModel)]="live.estado" name="estado">
+            <option value="programado">Programado</option>
+            <option value="activo">Activo (en vivo ahora)</option>
+            <option value="pausado">Pausado</option>
+            <option value="finalizado">Finalizado</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+        </div>
+      </div>
+
       <div class="form-group">
-        <label for="live-nombre">Nombre del evento *</label>
+        <label for="live-descripcion">Descripción o productos destacados</label>
         <input
-          id="live-nombre"
+          id="live-descripcion"
           type="text"
-          placeholder="Ej. Especial Cápsula de Verano"
-          [(ngModel)]="live.nombre"
-          name="nombre"
-          required
+          placeholder="Ej. Nuevos ingresos, promociones del día y artículos destacados"
+          [(ngModel)]="live.descripcion"
+          name="descripcion"
         />
       </div>
 
-      <div class="form-group">
-        <label for="live-fecha">Fecha y hora programada</label>
-        <input
-          id="live-fecha"
-          type="datetime-local"
-          [(ngModel)]="live.fecha"
-          name="fecha"
-        />
-      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn-primary" [disabled]="cargando">
+          {{ cargando ? 'Guardando...' : editando ? 'Guardar cambios' : 'Guardar evento Live' }}
+        </button>
 
-      <div class="form-group">
-        <label for="live-estado">Estado inicial</label>
-        <select id="live-estado" [(ngModel)]="live.estado" name="estado">
-          <option value="programado">Programado</option>
-          <option value="activo">Activo (en vivo ahora)</option>
-          <option value="pausado">Pausado</option>
-          <option value="finalizado">Finalizado</option>
-          <option value="cancelado">Cancelado</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="form-group">
-      <label for="live-descripcion">Descripción o prendas destacadas</label>
-      <input
-        id="live-descripcion"
-        type="text"
-        placeholder="Ej. Blusas de lino y vestidos frescos en pieza única"
-        [(ngModel)]="live.descripcion"
-        name="descripcion"
-      />
-    </div>
-
-    <div class="form-actions">
-      <button type="submit" class="btn-primary" [disabled]="cargando">
-        {{ cargando ? 'Guardando...' : editando ? 'Actualizar Live' : 'Guardar evento Live' }}
-      </button>
-
-      @if (editando) {
         <button
           type="button"
           class="btn-secondary"
           (click)="cancelarEdicion()"
           [disabled]="cargando"
         >
-          Cancelar edición
+          Cancelar
         </button>
-      }
-    </div>
-  </form>
+      </div>
+    </form>
+  }
 
   @if (cargando) {
-    <p class="estado-carga" role="status">Actualizando lista de transmisiones...</p>
+    <p class="estado-carga" role="status">Actualizando agenda de transmisiones...</p>
+  }
+
+  <!-- TARJETA PROTAGONISTA: TRANSMISIÓN ACTIVA O EN PAUSA -->
+  @if (liveDestacado; as destacado) {
+    <section
+      class="live-spotlight"
+      [class.live-control-strip--active]="destacado.estado === 'activo'"
+      [class.live-control-strip--paused]="destacado.estado === 'pausado'"
+      aria-label="Transmisión en curso"
+    >
+      <div class="live-spotlight__info">
+        <div class="live-spotlight__meta">
+          <mio-status-badge [tone]="obtenerTonoEstado(destacado.estado)" [dot]="true">
+            {{ obtenerEtiquetaEstado(destacado.estado) }}
+          </mio-status-badge>
+          <span class="live-spotlight__date">{{ mostrarFecha(destacado.fecha) }}</span>
+        </div>
+        <h2 class="live-spotlight__title">{{ destacado.nombre }}</h2>
+        @if (destacado.descripcion) {
+          <p class="live-spotlight__desc">{{ destacado.descripcion }}</p>
+        }
+      </div>
+
+      <div class="live-spotlight__actions">
+        @if (tieneConfirmacionEnItem(destacado._id)) {
+          @if (esConfirmando(destacado._id, 'finalizado')) {
+            <div class="confirm-inline">
+              <span>¿Finalizar Live?</span>
+              <button type="button" class="btn-finish" (click)="cambiarEstado(destacado, 'finalizado')">
+                Sí, finalizar
+              </button>
+              <button type="button" class="btn-secondary" (click)="cancelarConfirmacion()">
+                No
+              </button>
+            </div>
+          }
+          @if (esConfirmando(destacado._id, 'cancelado')) {
+            <div class="confirm-inline">
+              <span>¿Cancelar Live?</span>
+              <button type="button" class="danger" (click)="cambiarEstado(destacado, 'cancelado')">
+                Sí, cancelar
+              </button>
+              <button type="button" class="btn-secondary" (click)="cancelarConfirmacion()">
+                No
+              </button>
+            </div>
+          }
+          @if (esConfirmando(destacado._id, 'eliminar')) {
+            <div class="confirm-inline">
+              <span>¿Eliminar evento?</span>
+              <button type="button" class="danger" (click)="eliminarLive(destacado._id)">
+                Sí, eliminar
+              </button>
+              <button type="button" class="btn-secondary" (click)="cancelarConfirmacion()">
+                No
+              </button>
+            </div>
+          }
+        } @else {
+          @if (destacado.estado === 'activo') {
+            <a class="btn-live" routerLink="/live-activo">Abrir Cabina →</a>
+            <button
+              type="button"
+              class="btn-secondary"
+              (click)="cambiarEstado(destacado, 'pausado')"
+              [disabled]="cargando"
+            >
+              Pausar
+            </button>
+          } @else {
+            <button
+              type="button"
+              class="btn-primary"
+              (click)="cambiarEstado(destacado, 'activo')"
+              [disabled]="cargando"
+            >
+              Reanudar Live
+            </button>
+            <button
+              type="button"
+              class="btn-secondary"
+              (click)="solicitarConfirmacion(destacado._id, 'finalizado')"
+              [disabled]="cargando"
+            >
+              Finalizar
+            </button>
+          }
+
+          <button
+            type="button"
+            class="btn-ghost btn-icon-more"
+            [attr.popovertarget]="'live-menu-spotlight-' + destacado._id"
+            [attr.aria-label]="'Más opciones para ' + destacado.nombre"
+            [disabled]="cargando"
+          >
+            ⋯
+          </button>
+          <div
+            [id]="'live-menu-spotlight-' + destacado._id"
+            popover="auto"
+            class="action-popover"
+          >
+            @if (destacado.estado === 'pausado') {
+              <a
+                class="seg-btn action-popover__item"
+                routerLink="/live-activo"
+                (click)="cerrarPopover('live-menu-spotlight-' + destacado._id)"
+              >
+                Abrir Cabina
+              </a>
+            }
+            @if (destacado.estado === 'activo') {
+              <button
+                type="button"
+                class="seg-btn action-popover__item"
+                (click)="solicitarConfirmacion(destacado._id, 'finalizado', 'live-menu-spotlight-' + destacado._id)"
+              >
+                Finalizar transmisión
+              </button>
+            }
+            <button
+              type="button"
+              class="seg-btn action-popover__item"
+              (click)="editarLive(destacado, 'live-menu-spotlight-' + destacado._id)"
+            >
+              Editar detalles
+            </button>
+            <hr class="action-popover__sep" />
+            <button
+              type="button"
+              class="seg-btn action-popover__item action-popover__item--danger"
+              (click)="solicitarConfirmacion(destacado._id, 'cancelado', 'live-menu-spotlight-' + destacado._id)"
+            >
+              Cancelar transmisión
+            </button>
+            <button
+              type="button"
+              class="seg-btn action-popover__item action-popover__item--danger"
+              (click)="solicitarConfirmacion(destacado._id, 'eliminar', 'live-menu-spotlight-' + destacado._id)"
+            >
+              Eliminar evento
+            </button>
+          </div>
+        }
+      </div>
+    </section>
   }
 
   @if (!cargando && lives.length === 0) {
@@ -100,149 +264,264 @@
     </div>
   }
 
-  @if (lives.length > 0) {
-    <!-- VISTA ESCRITORIO: TABLA DE EVENTOS LIVE (>= 768px) -->
-    <div
-      class="table-wrapper desktop-table-view"
-      tabindex="0"
-      role="region"
-      aria-label="Tabla de eventos Live"
-    >
-      <table>
-        <thead>
-          <tr>
-            <th>Evento Live</th>
-            <th>Fecha programada</th>
-            <th>Estado</th>
-            <th>Control de transmisión y acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (item of lives; track item._id) {
-            <tr>
-              <td>
-                <div class="cell-primary">{{ item.nombre }}</div>
-                @if (item.descripcion) {
-                  <div class="cell-sub">{{ item.descripcion }}</div>
-                }
-              </td>
-              <td>{{ mostrarFecha(item.fecha) }}</td>
-              <td>
+  <!-- AGENDA E HISTORIAL DE EVENTOS -->
+  @if (lives.length > 0 && (!liveDestacado || lives.length > 1)) {
+    <section class="lives-agenda" aria-labelledby="agenda-title">
+      <div class="agenda-toolbar">
+        <h3 id="agenda-title">Agenda e historial</h3>
+
+        <div class="agenda-filters" role="group" aria-label="Filtrar eventos por estado">
+          <button
+            type="button"
+            class="seg-btn filter-pill"
+            [class.filter-pill--active]="filtroEstado === 'todos'"
+            [attr.aria-pressed]="filtroEstado === 'todos'"
+            (click)="cambiarFiltroEstado('todos')"
+          >
+            Todos ({{ lives.length - (liveDestacado ? 1 : 0) }})
+          </button>
+          <button
+            type="button"
+            class="seg-btn filter-pill"
+            [class.filter-pill--active]="filtroEstado === 'proximos'"
+            [attr.aria-pressed]="filtroEstado === 'proximos'"
+            (click)="cambiarFiltroEstado('proximos')"
+          >
+            Próximos ({{ conteoProximos }})
+          </button>
+          <button
+            type="button"
+            class="seg-btn filter-pill"
+            [class.filter-pill--active]="filtroEstado === 'historial'"
+            [attr.aria-pressed]="filtroEstado === 'historial'"
+            (click)="cambiarFiltroEstado('historial')"
+          >
+            Historial ({{ conteoHistorial }})
+          </button>
+        </div>
+      </div>
+
+      @if (livesAgenda.length === 0) {
+        <div class="empty-lives-box empty-lives-box--compact">
+          <p>No hay eventos en esta categoría.</p>
+        </div>
+      } @else {
+        <!-- VISTA ESCRITORIO: TABLA LIMPIA CON MÁXIMO 1 ACCIÓN + MENÚ ⋯ -->
+        <div
+          class="table-wrapper desktop-table-view"
+          tabindex="0"
+          role="region"
+          aria-label="Tabla de eventos Live"
+        >
+          <table>
+            <thead>
+              <tr>
+                <th>Evento Live</th>
+                <th>Fecha programada</th>
+                <th>Estado</th>
+                <th class="col-actions">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of livesAgendaPaginados; track item._id) {
+                <tr>
+                  <td>
+                    <div class="cell-primary">{{ item.nombre }}</div>
+                    @if (item.descripcion) {
+                      <div class="cell-sub">{{ item.descripcion }}</div>
+                    }
+                  </td>
+                  <td class="cell-date">{{ mostrarFecha(item.fecha) }}</td>
+                  <td>
+                    <mio-status-badge
+                      [tone]="obtenerTonoEstado(item.estado)"
+                      [dot]="item.estado === 'pausado'"
+                    >
+                      {{ obtenerEtiquetaEstado(item.estado) }}
+                    </mio-status-badge>
+                  </td>
+                  <td class="col-actions">
+                    <div class="row-actions">
+                      @if (tieneConfirmacionEnItem(item._id)) {
+                        @if (esConfirmando(item._id, 'finalizado')) {
+                          <div class="confirm-inline">
+                            <span>¿Finalizar?</span>
+                            <button type="button" class="btn-finish" (click)="cambiarEstado(item, 'finalizado')">
+                              Sí
+                            </button>
+                            <button type="button" class="btn-secondary" (click)="cancelarConfirmacion()">
+                              No
+                            </button>
+                          </div>
+                        }
+                        @if (esConfirmando(item._id, 'cancelado')) {
+                          <div class="confirm-inline">
+                            <span>¿Cancelar?</span>
+                            <button type="button" class="danger" (click)="cambiarEstado(item, 'cancelado')">
+                              Sí
+                            </button>
+                            <button type="button" class="btn-secondary" (click)="cancelarConfirmacion()">
+                              No
+                            </button>
+                          </div>
+                        }
+                        @if (esConfirmando(item._id, 'eliminar')) {
+                          <div class="confirm-inline">
+                            <span>¿Eliminar?</span>
+                            <button type="button" class="danger" (click)="eliminarLive(item._id)">
+                              Eliminar
+                            </button>
+                            <button type="button" class="btn-secondary" (click)="cancelarConfirmacion()">
+                              No
+                            </button>
+                          </div>
+                        }
+                      } @else {
+                        <!-- MÁXIMO 1 ACCIÓN PRINCIPAL SEGÚN EL ESTADO -->
+                        @if (item.estado === 'programado') {
+                          <button
+                            type="button"
+                            class="btn-primary btn-small"
+                            (click)="cambiarEstado(item, 'activo')"
+                            [disabled]="cargando"
+                          >
+                            Iniciar Live
+                          </button>
+                        } @else if (item.estado === 'pausado') {
+                          <button
+                            type="button"
+                            class="btn-primary btn-small"
+                            (click)="cambiarEstado(item, 'activo')"
+                            [disabled]="cargando"
+                          >
+                            Reanudar
+                          </button>
+                        } @else {
+                          <button
+                            type="button"
+                            class="btn-secondary btn-small"
+                            (click)="cambiarEstado(item, 'programado')"
+                            [disabled]="cargando"
+                          >
+                            Reprogramar
+                          </button>
+                        }
+
+                        <!-- MENÚ CONTEXTUAL ⋯ PARA ACCIONES SECUNDARIAS Y DESTRUCTIVAS -->
+                        <button
+                          type="button"
+                          class="btn-ghost btn-small btn-icon-more"
+                          [attr.popovertarget]="'live-menu-' + item._id"
+                          [attr.aria-label]="'Más opciones para ' + item.nombre"
+                          [disabled]="cargando"
+                        >
+                          ⋯
+                        </button>
+                        <div
+                          [id]="'live-menu-' + item._id"
+                          popover="auto"
+                          class="action-popover"
+                        >
+                          @if (item.estado === 'finalizado' || item.estado === 'cancelado') {
+                            <button
+                              type="button"
+                              class="seg-btn action-popover__item"
+                              (click)="cambiarEstado(item, 'activo', 'live-menu-' + item._id)"
+                            >
+                              Reactivar ahora
+                            </button>
+                          }
+                          <button
+                            type="button"
+                            class="seg-btn action-popover__item"
+                            (click)="editarLive(item, 'live-menu-' + item._id)"
+                          >
+                            Editar detalles
+                          </button>
+                          @if (item.estado === 'programado' || item.estado === 'pausado') {
+                            <button
+                              type="button"
+                              class="seg-btn action-popover__item"
+                              (click)="solicitarConfirmacion(item._id, 'finalizado', 'live-menu-' + item._id)"
+                            >
+                              Marcar como finalizado
+                            </button>
+                          }
+                          <hr class="action-popover__sep" />
+                          @if (item.estado === 'programado' || item.estado === 'pausado') {
+                            <button
+                              type="button"
+                              class="seg-btn action-popover__item action-popover__item--danger"
+                              (click)="solicitarConfirmacion(item._id, 'cancelado', 'live-menu-' + item._id)"
+                            >
+                              Cancelar evento
+                            </button>
+                          }
+                          <button
+                            type="button"
+                            class="seg-btn action-popover__item action-popover__item--danger"
+                            (click)="solicitarConfirmacion(item._id, 'eliminar', 'live-menu-' + item._id)"
+                          >
+                            Eliminar evento
+                          </button>
+                        </div>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- VISTA MÓVIL: TARJETAS LIMPIAS (< 768px) -->
+        <div class="mobile-cards-view" role="region" aria-label="Tarjetas de eventos Live en móvil">
+          @for (item of livesAgendaPaginados; track item._id) {
+            <article class="op-card">
+              <div class="op-card__head">
+                <div>
+                  <h4 class="op-card__title">{{ item.nombre }}</h4>
+                  <p class="op-card__sub">{{ mostrarFecha(item.fecha) }}</p>
+                </div>
                 <mio-status-badge
                   [tone]="obtenerTonoEstado(item.estado)"
-                  [dot]="item.estado === 'activo' || item.estado === 'pausado'"
+                  [dot]="item.estado === 'pausado'"
                 >
-                  {{ item.estado === 'activo' ? 'EN VIVO' : item.estado }}
+                  {{ obtenerEtiquetaEstado(item.estado) }}
                 </mio-status-badge>
-              </td>
-              <td>
-                <div class="table-actions">
-                  @if (item.estado === 'activo') {
-                    <a class="btn-live btn-small" routerLink="/live-activo">
-                      Abrir Cabina →
-                    </a>
-                  }
+              </div>
 
-                  @if (item.estado !== 'activo') {
-                    <button
-                      type="button"
-                      class="btn-primary btn-small"
-                      (click)="cambiarEstado(item, 'activo')"
-                      [disabled]="cargando"
-                    >
-                      Activar
-                    </button>
-                  }
+              @if (item.descripcion) {
+                <p class="op-card__sub">{{ item.descripcion }}</p>
+              }
 
-                  @if (item.estado === 'activo') {
-                    <button
-                      type="button"
-                      class="btn-warning btn-small"
-                      (click)="cambiarEstado(item, 'pausado')"
-                      [disabled]="cargando"
-                    >
-                      Pausar
-                    </button>
-                  }
-
-                  @if (item.estado !== 'programado' && item.estado !== 'activo') {
-                    <button
-                      type="button"
-                      class="btn-ghost btn-small"
-                      (click)="cambiarEstado(item, 'programado')"
-                      [disabled]="cargando"
-                    >
-                      Reprogramar
-                    </button>
-                  }
-
-                  @if (item.estado !== 'finalizado') {
-                    <button
-                      type="button"
-                      class="btn-finish btn-small"
-                      (click)="solicitarConfirmacion(item._id, 'finalizado')"
-                      [disabled]="cargando"
-                    >
-                      Finalizar
-                    </button>
-                  }
-
-                  @if (item.estado !== 'cancelado') {
-                    <button
-                      type="button"
-                      class="btn-danger-ghost btn-small"
-                      (click)="solicitarConfirmacion(item._id, 'cancelado')"
-                      [disabled]="cargando"
-                    >
-                      Cancelar
-                    </button>
-                  }
-
-                  <button
-                    type="button"
-                    class="btn-ghost btn-small"
-                    (click)="editarLive(item)"
-                    [disabled]="cargando"
-                  >
-                    Editar
-                  </button>
-
-                  <button
-                    type="button"
-                    class="btn-danger-ghost btn-small"
-                    (click)="solicitarConfirmacion(item._id, 'eliminar')"
-                    [disabled]="cargando"
-                  >
-                    Eliminar
-                  </button>
-
+              <div class="op-card__actions">
+                @if (tieneConfirmacionEnItem(item._id)) {
                   @if (esConfirmando(item._id, 'finalizado')) {
                     <div class="confirm-inline">
-                      <span>¿Finalizar Live?</span>
+                      <span>¿Finalizar este Live?</span>
                       <button type="button" class="btn-finish" (click)="cambiarEstado(item, 'finalizado')">
-                        Sí
+                        Sí, finalizar
                       </button>
                       <button type="button" class="btn-secondary" (click)="cancelarConfirmacion()">
                         No
                       </button>
                     </div>
                   }
-
                   @if (esConfirmando(item._id, 'cancelado')) {
                     <div class="confirm-inline">
-                      <span>¿Cancelar Live?</span>
+                      <span>¿Cancelar este Live?</span>
                       <button type="button" class="danger" (click)="cambiarEstado(item, 'cancelado')">
-                        Sí
+                        Sí, cancelar
                       </button>
                       <button type="button" class="btn-secondary" (click)="cancelarConfirmacion()">
                         No
                       </button>
                     </div>
                   }
-
                   @if (esConfirmando(item._id, 'eliminar')) {
                     <div class="confirm-inline">
-                      <span>¿Eliminar evento?</span>
+                      <span>¿Eliminar este evento?</span>
                       <button type="button" class="danger" (click)="eliminarLive(item._id)">
                         Sí, eliminar
                       </button>
@@ -251,107 +530,108 @@
                       </button>
                     </div>
                   }
-                </div>
-              </td>
-            </tr>
+                } @else {
+                  @if (item.estado === 'programado') {
+                    <button
+                      type="button"
+                      class="btn-primary"
+                      (click)="cambiarEstado(item, 'activo')"
+                      [disabled]="cargando"
+                    >
+                      Iniciar Live
+                    </button>
+                  } @else if (item.estado === 'pausado') {
+                    <button
+                      type="button"
+                      class="btn-primary"
+                      (click)="cambiarEstado(item, 'activo')"
+                      [disabled]="cargando"
+                    >
+                      Reanudar Live
+                    </button>
+                  } @else {
+                    <button
+                      type="button"
+                      class="btn-secondary"
+                      (click)="cambiarEstado(item, 'programado')"
+                      [disabled]="cargando"
+                    >
+                      Reprogramar
+                    </button>
+                  }
+
+                  <button
+                    type="button"
+                    class="btn-ghost btn-icon-more-mobile"
+                    [attr.popovertarget]="'live-menu-m-' + item._id"
+                    [attr.aria-label]="'Más opciones para ' + item.nombre"
+                    [disabled]="cargando"
+                  >
+                    Opciones ⋯
+                  </button>
+                  <div
+                    [id]="'live-menu-m-' + item._id"
+                    popover="auto"
+                    class="action-popover"
+                  >
+                    @if (item.estado === 'finalizado' || item.estado === 'cancelado') {
+                      <button
+                        type="button"
+                        class="seg-btn action-popover__item"
+                        (click)="cambiarEstado(item, 'activo', 'live-menu-m-' + item._id)"
+                      >
+                        Reactivar ahora
+                      </button>
+                    }
+                    <button
+                      type="button"
+                      class="seg-btn action-popover__item"
+                      (click)="editarLive(item, 'live-menu-m-' + item._id)"
+                    >
+                      Editar detalles
+                    </button>
+                    @if (item.estado === 'programado' || item.estado === 'pausado') {
+                      <button
+                        type="button"
+                        class="seg-btn action-popover__item"
+                        (click)="solicitarConfirmacion(item._id, 'finalizado', 'live-menu-m-' + item._id)"
+                      >
+                        Marcar como finalizado
+                      </button>
+                    }
+                    <hr class="action-popover__sep" />
+                    @if (item.estado === 'programado' || item.estado === 'pausado') {
+                      <button
+                        type="button"
+                        class="seg-btn action-popover__item action-popover__item--danger"
+                        (click)="solicitarConfirmacion(item._id, 'cancelado', 'live-menu-m-' + item._id)"
+                      >
+                        Cancelar evento
+                      </button>
+                    }
+                    <button
+                      type="button"
+                      class="seg-btn action-popover__item action-popover__item--danger"
+                      (click)="solicitarConfirmacion(item._id, 'eliminar', 'live-menu-m-' + item._id)"
+                    >
+                      Eliminar evento
+                    </button>
+                  </div>
+                }
+              </div>
+            </article>
           }
-        </tbody>
-      </table>
-    </div>
+        </div>
 
-    <!-- VISTA MÓVIL: TARJETAS DE EVENTOS LIVE (< 768px) -->
-    <div class="mobile-cards-view" role="region" aria-label="Tarjetas de eventos Live en móvil">
-      @for (item of lives; track item._id) {
-        <article class="op-card">
-          <div class="op-card__head">
-            <div>
-              <h4 class="op-card__title">{{ item.nombre }}</h4>
-              <p class="op-card__sub">{{ mostrarFecha(item.fecha) }}</p>
-            </div>
-            <mio-status-badge
-              [tone]="obtenerTonoEstado(item.estado)"
-              [dot]="item.estado === 'activo' || item.estado === 'pausado'"
-            >
-              {{ item.estado === 'activo' ? 'EN VIVO' : item.estado }}
-            </mio-status-badge>
-          </div>
-
-          @if (item.descripcion) {
-            <p class="op-card__sub">{{ item.descripcion }}</p>
-          }
-
-          <div class="op-card__actions">
-            @if (item.estado === 'activo') {
-              <a class="btn-live" routerLink="/live-activo">
-                Ir a Cabina Live →
-              </a>
-              <button type="button" class="btn-warning" (click)="cambiarEstado(item, 'pausado')">
-                Pausar
-              </button>
-            } @else {
-              <button type="button" class="btn-primary" (click)="cambiarEstado(item, 'activo')">
-                Activar Live
-              </button>
-            }
-
-            @if (item.estado !== 'finalizado') {
-              <button type="button" class="btn-finish" (click)="solicitarConfirmacion(item._id, 'finalizado')">
-                Finalizar
-              </button>
-            }
-
-            @if (item.estado !== 'cancelado') {
-              <button type="button" class="btn-danger-ghost" (click)="solicitarConfirmacion(item._id, 'cancelado')">
-                Cancelar
-              </button>
-            }
-
-            <button type="button" class="btn-ghost" (click)="editarLive(item)">
-              Editar
-            </button>
-
-            <button type="button" class="btn-danger-ghost" (click)="solicitarConfirmacion(item._id, 'eliminar')">
-              Eliminar
-            </button>
-
-            @if (esConfirmando(item._id, 'finalizado')) {
-              <div class="confirm-inline">
-                <span>¿Finalizar este Live?</span>
-                <button type="button" class="btn-finish" (click)="cambiarEstado(item, 'finalizado')">
-                  Sí, finalizar
-                </button>
-                <button type="button" class="btn-secondary" (click)="cancelarConfirmacion()">
-                  No
-                </button>
-              </div>
-            }
-
-            @if (esConfirmando(item._id, 'cancelado')) {
-              <div class="confirm-inline">
-                <span>¿Cancelar este Live?</span>
-                <button type="button" class="danger" (click)="cambiarEstado(item, 'cancelado')">
-                  Sí, cancelar
-                </button>
-                <button type="button" class="btn-secondary" (click)="cancelarConfirmacion()">
-                  No
-                </button>
-              </div>
-            }
-
-            @if (esConfirmando(item._id, 'eliminar')) {
-              <div class="confirm-inline">
-                <span>¿Eliminar este evento?</span>
-                <button type="button" class="danger" (click)="eliminarLive(item._id)">
-                  Sí, eliminar
-                </button>
-                <button type="button" class="btn-secondary" (click)="cancelarConfirmacion()">
-                  No
-                </button>
-              </div>
-            }
-          </div>
-        </article>
+        <mio-pagination
+          [totalItems]="livesAgenda.length"
+          [page]="paginaActual"
+          [pageSize]="elementosPorPagina"
+          itemLabel="eventos"
+          (pageChange)="paginaActual = $event"
+          (pageSizeChange)="elementosPorPagina = $event; paginaActual = 1"
+        />
       }
-    </div>
+    </section>
   }
 </div>

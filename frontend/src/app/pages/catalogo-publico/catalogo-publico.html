@@ -284,7 +284,7 @@
       @if (productosFiltrados.length > 0) {
         <div class="product-grid">
           @for (producto of productosFiltrados; track producto._id) {
-            <article class="product-card">
+            <article class="product-card" tabindex="-1" [attr.id]="'producto-' + producto._id" [class.product-card--seleccionado]="productoSolicitud?._id === producto._id">
               <div class="product-card__media">
                 @if (tieneFotoValida(producto)) {
                   <img
@@ -335,6 +335,24 @@
                     >
                       Consultar
                     </a>
+                  }
+                </div>
+                <div class="solicitud-producto">
+                  @if (solicitudesEnviadas.has(producto._id)) {
+                    <p role="status">Solicitud enviada. Pendiente de revisión; todavía no confirma una reserva.</p>
+                    <a routerLink="/cliente/perfil">Ver Mis apartados</a>
+                  } @else if (productoSolicitud?._id === producto._id) {
+                    <p>¿Solicitar el apartado de {{ producto.nombre }}? La tienda debe revisarlo. El artículo todavía no queda reservado.</p>
+                    @if (errorSolicitud) { <p class="solicitud-error" role="alert">{{ errorSolicitud }}</p> }
+                    <div class="solicitud-acciones">
+                      @if (puedeConfirmarSolicitud()) {
+                        <button type="button" [disabled]="guardandoSolicitud" (click)="confirmarSolicitud()">{{ guardandoSolicitud ? 'Enviando…' : 'Confirmar solicitud' }}</button>
+                      }
+                      <button type="button" class="btn-secondary" [disabled]="guardandoSolicitud" (click)="cancelarSolicitud()">Cancelar</button>
+                    </div>
+                    @if (errorSolicitud) { <a routerLink="/cliente/perfil">Consultar Mis apartados</a> }
+                  } @else if (producto.estado === 'activo') {
+                    <button type="button" class="btn-secondary" [disabled]="guardandoSolicitud" (click)="solicitarApartado(producto)">Solicitar apartado</button>
                   }
                 </div>
               </div>

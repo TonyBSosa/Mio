@@ -8,6 +8,13 @@ interface AuthResponse {
   [key: string]: unknown;
 }
 
+export interface PerfilUsuario {
+  _id: string;
+  nombre: string;
+  email: string;
+  rol: 'cliente' | 'vendedor' | 'admin';
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -44,6 +51,18 @@ export class AuthService {
 
   getToken() {
     return localStorage.getItem('token');
+  }
+
+  obtenerPerfil() {
+    return this.http.get<PerfilUsuario>(`${this.apiUrl}/me`, {
+      headers: { Authorization: `Bearer ${this.getToken()}` },
+    });
+  }
+
+  descartarSesionVencida(volver?: string) {
+    localStorage.removeItem('token');
+    localStorage.removeItem('usuario');
+    return this.router.navigate(['/login'], { queryParams: volver ? { volver } : undefined });
   }
 
   getUsuario() {

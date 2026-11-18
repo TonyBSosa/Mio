@@ -3,7 +3,7 @@
 ## Roles y entrada
 
 - **Visitante**: consulta el escaparate público sin sesión.
-- **Cliente**: registro público para explorar tiendas; todavía no tiene compra/autopedidos implementados. No confundir esta cuenta con la ficha `clientes` que mantiene cada vendedor.
+- **Cliente**: registro público para explorar tiendas y solicitar apartados pendientes de revisión; no crea pedidos ni reservas confirmadas. No confundir esta cuenta con la ficha `clientes` que mantiene cada vendedor.
 - **Vendedor**: registro público para abrir su propia tienda; nunca obtiene acceso a otra tienda.
 - **Administrador**: alta mediante `npm run create-admin` en un entorno autorizado o mediante otro administrador. El registro público rechaza `admin`.
 
@@ -17,6 +17,15 @@ El rol se guarda en `usuarios.rol`. En cada petición protegida el servidor veri
 | Registrarse como vendedor o cliente | Sí | Sí | Sí | Sí | Registro público excluye admin; no acepta estado/ID del solicitante |
 | Iniciar sesión / solicitar recuperación | Sí | Sí | Sí | Sí | Credenciales válidas, cuenta activa; recuperación por correo del titular |
 | Ver `/auth/me` y cerrar sesión | No | Propio | Propio | Propio | Usuario y sesión extraídos del JWT firmado; nunca del body |
+| Crear solicitud de apartado pendiente | No | Sí | No | No | `/api/solicitudes-apartado`; comprador desde sesión, vendedor desde producto activo y tienda activa; índice único comprador/producto pendiente |
+| Consultar solicitudes de apartado | No | Propias | Recibidas para su tienda | No | Listado y detalle filtrados por comprador o vendedor autenticado; solicitud ajena devuelve 404 |
+| Rechazar solicitud pendiente | No | No | Propias | No | Elimina condicionalmente por ID, vendedor autenticado y estado pendiente; sin historial, no toca inventario |
+| Cancelar apartado | No | Propio, pendiente o confirmado sin comprobante/pago | No | No | Pendiente: eliminación condicional; confirmado: transacción que libera solo su pieza y elimina la solicitud. No admite revisión, corrección de comprobante, pago o expiración |
+| Confirmar reserva de prueba | No | No | Solo vendedor autorizado en pruebas | No | Deshabilitada en producción; exige base aislada, allowlist, flag de servidor y transacciones; producto y solicitud cambian juntos |
+| Configurar plazo de futuras reservas | No | No | Propio | No | Solo 3 o 7 días; no habilita confirmaciones ni cambia reservas ya confirmadas |
+| Adjuntar comprobante | No | Reserva propia confirmada o corrección vigente | No | No | JWT, propiedad, plazo, imagen válida hasta 5 MB; solo entorno aislado en 2D |
+| Historial y acceso temporal al archivo | No | Reserva propia | Reserva de su tienda | No | Clave privada solo en servidor; URL firmada de 60 segundos después de autorizar |
+| Aprobar/rechazar comprobante | No | No | Reserva de su tienda | No | Revisión actual, transacción, aprobación idempotente; rechazo requiere motivo y corrección limitada |
 | Listar, crear, consultar, editar y eliminar fichas de clientes | No | No | Propios | No | `/api/clientes`; filtro por `vendedorId = req.usuario._id` |
 | Listar, crear, consultar, editar, cambiar estado y eliminar productos | No | No | Propios | No | `/api/productos`; filtro por tienda, incluso si se cambia el ID en URL |
 | Listar, crear, consultar, editar, cambiar estado y eliminar lives | No | No | Propios | No | `/api/lives`; filtro por tienda |
@@ -29,6 +38,12 @@ El rol se guarda en `usuarios.rol`. En cada petición protegida el servidor veri
 | Crear un pedido desde cuenta cliente | No | No | No | No | Función futura: no hay endpoint de compra de cliente |
 
 El administrador gestiona cuentas; por menor privilegio no recibe acceso a operaciones privadas de tiendas. Los borrados conservan las reglas de integridad ya documentadas en el modelo de datos.
+
+Las solicitudes se guardan en `solicitudes_apartado`, separadas de `pedidos`. Se conservan nombres y código tomados por el servidor como referencia histórica, incluso si después desaparece el producto. El incremento 2C añade vencimiento y liberación transaccionales en pruebas aisladas; no hay pagos ni recepción de adjuntos. Distintos compradores pueden solicitar el mismo producto disponible: una solicitud pendiente no concede exclusividad. Solo una confirmación transaccional de prueba bloquea la pieza mediante `reservaSolicitudId`; las operaciones de productos y pedidos no pueden reactivarla, eliminarla ni liberarla por los caminos existentes.
+
+El backend comprueba vencimientos relevantes antes de responder consultas de solicitudes, catálogo y productos o gestionar pedidos/reservas. Expira reservas confirmadas vencidas o correcciones vencidas, sin señal de comprobante recibido; conserva el documento. La liberación exige que la pieza aún esté apartada por esa misma solicitud y no tenga pedido asociado. En 2D una imagen completada y validada pasa a `comprobante_en_revision`; el inventario se mantiene durante la revisión. El barrido externo `npm run reservas:expirar` también limpia archivos fallidos y exige una base de pruebas aislada. Ver [configuración privada de 2D](COMPROBANTES_STORAGE.md).
+
+Una aprobación de comprobante crea, en la misma transacción, un único pedido pagado con el precio confirmado de la reserva. Se crea o reutiliza una ficha de cliente vinculada por cuenta y vendedor, sin unir fichas antiguas por nombre. Un índice único por reserva evita duplicar ventas. Los importes, pago y borrado de esos pedidos quedan protegidos en los endpoints anteriores; entrega y observaciones conservan su operación. Los pedidos heredados siguen sus reglas existentes.
 
 ## Autenticación y sesiones
 

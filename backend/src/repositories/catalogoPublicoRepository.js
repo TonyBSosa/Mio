@@ -22,7 +22,8 @@ const buscarPerfilPorVendedor = (vendedorId) => {
 const listarProductosActivosPorVendedor = (vendedorId) => {
   return Producto.find({
     vendedorId,
-    estado: "activo"
+    estado: "activo",
+    reservaSolicitudId: null
   }).sort({ createdAt: -1 });
 };
 

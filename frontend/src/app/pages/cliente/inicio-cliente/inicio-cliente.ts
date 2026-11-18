@@ -137,6 +137,10 @@ export class InicioCliente implements OnInit {
     });
   }
 
+  inicialesTienda(nombre: string = '') {
+    return nombre.trim().split(/\s+/).filter(Boolean).slice(0, 2).map(parte => parte[0]).join('').toUpperCase() || 'M';
+  }
+
   cerrarSesion() {
     this.authService.logout();
   }

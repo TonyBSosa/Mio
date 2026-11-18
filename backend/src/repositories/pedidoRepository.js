@@ -22,10 +22,12 @@ const buscarPorIdYVendedor = (id, vendedorId) => {
 };
 
 const actualizarPorIdYVendedor = (id, vendedorId, data) => {
+  const tocaFinanzas = ['clienteId', 'liveId', 'producto', 'cantidad', 'precio', 'estadoPago'].some(campo => data[campo] !== undefined);
   return Pedido.findOneAndUpdate(
     {
       _id: id,
-      vendedorId
+      vendedorId,
+      ...(tocaFinanzas ? { reservaSolicitudId: null } : {})
     },
     data,
     { new: true, runValidators: true }
@@ -35,7 +37,8 @@ const actualizarPorIdYVendedor = (id, vendedorId, data) => {
 const eliminarPorIdYVendedor = (id, vendedorId) => {
   return Pedido.findOneAndDelete({
     _id: id,
-    vendedorId
+    vendedorId,
+    reservaSolicitudId: null
   });
 };
 
@@ -69,7 +72,8 @@ const apartarProductoPorIdYVendedor = async (productoId, vendedorId) => {
     {
       _id: productoId,
       vendedorId,
-      estado: "activo"
+      estado: "activo",
+      reservaSolicitudId: null
     },
     {
       $set: { estado: "apartado" }
@@ -87,7 +91,8 @@ const liberarProductoPorIdYVendedor = async (productoId, vendedorId) => {
     {
       _id: productoId,
       vendedorId,
-      estado: "apartado"
+      estado: "apartado",
+      reservaSolicitudId: null
     },
     {
       $set: { estado: "activo" }

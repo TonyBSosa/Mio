@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
 import { AuthService } from '../../services/auth.service';
 
@@ -20,11 +20,13 @@ export class Login implements OnInit {
   constructor(
     private authService: AuthService,
     private detectorCambios: ChangeDetectorRef,
+    private route: ActivatedRoute,
+    private router: Router,
   ) {}
 
   ngOnInit() {
     if (this.authService.estaAutenticado()) {
-      this.authService.redirigirPorRol();
+      this.continuar();
     }
   }
 
@@ -58,7 +60,7 @@ export class Login implements OnInit {
             return;
           }
 
-          this.authService.redirigirPorRol();
+          this.continuar();
         },
         error: (error) => {
           console.error('Error al iniciar sesion', error);
@@ -77,5 +79,15 @@ export class Login implements OnInit {
     }
 
     return mensaje || 'Error al iniciar sesion';
+  }
+
+  private continuar() {
+    const volver = this.route.snapshot.queryParamMap.get('volver') || '';
+    // Solo una ruta interna de catálogo y producto; nunca redirecciones externas.
+    if (this.authService.getRol() === 'cliente' && /^\/catalogo\/[a-f\d]{24}\?producto=[a-f\d]{24}$/i.test(volver)) {
+      this.router.navigateByUrl(volver);
+    } else {
+      this.authService.redirigirPorRol();
+    }
   }
 }

@@ -6,6 +6,7 @@ import { UsuariosAdmin } from './pages/admin/usuarios/usuarios';
 import { Bienvenida } from './pages/bienvenida/bienvenida';
 import { CatalogoPublico } from './pages/catalogo-publico/catalogo-publico';
 import { InicioCliente } from './pages/cliente/inicio-cliente/inicio-cliente';
+import { PerfilCliente } from './pages/cliente/perfil-cliente/perfil-cliente';
 import { Clientes } from './pages/clientes/clientes';
 import { Dashboard } from './pages/dashboard/dashboard';
 import { LiveActivo } from './pages/live-activo/live-activo';
@@ -25,6 +26,7 @@ export const routes: Routes = [
   { path: 'register-vendedor', component: Register },
   { path: 'register-cliente', component: Register },
   { path: 'cliente/inicio', component: InicioCliente, canActivate: [accesoRol], data: { roles: ['cliente'] } },
+  { path: 'cliente/perfil', component: PerfilCliente, canActivate: [accesoRol], data: { roles: ['cliente'] }, title: 'Mi perfil | MIO' },
   { path: 'dashboard', component: Dashboard, canActivate: [accesoRol], data: { roles: ['vendedor'] } },
   { path: 'live-activo', component: LiveActivo, canActivate: [accesoRol], data: { roles: ['vendedor'] } },
   { path: 'perfil-vendedor', component: PerfilVendedor, canActivate: [accesoRol], data: { roles: ['vendedor'] } },

@@ -1,9 +1,12 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
 import { CatalogoPublicoService } from '../../services/catalogo-publico.service';
 import { StatusBadgeComponent } from '../../shared/ui/status-badge/status-badge';
+import { AuthService } from '../../services/auth.service';
+import { SolicitudApartadoService } from '../../services/solicitud-apartado.service';
 
 @Component({
   selector: 'app-catalogo-publico',
@@ -12,6 +15,7 @@ import { StatusBadgeComponent } from '../../shared/ui/status-badge/status-badge'
   styleUrl: './catalogo-publico.css',
 })
 export class CatalogoPublico implements OnInit {
+  private readonly destroyRef = inject(DestroyRef);
   perfil: any = null;
   productos: any[] = [];
   productosFiltrados: any[] = [];
@@ -28,11 +32,18 @@ export class CatalogoPublico implements OnInit {
   cargando = false;
   vendedorId = '';
   fotosConError = new Set<string>();
+  productoSolicitud: any = null;
+  guardandoSolicitud = false;
+  errorSolicitud = '';
+  solicitudesEnviadas = new Set<string>();
 
   constructor(
     private route: ActivatedRoute,
     private catalogoPublicoService: CatalogoPublicoService,
     private detectorCambios: ChangeDetectorRef,
+    private auth: AuthService,
+    private solicitudes: SolicitudApartadoService,
+    private router: Router,
   ) {}
 
   ngOnInit() {
@@ -57,6 +68,9 @@ export class CatalogoPublico implements OnInit {
       next: (respuesta: any) => {
         this.perfil = respuesta.perfil;
         this.productos = respuesta.productos || [];
+        const regreso = this.route.snapshot.queryParamMap.get('producto');
+        const productoRegreso = this.productos.find(p => p._id === regreso && p.estado === 'activo');
+        if (productoRegreso && this.auth.getRol() === 'cliente') this.productoSolicitud = productoRegreso;
         this.fotosConError.clear();
         this.actualizarCategorias();
         this.filtrarProductos();
@@ -67,6 +81,11 @@ export class CatalogoPublico implements OnInit {
         );
         this.cargando = false;
         this.detectorCambios.detectChanges();
+        if (productoRegreso && this.productoSolicitud) {
+          const articulo = document.getElementById(`producto-${productoRegreso._id}`);
+          articulo?.focus({ preventScroll: true });
+          articulo?.scrollIntoView?.({ block: 'center' });
+        }
       },
       error: (error) => {
         console.error('Error al cargar catalogo publico', error);
@@ -80,6 +99,50 @@ export class CatalogoPublico implements OnInit {
   mostrarMensajeSeguimiento() {
     this.mensaje = 'Funcion disponible en una proxima version.';
     this.detectorCambios.detectChanges();
+  }
+
+  solicitarApartado(producto: any) {
+    if (this.guardandoSolicitud || producto.estado !== 'activo') return;
+    this.errorSolicitud = '';
+    if (!this.auth.estaAutenticado()) {
+      this.router.navigate(['/login'], { queryParams: { volver: this.regresoAlProducto(producto) } });
+      return;
+    }
+    this.productoSolicitud = producto;
+    if (this.auth.getRol() !== 'cliente') {
+      this.errorSolicitud = 'Para solicitar un apartado necesitás una cuenta de comprador.';
+    }
+  }
+
+  cancelarSolicitud() {
+    if (!this.guardandoSolicitud) { this.productoSolicitud = null; this.errorSolicitud = ''; }
+  }
+
+  puedeConfirmarSolicitud() { return this.auth.getRol() === 'cliente'; }
+
+  confirmarSolicitud() {
+    const producto = this.productoSolicitud;
+    if (!producto || this.guardandoSolicitud || !this.puedeConfirmarSolicitud() || producto.estado !== 'activo') return;
+    this.guardandoSolicitud = true;
+    this.errorSolicitud = '';
+    this.solicitudes.crear(producto._id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => {
+        this.solicitudesEnviadas.add(producto._id);
+        this.productoSolicitud = null;
+        this.guardandoSolicitud = false;
+        this.detectorCambios.detectChanges();
+      },
+      error: error => {
+        this.guardandoSolicitud = false;
+        this.errorSolicitud = error.error?.mensaje || 'No pudimos confirmar el envío. Revisá Mis apartados antes de intentar de nuevo.';
+        if (error.status === 401) this.auth.descartarSesionVencida(this.regresoAlProducto(producto));
+        this.detectorCambios.detectChanges();
+      },
+    });
+  }
+
+  private regresoAlProducto(producto: any) {
+    return `/catalogo/${this.vendedorId}?producto=${producto._id}`;
   }
 
   filtrarProductos() {

@@ -251,7 +251,7 @@
   } @else if (esModoWorkspace()) {
     <!-- SHELL OPERATIVO PARA ADMIN / CLIENTE AUTENTICADO -->
     <div class="workspace-stage">
-      <header class="workspace-topbar workspace-topbar--standalone">
+      <header class="workspace-topbar workspace-topbar--standalone" [class.workspace-topbar--cliente]="esWorkspaceCliente()">
         <div class="workspace-topbar__start">
           <a class="brand" routerLink="/bienvenida" aria-label="MIO, inicio">
             <span class="brand-mark brand-mark--sm" aria-hidden="true">m</span>
@@ -262,9 +262,16 @@
           </a>
         </div>
         <div class="workspace-topbar__end">
-          <a class="topbar-action topbar-action--ghost" routerLink="/bienvenida">Inicio público</a>
+          @if (esWorkspaceCliente()) {
+            <nav class="cliente-nav" aria-label="Área del comprador">
+              <a class="topbar-action" routerLink="/cliente/inicio" routerLinkActive="active" ariaCurrentWhenActive="page">Explorar tiendas</a>
+              <a class="topbar-action" routerLink="/cliente/perfil" routerLinkActive="active" ariaCurrentWhenActive="page">Mi perfil</a>
+            </nav>
+          } @else {
+            <a class="topbar-action topbar-action--ghost" routerLink="/bienvenida">Inicio público</a>
+          }
           @if (usuario()) {
-            <span class="topbar-user-chip">{{ usuario()?.nombre }}</span>
+            <span class="topbar-user-chip" [class.buyer-identity]="esWorkspaceCliente()">{{ usuario()?.nombre }}@if (esWorkspaceCliente()) {<small>Comprador</small>}</span>
             <button type="button" class="topbar-logout-btn" (click)="cerrarSesion()">
               Cerrar sesión
             </button>

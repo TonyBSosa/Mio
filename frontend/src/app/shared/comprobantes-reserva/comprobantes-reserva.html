@@ -1,0 +1,61 @@
+<section class="comprobantes" aria-label="Comprobantes de la reserva" [attr.aria-busy]="cargando() || ocupada()">
+  @if (error()) { <p role="alert" class="error-comprobante">{{ error() }}</p> }
+  @if (mensaje()) { <p role="status">{{ mensaje() }}</p> }
+  @if (cargando()) { <p role="status">Consultando comprobantes…</p> }
+  @else if (historial(); as info) {
+    @if (vista === 'cliente' && !info.almacenamientoConfigurado) { <p>La recepción de comprobantes todavía no está configurada en este entorno.</p> }
+    @if (!info.comprobantes.length) { <p>Todavía no hay comprobantes en esta reserva.</p> }
+    @for (comprobante of info.comprobantes; track comprobante._id) {
+      <article class="comprobante">
+        <strong>{{ estadoTexto(comprobante.estado) }}</strong>
+        @if (comprobante.recibidoEn) { <span>Recibido: {{ comprobante.recibidoEn | date:'dd/MM/yyyy, HH:mm' }}</span> }
+        @if (comprobante.revisadoEn) { <span>Revisado: {{ comprobante.revisadoEn | date:'dd/MM/yyyy, HH:mm' }}</span> }
+        @if (comprobante.motivo) { <p>Motivo: {{ comprobante.motivo }}</p> }
+        @if (comprobante.corregirHasta) { <span>Corrección hasta: {{ comprobante.corregirHasta | date:'dd/MM/yyyy, HH:mm' }}</span> }
+        @if (['en_revision', 'aprobado', 'rechazado'].includes(comprobante.estado)) {
+          <button type="button" class="btn-secondary" [disabled]="ocupada()" (click)="ver(comprobante._id)">Ver imagen privada</button>
+        }
+        @if (vista === 'vendedor' && comprobante.estado === 'en_revision') {
+          <div class="acciones">
+            @if (decision()?.id === comprobante._id) {
+              @if (decision()?.accion === 'rechazar') {
+                <label>Motivo del rechazo<textarea maxlength="500" [(ngModel)]="motivo" rows="3" [disabled]="ocupada()"></textarea></label>
+                <p>{{ info.politicaCorreccion }}</p>
+              } @else { <p>¿Confirmás que recibiste el pago completo de esta reserva?</p> }
+              <button type="button" [disabled]="ocupada()" (click)="revisar()">{{ ocupada() ? 'Guardando…' : 'Confirmar revisión' }}</button>
+              <button type="button" class="btn-secondary" [disabled]="ocupada()" (click)="decision.set(null)">Cancelar</button>
+            } @else {
+              <button type="button" [disabled]="ocupada()" (click)="preparar(comprobante._id, 'aprobar')">Aprobar pago</button>
+              <button type="button" class="btn-danger-ghost" [disabled]="ocupada()" (click)="preparar(comprobante._id, 'rechazar')">Rechazar comprobante</button>
+            }
+          </div>
+        }
+      </article>
+    }
+    @if (imagen()) {
+      <div class="imagen-privada">
+        <img [src]="imagen()" alt="Comprobante de pago de esta reserva" referrerpolicy="no-referrer" (error)="imagen.set(''); error.set('El acceso a la imagen venció o no está disponible. Volvé a abrirla.')">
+        <p>Acceso temporal de 60 segundos. Volvé a abrir la imagen si vence.</p>
+        <button type="button" class="btn-ghost" (click)="imagen.set('')">Cerrar imagen</button>
+      </div>
+    }
+    @if (vista === 'cliente' && info.cargaHabilitada) {
+      <div class="adjuntar">
+        <label>Comprobante de pago
+          <input #archivoInput type="file" accept="image/jpeg,image/png,image/webp" [disabled]="ocupada()" (change)="seleccionar($event)">
+        </label>
+        <p>JPG, PNG o WebP, máximo 5 MB. Adjuntar la imagen no confirma el pago.</p>
+        @if (info.limiteCargaEn) { <p>Completá el envío antes del {{ info.limiteCargaEn | date:'dd/MM/yyyy, HH:mm' }}.</p> }
+        @if (previa()) {
+          <img [src]="previa()" alt="Vista previa del comprobante seleccionado">
+          <div class="acciones">
+            <button type="button" [disabled]="ocupada()" (click)="enviar()">{{ ocupada() ? 'Enviando…' : 'Confirmar envío' }}</button>
+            <button type="button" class="btn-secondary" [disabled]="ocupada()" (click)="limpiarSeleccion()">Quitar imagen</button>
+          </div>
+        }
+        <p>{{ info.politicaCorreccion }}</p>
+      </div>
+    }
+  }
+  <button type="button" class="btn-ghost" [disabled]="cargando() || ocupada()" (click)="error.set(''); cargar()">Actualizar comprobantes</button>
+</section>

@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 
 const productoSchema = new mongoose.Schema(
   {
+    reservaSolicitudId: { type: mongoose.Schema.Types.ObjectId, ref: 'SolicitudApartado' },
     vendedorId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

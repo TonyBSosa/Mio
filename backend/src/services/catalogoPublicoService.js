@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 
 const catalogoPublicoRepository = require("../repositories/catalogoPublicoRepository");
+const expiracion = require('./expiracionReservasService');
 
 const crearError = (status, mensaje) => {
   const error = new Error(mensaje);
@@ -49,6 +50,7 @@ const formatearProducto = (producto) => {
 
 const obtenerCatalogo = async (vendedorId) => {
   validarVendedorId(vendedorId);
+  await expiracion.procesar({ vendedorId });
 
   const vendedor =
     await catalogoPublicoRepository.buscarVendedorPorId?.(vendedorId);

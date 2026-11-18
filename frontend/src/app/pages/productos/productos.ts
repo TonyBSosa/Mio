@@ -1,3 +1,4 @@
+import { TitleCasePipe } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit, Optional } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -6,11 +7,21 @@ import { AuthService } from '../../services/auth.service';
 import { PedidoService } from '../../services/pedido.service';
 import { ProductoService } from '../../services/producto.service';
 import { PageHeaderComponent } from '../../shared/ui/page-header/page-header';
+import { PaginationComponent, paginarLista } from '../../shared/ui/pagination/pagination';
 import { BadgeTone, StatusBadgeComponent } from '../../shared/ui/status-badge/status-badge';
+
+export type OrdenProductos = 'reciente' | 'nombre-asc' | 'nombre-desc' | 'precio-asc' | 'precio-desc';
 
 @Component({
   selector: 'app-productos',
-  imports: [FormsModule, RouterModule, PageHeaderComponent, StatusBadgeComponent],
+  imports: [
+    FormsModule,
+    RouterModule,
+    TitleCasePipe,
+    PageHeaderComponent,
+    StatusBadgeComponent,
+    PaginationComponent,
+  ],
   templateUrl: './productos.html',
   styleUrl: './productos.css',
 })
@@ -18,9 +29,13 @@ export class Productos implements OnInit {
   productos: any[] = [];
   productosFiltrados: any[] = [];
   categorias: string[] = [];
+  categoriasFiltro: { clave: string; etiqueta: string }[] = [];
   filtroNombre = '';
   filtroCategoria = '';
   filtroEstado = '';
+  orden: OrdenProductos = 'reciente';
+  paginaActual = 1;
+  elementosPorPagina = 10;
 
   producto = {
     codigo: '',
@@ -36,7 +51,7 @@ export class Productos implements OnInit {
   productoEditandoId = '';
   confirmandoEliminarId = '';
   confirmandoReactivarId = '';
-  formularioExpandido = true;
+  formularioExpandido = false;
   mensaje = '';
   error = '';
   cargando = false;
@@ -109,6 +124,17 @@ export class Productos implements OnInit {
     this.detectorCambios.detectChanges();
   }
 
+  cerrarPopover(popoverId: string) {
+    const el = typeof document !== 'undefined' ? document.getElementById(popoverId) : null;
+    if (el && typeof (el as any).hidePopover === 'function') {
+      try {
+        (el as any).hidePopover();
+      } catch {
+        // Ignorar si ya está cerrado
+      }
+    }
+  }
+
   listarProductos() {
     this.cargando = true;
     this.error = '';
@@ -116,6 +142,9 @@ export class Productos implements OnInit {
     this.productoService.listarProductos().subscribe({
       next: (respuesta: any) => {
         this.productos = Array.isArray(respuesta) ? respuesta : [];
+        if (this.productos.length === 0) {
+          this.formularioExpandido = true;
+        }
         this.actualizarCategorias();
         this.filtrarProductos();
         this.cargando = false;
@@ -162,7 +191,7 @@ export class Productos implements OnInit {
         .subscribe({
           next: (productoActualizado: any) => {
             const index = this.productos.findIndex(
-              (productoItem) => productoItem._id === this.productoEditandoId
+              (productoItem) => productoItem._id === this.productoEditandoId,
             );
 
             if (index !== -1) {
@@ -172,9 +201,7 @@ export class Productos implements OnInit {
               this.filtrarProductos();
             }
 
-            this.limpiarFormulario();
-            this.editando = false;
-            this.productoEditandoId = '';
+            this.cerrarFormulario();
             this.mensaje = 'Producto actualizado correctamente';
             this.cargando = false;
             this.detectorCambios.detectChanges();
@@ -189,11 +216,10 @@ export class Productos implements OnInit {
     } else {
       this.productoService.crearProducto(this.producto).subscribe({
         next: (productoCreado: any) => {
-          this.productos.push(productoCreado);
-          this.productos = [...this.productos];
+          this.productos = [productoCreado, ...this.productos];
           this.actualizarCategorias();
           this.filtrarProductos();
-          this.limpiarFormulario();
+          this.cerrarFormulario();
           this.mensaje = 'Producto creado correctamente';
           this.cargando = false;
           this.detectorCambios.detectChanges();
@@ -206,6 +232,14 @@ export class Productos implements OnInit {
         },
       });
     }
+  }
+
+  get productosPaginados(): any[] {
+    const res = paginarLista(this.productosFiltrados, this.paginaActual, this.elementosPorPagina);
+    if (res.paginaSegura !== this.paginaActual) {
+      this.paginaActual = res.paginaSegura;
+    }
+    return res.itemsPagina;
   }
 
   get totalDisponibles(): number {
@@ -221,16 +255,68 @@ export class Productos implements OnInit {
   }
 
   get tieneFiltrosActivos(): boolean {
-    return Boolean(
-      this.filtroNombre.trim() || this.filtroCategoria || this.filtroEstado
-    );
+    return Boolean(this.filtroNombre.trim() || this.filtroCategoria || this.filtroEstado);
   }
 
   alternarFormulario() {
-    this.formularioExpandido = !this.formularioExpandido;
+    if (this.formularioExpandido) {
+      this.cerrarFormulario();
+    } else {
+      this.editando = false;
+      this.productoEditandoId = '';
+      this.limpiarFormulario();
+      this.formularioExpandido = true;
+      this.mensaje = '';
+      this.error = '';
+    }
   }
 
-  solicitarEliminarProducto(id: string) {
+  cerrarFormulario() {
+    this.formularioExpandido = false;
+    this.editando = false;
+    this.productoEditandoId = '';
+    this.limpiarFormulario();
+  }
+
+  seleccionarEstadoKpi(estado: string) {
+    this.filtroEstado = this.filtroEstado === estado ? '' : estado;
+    this.paginaActual = 1;
+    this.filtrarProductos();
+  }
+
+  alternarOrdenNombre() {
+    if (this.orden === 'nombre-asc') {
+      this.orden = 'nombre-desc';
+    } else if (this.orden === 'nombre-desc') {
+      this.orden = 'reciente';
+    } else {
+      this.orden = 'nombre-asc';
+    }
+    this.filtrarProductos();
+  }
+
+  alternarOrdenPrecio() {
+    if (this.orden === 'precio-asc') {
+      this.orden = 'precio-desc';
+    } else if (this.orden === 'precio-desc') {
+      this.orden = 'reciente';
+    } else {
+      this.orden = 'precio-asc';
+    }
+    this.filtrarProductos();
+  }
+
+  formatearPrecio(precio: any): string {
+    const n = Number(precio ?? 0);
+    if (Number.isNaN(n)) return '0.00';
+    return n.toLocaleString('es-HN', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  }
+
+  solicitarEliminarProducto(id: string, popoverId?: string) {
+    if (popoverId) this.cerrarPopover(popoverId);
     this.confirmandoReactivarId = '';
     this.confirmandoEliminarId = id;
   }
@@ -239,7 +325,8 @@ export class Productos implements OnInit {
     this.confirmandoEliminarId = '';
   }
 
-  solicitarReactivarProducto(productoItem: any) {
+  solicitarReactivarProducto(productoItem: any, popoverId?: string) {
+    if (popoverId) this.cerrarPopover(popoverId);
     this.confirmandoEliminarId = '';
     this.confirmandoReactivarId = '';
     if (this.tienePedidoVinculado(productoItem._id)) {
@@ -288,7 +375,8 @@ export class Productos implements OnInit {
     }
   }
 
-  editarProducto(producto: any) {
+  editarProducto(producto: any, popoverId?: string) {
+    if (popoverId) this.cerrarPopover(popoverId);
     this.editando = true;
     this.formularioExpandido = true;
     this.confirmandoEliminarId = '';
@@ -297,8 +385,8 @@ export class Productos implements OnInit {
     this.producto = {
       codigo: producto.codigo || '',
       nombre: producto.nombre,
-      descripcion: producto.descripcion,
-      categoria: producto.categoria,
+      descripcion: producto.descripcion || '',
+      categoria: producto.categoria || '',
       foto: producto.foto || '',
       precio: producto.precio,
       estado: producto.estado,
@@ -311,9 +399,7 @@ export class Productos implements OnInit {
   }
 
   cancelarEdicion() {
-    this.editando = false;
-    this.productoEditandoId = '';
-    this.limpiarFormulario();
+    this.cerrarFormulario();
   }
 
   eliminarProducto(id: string) {
@@ -330,9 +416,7 @@ export class Productos implements OnInit {
 
     this.productoService.eliminarProducto(id).subscribe({
       next: () => {
-        this.productos = this.productos.filter(
-          (productoItem) => productoItem._id !== id
-        );
+        this.productos = this.productos.filter((productoItem) => productoItem._id !== id);
         this.actualizarCategorias();
         this.filtrarProductos();
         this.mensaje = 'Producto eliminado correctamente';
@@ -348,7 +432,8 @@ export class Productos implements OnInit {
     });
   }
 
-  cambiarEstado(producto: any, estado: string) {
+  cambiarEstado(producto: any, estado: string, popoverId?: string) {
+    if (popoverId) this.cerrarPopover(popoverId);
     this.confirmandoReactivarId = '';
     this.mensaje = '';
     this.error = '';
@@ -367,7 +452,7 @@ export class Productos implements OnInit {
     this.productoService.cambiarEstado(producto._id, estado).subscribe({
       next: (productoActualizado: any) => {
         const index = this.productos.findIndex(
-          (productoItem) => productoItem._id === producto._id
+          (productoItem) => productoItem._id === producto._id,
         );
 
         if (index !== -1) {
@@ -403,22 +488,54 @@ export class Productos implements OnInit {
   }
 
   filtrarProductos() {
-    const textoNombre = this.filtroNombre.trim().toLowerCase();
+    const q = this.normalizar(this.filtroNombre);
+    const catFiltro = this.normalizar(this.filtroCategoria);
 
-    this.productosFiltrados = this.productos.filter((productoItem) => {
-      const nombre = String(productoItem.nombre || '').toLowerCase();
-      const categoria = String(productoItem.categoria || '');
+    let lista = this.productos.filter((productoItem) => {
+      const nombre = this.normalizar(String(productoItem.nombre || ''));
+      const codigo = this.normalizar(String(productoItem.codigo || ''));
+      const desc = this.normalizar(String(productoItem.descripcion || ''));
+      const categoria = this.normalizar(String(productoItem.categoria || ''));
       const estado = String(productoItem.estado || '');
 
-      const codigo = String(productoItem.codigo || '').toLowerCase();
       const coincideNombre =
-        !textoNombre || nombre.includes(textoNombre) || codigo.includes(textoNombre);
-      const coincideCategoria =
-        !this.filtroCategoria || categoria === this.filtroCategoria;
+        !q ||
+        nombre.includes(q) ||
+        codigo.includes(q) ||
+        desc.includes(q) ||
+        categoria.includes(q);
+      const coincideCategoria = !catFiltro || categoria === catFiltro;
       const coincideEstado = !this.filtroEstado || estado === this.filtroEstado;
 
       return coincideNombre && coincideCategoria && coincideEstado;
     });
+
+    if (this.orden === 'nombre-asc' || this.orden === 'nombre-desc') {
+      const dir = this.orden === 'nombre-asc' ? 1 : -1;
+      lista = [...lista].sort((a, b) =>
+        dir *
+        String(a.nombre || '').localeCompare(String(b.nombre || ''), 'es', {
+          sensitivity: 'base',
+        }),
+      );
+    } else if (this.orden === 'precio-asc' || this.orden === 'precio-desc') {
+      const dir = this.orden === 'precio-asc' ? 1 : -1;
+      lista = [...lista].sort((a, b) => dir * (Number(a.precio || 0) - Number(b.precio || 0)));
+    }
+
+    this.productosFiltrados = lista;
+    const totalPaginas = Math.max(
+      1,
+      Math.ceil(this.productosFiltrados.length / Math.max(1, this.elementosPorPagina)),
+    );
+    if (this.paginaActual > totalPaginas) {
+      this.paginaActual = totalPaginas;
+    }
+  }
+
+  alCambiarFiltros() {
+    this.paginaActual = 1;
+    this.filtrarProductos();
   }
 
   limpiarFiltros() {
@@ -429,14 +546,31 @@ export class Productos implements OnInit {
   }
 
   actualizarCategorias() {
-    const categoriasUnicas = this.productos
-      .map((productoItem) => productoItem.categoria)
-      .filter((categoria) => !!categoria);
+    const mapa = new Map<string, string>();
+    for (const productoItem of this.productos) {
+      const original = String(productoItem.categoria || '').trim();
+      const clave = this.normalizar(original);
+      if (clave && !mapa.has(clave)) {
+        mapa.set(clave, original);
+      }
+    }
 
-    this.categorias = [...new Set(categoriasUnicas)];
+    this.categoriasFiltro = [...mapa.entries()]
+      .map(([clave, etiqueta]) => ({ clave, etiqueta }))
+      .sort((a, b) => a.etiqueta.localeCompare(b.etiqueta, 'es', { sensitivity: 'base' }));
+
+    this.categorias = this.categoriasFiltro.map((c) => c.etiqueta);
   }
 
   cerrarSesion() {
     this.authService.logout();
+  }
+
+  private normalizar(valor: string): string {
+    return valor
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
   }
 }

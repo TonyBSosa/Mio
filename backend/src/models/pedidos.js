@@ -2,6 +2,8 @@ const mongoose = require("mongoose");
 
 const pedidoSchema = new mongoose.Schema(
   {
+    reservaSolicitudId: { type: mongoose.Schema.Types.ObjectId, ref: 'SolicitudApartado', immutable: true },
+    comprobanteId: { type: mongoose.Schema.Types.ObjectId, ref: 'Comprobante', immutable: true },
     clienteId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Cliente",
@@ -65,6 +67,7 @@ const pedidoSchema = new mongoose.Schema(
   }
 );
 
+pedidoSchema.index({ reservaSolicitudId: 1 }, { unique: true, partialFilterExpression: { reservaSolicitudId: { $type: 'objectId' } } });
 const Pedido = mongoose.model("Pedido", pedidoSchema);
 
 module.exports = Pedido;

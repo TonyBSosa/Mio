@@ -23,7 +23,8 @@ const actualizarPorIdYVendedor = (id, vendedorId, data) => {
   return Producto.findOneAndUpdate(
     {
       _id: id,
-      vendedorId
+      vendedorId,
+      reservaSolicitudId: null
     },
     data,
     { new: true, runValidators: true }
@@ -33,7 +34,8 @@ const actualizarPorIdYVendedor = (id, vendedorId, data) => {
 const eliminarPorIdYVendedor = (id, vendedorId) => {
   return Producto.findOneAndDelete({
     _id: id,
-    vendedorId
+    vendedorId,
+    reservaSolicitudId: null
   });
 };
 

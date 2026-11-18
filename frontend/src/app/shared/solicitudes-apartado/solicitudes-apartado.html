@@ -1,0 +1,96 @@
+<div class="solicitudes" [attr.aria-busy]="cargando()">
+  <p class="aviso">Una solicitud pendiente no confirma la reserva del artículo ni su pago.</p>
+  @if (vista === 'vendedor') {
+    <div class="configuracion-reserva">
+      <p>{{ configuracion()?.motivo || 'La confirmación permanece deshabilitada mientras consultamos la configuración.' }}</p>
+      @if (configuracion(); as config) {
+        <label>Plazo para futuras reservas
+          <select [value]="config.plazoReservaDias" [disabled]="guardando()" (change)="cambiarPlazo($any($event.target).value, $any($event.target))">
+            <option value="3">3 días</option><option value="7">7 días</option>
+          </select>
+        </label>
+      }
+    </div>
+  }
+  @if (gestionError()) { <p role="alert" class="gestion-error">{{ gestionError() }}</p> }
+  @if (mensaje()) { <p role="status">{{ mensaje() }}</p> }
+  @if (cargando()) {
+    <p role="status">Cargando solicitudes…</p>
+  } @else if (error()) {
+    <p role="alert">{{ error() }}</p>
+    <button type="button" class="btn-secondary" (click)="cargar()">Reintentar</button>
+  } @else if (!solicitudes().length) {
+    <p role="status">{{ vista === 'cliente' ? 'Todavía no tenés solicitudes de apartado. Podés solicitar una desde el catálogo de una tienda.' : 'Todavía no recibiste solicitudes para tus productos.' }}</p>
+  } @else {
+    <ul aria-label="Solicitudes de apartado">
+      @for (solicitud of solicitudes(); track solicitud._id) {
+        <li>
+          <strong>{{ solicitud.productoNombre }}</strong>
+          @if (solicitud.productoCodigo) { <span class="codigo">{{ solicitud.productoCodigo }}</span> }
+          <span>{{ vista === 'cliente' ? solicitud.tiendaNombre : 'Comprador: ' + solicitud.compradorNombre }}</span>
+          <time [attr.datetime]="solicitud.createdAt">{{ solicitud.createdAt | date:'dd/MM/yyyy, HH:mm' }}</time>
+          @if (solicitud.precioRegistrado !== undefined) {
+            <span>Precio registrado: L {{ solicitud.precioRegistrado | number:'1.2-2' }}</span>
+          } @else { <span>Sin precio registrado en esta solicitud anterior.</span> }
+          <span class="estado">{{ estadoTexto(solicitud.estado) }}</span>
+          @if (solicitud.esPrueba) { <strong>Reserva de prueba · No usar para pagos reales</strong> }
+          @if (solicitud.confirmadoEn) {
+            <span>Confirmada: {{ solicitud.confirmadoEn | date:'dd/MM/yyyy, HH:mm' }}</span>
+            <span>Precio al confirmar: L {{ solicitud.precioConfirmado | number:'1.2-2' }}</span>
+          }
+          @if (solicitud.venceEn) { <span>Vence: {{ solicitud.venceEn | date:'dd/MM/yyyy, HH:mm' }}</span> }
+          @if (solicitud.estado === 'confirmada' && solicitud.tiempoRestanteSegundos != null) {
+            <span>Tiempo restante al actualizar: {{ tiempoRestante(solicitud.tiempoRestanteSegundos!) }}</span>
+          }
+          @if (solicitud.estado === 'expirada') {
+            <span>Expirada: {{ solicitud.expiradoEn | date:'dd/MM/yyyy, HH:mm' }}. Consultá la disponibilidad actual antes de solicitar de nuevo.</span>
+            @if (vista === 'vendedor' && solicitud.inventarioLiberado === false) {
+              <span>El inventario requiere revisión: la pieza no se liberó porque cambió su vínculo, estado o tiene un pedido asociado.</span>
+            }
+          }
+          @if (solicitud.estado === 'comprobante_en_revision') {
+            <span>La reserva se mantiene mientras se revisa el comprobante.</span>
+          }
+          @if (solicitud.corregirHasta && solicitud.estado === 'comprobante_rechazado') { <span>Podés corregir el comprobante hasta: {{ solicitud.corregirHasta | date:'dd/MM/yyyy, HH:mm' }}.</span> }
+          @if (solicitud.pagadoEn) { <span>Pago aprobado: {{ solicitud.pagadoEn | date:'dd/MM/yyyy, HH:mm' }}.</span> }
+          @if (!['pendiente', 'rechazada'].includes(solicitud.estado)) {
+            <details (toggle)="alternarComprobantes(solicitud._id, $event)">
+              <summary>Comprobantes de pago</summary>
+              @if (comprobantesAbiertos().includes(solicitud._id)) {
+                <mio-comprobantes-reserva [reservaId]="solicitud._id" [vista]="vista" (actualizado)="cargar()" />
+              }
+            </details>
+          }
+          @if (solicitud.rechazadoEn) { <span>Rechazada: {{ solicitud.rechazadoEn | date:'dd/MM/yyyy, HH:mm' }}</span> }
+          @if (vista === 'cliente' && ['pendiente', 'confirmada'].includes(solicitud.estado)) {
+            <div class="acciones-reserva">
+              @if (cancelacion() === solicitud._id) {
+                <p>¿Cancelar este apartado? Se retirará de ambas cuentas y la pieza se liberará si estaba reservada.</p>
+                <button type="button" class="btn-danger-ghost" [disabled]="guardando()" (click)="cancelarApartado()">{{ guardando() ? 'Cancelando…' : 'Sí, cancelar apartado' }}</button>
+                <button type="button" class="btn-secondary" [disabled]="guardando()" (click)="cancelacion.set(null)">Volver</button>
+              } @else {
+                <button type="button" class="btn-danger-ghost" [disabled]="guardando()" (click)="prepararCancelacion(solicitud)">Cancelar apartado</button>
+              }
+            </div>
+          }
+          @if (vista === 'vendedor' && solicitud.estado === 'pendiente') {
+            <div class="acciones-reserva">
+              @if (decision()?.id === solicitud._id) {
+                <p>{{ decision()?.accion === 'rechazar' ? '¿Rechazar esta solicitud? Se eliminará de ambas cuentas, sin conservar historial.' : '¿Confirmar esta reserva de prueba? El artículo quedará bloqueado hasta su vencimiento. No usar para pagos reales.' }}</p>
+                <button type="button" [disabled]="guardando()" (click)="resolver()">{{ guardando() ? 'Guardando…' : 'Sí, continuar' }}</button>
+                <button type="button" class="btn-secondary" [disabled]="guardando()" (click)="decision.set(null)">Cancelar</button>
+              } @else {
+                <button type="button" [disabled]="guardando() || !configuracion()?.confirmacionPruebaHabilitada" (click)="preparar(solicitud._id, 'confirmar')">Confirmar reserva</button>
+                <button type="button" class="btn-danger-ghost" [disabled]="guardando()" (click)="preparar(solicitud._id, 'rechazar')">Rechazar</button>
+              }
+            </div>
+          }
+        </li>
+      }
+    </ul>
+    @if (vista === 'vendedor') { <p>Solo los pagos aprobados se incluyen en tus ventas. Las confirmaciones siguen disponibles únicamente en pruebas aisladas.</p> }
+  }
+  @if (!cargando() && !error()) {
+    <button type="button" class="btn-ghost" [disabled]="guardando()" (click)="cargar(); cargarConfiguracion()">Actualizar solicitudes</button>
+  }
+</div>

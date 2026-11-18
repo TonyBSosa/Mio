@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 
 const pedidoRepository = require("../repositories/pedidoRepository");
+const expiracion = require('./expiracionReservasService');
 
 const ESTADOS_PAGO = ["pendiente", "pagado"];
 const ESTADOS_ENTREGA = ["pendiente", "entregado"];
@@ -131,9 +132,10 @@ const crearPedido = async (data, vendedorId) => {
     if (!mongoose.Types.ObjectId.isValid(data.productoId)) {
       throw crearError(400, "ID de producto invalido");
     }
+    await expiracion.procesar({ productoId: data.productoId, vendedorId });
     pieza = await pedidoRepository.buscarProductoPorIdYVendedor(data.productoId, vendedorId);
     if (!pieza) throw crearError(404, "Producto no encontrado");
-    if (pieza.estado !== "activo") throw crearError(409, "La pieza no esta disponible");
+    if (pieza.estado !== "activo" || pieza.reservaSolicitudId) throw crearError(409, "La pieza no esta disponible");
     if (cantidad !== undefined && Number(cantidad) !== 1) {
       throw crearError(400, "Una pieza unica debe tener cantidad 1");
     }
@@ -223,6 +225,9 @@ const actualizarPedido = async (id, data, vendedorId) => {
   if (!pedidoActual) {
     throw crearError(404, "Pedido no encontrado");
   }
+  if (pedidoActual.reservaSolicitudId && ['clienteId', 'liveId', 'producto', 'cantidad', 'precio', 'estadoPago'].some(campo => data[campo] !== undefined)) {
+    throw crearError(409, 'El pago aprobado por comprobante y sus importes no se pueden modificar desde pedidos');
+  }
 
   if (data.productoId && String(data.productoId) !== String(pedidoActual.productoId || "")) {
     throw crearError(400, "No se puede cambiar la pieza de un pedido existente");
@@ -274,6 +279,11 @@ const actualizarPagoPedido = async (id, estadoPago, vendedorId) => {
   }
 
   validarEstadoPago(estadoPago);
+  const actual = await pedidoRepository.buscarPorIdYVendedor(id, vendedorId);
+  if (actual?.reservaSolicitudId) {
+    if (estadoPago !== 'pagado') throw crearError(409, 'No se puede revertir un pago aprobado por comprobante');
+    return actual;
+  }
 
   const pedido = await pedidoRepository.actualizarPorIdYVendedor(
     id,

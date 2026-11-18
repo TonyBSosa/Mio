@@ -16,6 +16,7 @@ const router = express.Router();
 
 router.use(protegerRuta);
 router.use(validarRol("vendedor"));
+router.use(require('../middlewares/expirarReservasMiddleware'));
 
 router.post("/", crearPedido);
 router.get("/", obtenerPedidos);

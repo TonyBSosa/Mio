@@ -1,0 +1,10 @@
+:host { display: block; }
+.comprobantes { margin-block: var(--space-3); font-size: var(--text-sm); }
+.comprobante { display: grid; gap: var(--space-2); padding-block: var(--space-4); border-block-start: 1px solid var(--border); }
+.acciones { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.acciones p, .acciones label { flex-basis: 100%; }
+label { display: grid; gap: var(--space-2); }
+textarea, input { max-inline-size: 100%; }
+img { max-inline-size: 100%; max-block-size: 380px; object-fit: contain; border: 1px solid var(--border); border-radius: var(--radius-sm); margin-block: var(--space-3); }
+.adjuntar, .imagen-privada { padding-block: var(--space-4); border-block-start: 1px solid var(--border); }
+.error-comprobante { color: var(--danger); }

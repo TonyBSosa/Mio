@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 
 const perfilVendedorSchema = new mongoose.Schema(
   {
+    plazoReservaDias: { type: Number, enum: [3, 7], default: 3 },
     vendedorId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

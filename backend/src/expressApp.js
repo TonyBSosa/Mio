@@ -31,6 +31,8 @@ expressApp.use("/api/clientes", clienteRoutes);
 expressApp.use("/api/lives", liveRoutes);
 expressApp.use("/api/productos", productoRoutes);
 expressApp.use("/api/pedidos", pedidoRoutes);
+expressApp.use('/api/solicitudes-apartado', require('./routes/solicitudApartadoRoutes'));
+expressApp.use('/api/solicitudes-apartado/:id/comprobantes', require('./routes/comprobanteRoutes'));
 expressApp.use("/api/resumen", resumenRoutes);
 expressApp.use("/api/perfil-vendedor", perfilVendedorRoutes);
 expressApp.use("/api/public/catalogo", catalogoPublicoRoutes);

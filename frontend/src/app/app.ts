@@ -25,6 +25,7 @@ const TITULOS_RUTA: Record<string, string> = {
   '/perfil-vendedor': 'Perfil y vitrina pública',
   '/admin/usuarios': 'Gestión de usuarios',
   '/cliente/inicio': 'Explorar tiendas y eventos',
+  '/cliente/perfil': 'Mi cuenta',
 };
 
 @Component({
@@ -53,7 +54,8 @@ export class App implements OnInit, OnDestroy {
   );
 
   protected readonly esWorkspaceCliente = computed(() =>
-    this.rutaActual().startsWith('/cliente'),
+    this.rutaActual().startsWith('/cliente') ||
+    (this.rutaActual().startsWith('/catalogo/') && this.estaAutenticado() && this.usuario()?.rol === 'cliente'),
   );
 
   protected readonly esModoWorkspace = computed(
@@ -64,7 +66,7 @@ export class App implements OnInit, OnDestroy {
   );
 
   protected readonly tituloSeccionActual = computed(
-    () => TITULOS_RUTA[this.rutaActual()] || 'Espacio de trabajo',
+    () => TITULOS_RUTA[this.rutaActual()] || (this.rutaActual().startsWith('/catalogo/') ? 'Explorar tienda' : 'Espacio de trabajo'),
   );
 
   protected readonly enlaceCatalogoPublico = computed(() => {

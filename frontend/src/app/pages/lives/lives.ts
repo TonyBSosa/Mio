@@ -5,11 +5,14 @@ import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { LiveService } from '../../services/live.service';
 import { PageHeaderComponent } from '../../shared/ui/page-header/page-header';
+import { PaginationComponent, paginarLista } from '../../shared/ui/pagination/pagination';
 import { BadgeTone, StatusBadgeComponent } from '../../shared/ui/status-badge/status-badge';
+
+export type FiltroLives = 'todos' | 'proximos' | 'historial';
 
 @Component({
   selector: 'app-lives',
-  imports: [FormsModule, RouterModule, PageHeaderComponent, StatusBadgeComponent],
+  imports: [FormsModule, RouterModule, PageHeaderComponent, StatusBadgeComponent, PaginationComponent],
   templateUrl: './lives.html',
   styleUrl: './lives.css',
 })
@@ -23,6 +26,10 @@ export class Lives implements OnInit {
     estado: 'programado',
   };
 
+  formularioAbierto = false;
+  filtroEstado: FiltroLives = 'todos';
+  paginaActual = 1;
+  elementosPorPagina = 10;
   editando = false;
   liveEditandoId = '';
   confirmandoAccion: { id: string; tipo: 'cancelado' | 'finalizado' | 'eliminar' } | null = null;
@@ -37,8 +44,85 @@ export class Lives implements OnInit {
     private detectorCambios: ChangeDetectorRef,
   ) {}
 
+  get liveDestacado(): any | null {
+    return (
+      this.lives.find((item) => item.estado === 'activo') ||
+      this.lives.find((item) => item.estado === 'pausado') ||
+      null
+    );
+  }
+
+  get livesAgenda(): any[] {
+    const destacadoId = this.liveDestacado?._id;
+    const base = this.lives.filter((item) => item._id !== destacadoId);
+
+    if (this.filtroEstado === 'proximos') {
+      return base.filter((item) => item.estado === 'programado' || item.estado === 'pausado');
+    }
+    if (this.filtroEstado === 'historial') {
+      return base.filter((item) => item.estado === 'finalizado' || item.estado === 'cancelado');
+    }
+    return base;
+  }
+
+  get livesAgendaPaginados(): any[] {
+    const res = paginarLista(this.livesAgenda, this.paginaActual, this.elementosPorPagina);
+    if (res.paginaSegura !== this.paginaActual) {
+      this.paginaActual = res.paginaSegura;
+    }
+    return res.itemsPagina;
+  }
+
+  cambiarFiltroEstado(filtro: FiltroLives) {
+    this.filtroEstado = filtro;
+    this.paginaActual = 1;
+  }
+
+  get conteoProximos(): number {
+    const destacadoId = this.liveDestacado?._id;
+    return this.lives.filter(
+      (item) =>
+        item._id !== destacadoId && (item.estado === 'programado' || item.estado === 'pausado'),
+    ).length;
+  }
+
+  get conteoHistorial(): number {
+    const destacadoId = this.liveDestacado?._id;
+    return this.lives.filter(
+      (item) =>
+        item._id !== destacadoId && (item.estado === 'finalizado' || item.estado === 'cancelado'),
+    ).length;
+  }
+
   ngOnInit() {
     this.listarLives();
+  }
+
+  abrirFormularioNuevo() {
+    this.editando = false;
+    this.liveEditandoId = '';
+    this.limpiarFormulario();
+    this.formularioAbierto = !this.formularioAbierto;
+    this.mensaje = '';
+    this.error = '';
+  }
+
+  cerrarFormulario() {
+    this.formularioAbierto = false;
+    this.editando = false;
+    this.liveEditandoId = '';
+    this.limpiarFormulario();
+  }
+
+  cerrarPopover(popoverId: string) {
+    const el = typeof document !== 'undefined' ? document.getElementById(popoverId) : null;
+    if (el && typeof (el as any).hidePopover === 'function') {
+      try {
+        (el as any).hidePopover();
+      } catch {
+        // Ignorar si el popover ya estaba cerrado
+      }
+    }
   }
 
   listarLives() {
@@ -47,7 +131,10 @@ export class Lives implements OnInit {
 
     this.liveService.listarLives().subscribe({
       next: (respuesta: any) => {
-        this.lives = respuesta;
+        this.lives = Array.isArray(respuesta) ? respuesta : [];
+        if (this.lives.length === 0) {
+          this.formularioAbierto = true;
+        }
         this.cargando = false;
         this.detectorCambios.detectChanges();
       },
@@ -64,8 +151,8 @@ export class Lives implements OnInit {
     this.mensaje = '';
     this.error = '';
 
-    if (!this.live.nombre) {
-      this.error = 'El nombre es obligatorio';
+    if (!this.live.nombre?.trim()) {
+      this.error = 'El nombre del evento es obligatorio';
       return;
     }
 
@@ -75,7 +162,7 @@ export class Lives implements OnInit {
       this.liveService.actualizarLive(this.liveEditandoId, this.live).subscribe({
         next: (liveActualizado: any) => {
           const index = this.lives.findIndex(
-            (liveItem) => liveItem._id === this.liveEditandoId
+            (liveItem) => liveItem._id === this.liveEditandoId,
           );
 
           if (index !== -1) {
@@ -83,10 +170,8 @@ export class Lives implements OnInit {
             this.lives = [...this.lives];
           }
 
-          this.limpiarFormulario();
-          this.editando = false;
-          this.liveEditandoId = '';
-          this.mensaje = 'Live actualizado correctamente';
+          this.cerrarFormulario();
+          this.mensaje = 'Evento Live actualizado correctamente';
           this.cargando = false;
           this.detectorCambios.detectChanges();
         },
@@ -100,10 +185,9 @@ export class Lives implements OnInit {
     } else {
       this.liveService.crearLive(this.live).subscribe({
         next: (liveCreado: any) => {
-          this.lives.push(liveCreado);
-          this.lives = [...this.lives];
-          this.limpiarFormulario();
-          this.mensaje = 'Live creado correctamente';
+          this.lives = [liveCreado, ...this.lives];
+          this.cerrarFormulario();
+          this.mensaje = 'Evento Live programado correctamente';
           this.cargando = false;
           this.detectorCambios.detectChanges();
         },
@@ -117,26 +201,38 @@ export class Lives implements OnInit {
     }
   }
 
-  editarLive(live: any) {
+  editarLive(live: any, popoverId?: string) {
+    if (popoverId) {
+      this.cerrarPopover(popoverId);
+    }
     this.editando = true;
+    this.formularioAbierto = true;
     this.liveEditandoId = live._id;
     this.live = {
       nombre: live.nombre,
-      descripcion: live.descripcion,
+      descripcion: live.descripcion || '',
       fecha: this.formatearFechaParaInput(live.fecha),
       estado: live.estado,
     };
     this.mensaje = '';
     this.error = '';
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }
 
   cancelarEdicion() {
-    this.editando = false;
-    this.liveEditandoId = '';
-    this.limpiarFormulario();
+    this.cerrarFormulario();
   }
 
-  solicitarConfirmacion(id: string, tipo: 'cancelado' | 'finalizado' | 'eliminar') {
+  solicitarConfirmacion(
+    id: string,
+    tipo: 'cancelado' | 'finalizado' | 'eliminar',
+    popoverId?: string,
+  ) {
+    if (popoverId) {
+      this.cerrarPopover(popoverId);
+    }
     this.confirmandoAccion = { id, tipo };
   }
 
@@ -146,6 +242,27 @@ export class Lives implements OnInit {
 
   esConfirmando(id: string, tipo: 'cancelado' | 'finalizado' | 'eliminar'): boolean {
     return this.confirmandoAccion?.id === id && this.confirmandoAccion?.tipo === tipo;
+  }
+
+  tieneConfirmacionEnItem(id: string): boolean {
+    return this.confirmandoAccion?.id === id;
+  }
+
+  obtenerEtiquetaEstado(estado: string): string {
+    switch (estado) {
+      case 'activo':
+        return 'EN VIVO';
+      case 'pausado':
+        return 'Pausado';
+      case 'programado':
+        return 'Programado';
+      case 'finalizado':
+        return 'Finalizado';
+      case 'cancelado':
+        return 'Cancelado';
+      default:
+        return estado || 'Sin estado';
+    }
   }
 
   obtenerTonoEstado(estado: string): BadgeTone {
@@ -174,7 +291,7 @@ export class Lives implements OnInit {
     this.liveService.eliminarLive(id).subscribe({
       next: () => {
         this.lives = this.lives.filter((liveItem) => liveItem._id !== id);
-        this.mensaje = 'Live eliminado correctamente';
+        this.mensaje = 'Evento Live eliminado correctamente';
         this.cargando = false;
         this.detectorCambios.detectChanges();
       },
@@ -187,7 +304,10 @@ export class Lives implements OnInit {
     });
   }
 
-  cambiarEstado(live: any, estado: string) {
+  cambiarEstado(live: any, estado: string, popoverId?: string) {
+    if (popoverId) {
+      this.cerrarPopover(popoverId);
+    }
     this.confirmandoAccion = null;
     this.mensaje = '';
     this.error = '';
@@ -195,9 +315,7 @@ export class Lives implements OnInit {
 
     this.liveService.cambiarEstado(live._id, estado).subscribe({
       next: (liveActualizado: any) => {
-        const index = this.lives.findIndex(
-          (liveItem) => liveItem._id === live._id
-        );
+        const index = this.lives.findIndex((liveItem) => liveItem._id === live._id);
 
         if (index !== -1) {
           this.lives[index] = liveActualizado;
@@ -238,7 +356,7 @@ export class Lives implements OnInit {
     }
 
     const fechaLocal = new Date(
-      fechaObjeto.getTime() - fechaObjeto.getTimezoneOffset() * 60000
+      fechaObjeto.getTime() - fechaObjeto.getTimezoneOffset() * 60000,
     );
 
     return fechaLocal.toISOString().slice(0, 16);
@@ -246,18 +364,18 @@ export class Lives implements OnInit {
 
   mostrarFecha(fecha: any) {
     if (!fecha) {
-      return 'Sin fecha';
+      return 'Sin fecha definida';
     }
 
     const fechaObjeto = new Date(fecha);
 
     if (Number.isNaN(fechaObjeto.getTime())) {
-      return 'Sin fecha';
+      return 'Sin fecha definida';
     }
 
     return fechaObjeto.toLocaleString('es-HN', {
       year: 'numeric',
-      month: '2-digit',
+      month: 'short',
       day: '2-digit',
       hour: '2-digit',
       minute: '2-digit',

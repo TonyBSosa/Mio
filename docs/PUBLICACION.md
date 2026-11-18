@@ -78,3 +78,15 @@ En el backend de Render configurar:
 La nueva versión añade `sesiones` y `recuperaciones` en MongoDB, con índices TTL. Confirmar que el usuario de base tiene permisos para crear sus índices. La comprobación de expiración se hace también en las consultas, aunque el limpiador TTL aún no haya borrado el registro. No necesita migrar usuarios; los tokens anteriores se rechazan y hay que iniciar sesión nuevamente.
 
 Después del despliegue seguir el recorrido de `docs/permisos.md`, incluyendo correo recibido, enlace vencido/repetido, cuenta por rol, ID ajeno y reutilización del token tras logout. No incluir contraseñas ni enlaces de recuperación en capturas o bitácoras públicas.
+
+## Reservas: límite del incremento 2C
+
+Actualización 2D: la carga y revisión ya están implementadas, pero la activación sigue restringida a pruebas hasta configurar y validar el almacenamiento real. Ver [comprobantes privados](COMPROBANTES_STORAGE.md), incluido Node >=22, bucket, variables exclusivas del backend y pruebas pendientes. El comando de vencimiento también limpia cargas fallidas. No se configuró ni desplegó ningún servicio externo en esta entrega.
+
+Las confirmaciones y el barrido de vencimientos siguen restringidos a `NODE_ENV=test` y una base `mio_pruebas_*`. La confirmación requiere además flag de servidor, vendedor permitido y replica set/Atlas. No cambiar esas restricciones para usar pagos reales: falta implementar comprobantes.
+
+Render Free puede suspender un servicio tras 15 minutos sin tráfico y reactivarlo con la siguiente petición ([documentación oficial](https://render.com/docs/free)). Por eso MIO procesa vencimientos relevantes antes de leer disponibilidad: no usa intervalos de memoria ni temporizadores de Angular. Si falla esa reconciliación, la consulta responde error en lugar de afirmar disponibilidad.
+
+Para procesar reservas vencidas **sin visitas**, preparar un ejecutor externo que conecte directamente a la misma base aislada y ejecute `npm run reservas:expirar` desde `backend`. Un [Cron Job de Render](https://render.com/docs/cronjobs) puede ejecutar el comando periódicamente; no se ha creado ni programado uno en esta entrega. Usar variables privadas del entorno de prueba, registrar fallos y reintentar; el comando es idempotente y termina con código distinto de cero si no completa el barrido. No exponer una URL pública de mantenimiento ni guardar secretos en el repositorio.
+
+Sin ese ejecutor, el vencimiento queda materializado al llegar la siguiente consulta o intento de reserva, no necesariamente en el segundo exacto del plazo. La fecha se conserva en MongoDB y no depende de que el proceso web siga vivo. Las transacciones necesitan replica set o clúster fragmentado, no MongoDB standalone ([documentación de MongoDB](https://www.mongodb.com/docs/manual/data-modeling/enforce-consistency/transactions/)). No se alteró la configuración de MongoDB ni de Render de la aplicación durante este incremento.

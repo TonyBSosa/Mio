@@ -1,0 +1,67 @@
+<section class="cuenta-page" aria-labelledby="perfil-titulo" [attr.aria-busy]="cargando()">
+  <h1 id="perfil-titulo">Mi perfil</h1>
+  <p class="introduccion">Tu información y la configuración de tu cuenta.</p>
+
+  @if (cargando()) {
+    <div class="estado-cuenta" role="status">Cargando tu información…</div>
+  } @else if (error()) {
+    <div class="estado-cuenta">
+      <p role="alert">{{ error() }}</p>
+      @if (!accesoDenegado()) {
+        <button class="btn-secondary" type="button" (click)="cargarPerfil()">Reintentar</button>
+      }
+      <a routerLink="/bienvenida">Ir al inicio</a>
+    </div>
+  } @else if (usuario(); as persona) {
+    <div class="identidad">
+      <span class="avatar" aria-hidden="true">{{ iniciales() }}</span>
+      <div class="identidad-texto">
+        <p class="nombre">{{ persona.nombre }}</p>
+        <p class="correo">{{ persona.email }}</p>
+        <span class="tipo-cuenta">Comprador</span>
+      </div>
+    </div>
+
+    <section class="configuracion" aria-labelledby="configuracion-titulo">
+      <h2 id="configuracion-titulo">Configuración de cuenta</h2>
+      <div class="opciones-cuenta">
+        <details open>
+          <summary>Datos personales</summary>
+          <div class="detalle">
+            <dl>
+              <div><dt>Nombre</dt><dd>{{ persona.nombre }}</dd></div>
+              <div><dt>Correo electrónico</dt><dd>{{ persona.email }}</dd></div>
+              <div><dt>Tipo de cuenta</dt><dd>Comprador</dd></div>
+            </dl>
+            <p>Por ahora, tus datos están disponibles solo para consulta.</p>
+          </div>
+        </details>
+        <details>
+          <summary>Seguridad</summary>
+          <div class="detalle">
+            <p>Solicitá un enlace por correo para restablecer tu contraseña.</p>
+            <a routerLink="/recuperar">Restablecer contraseña</a>
+          </div>
+        </details>
+        <details (toggle)="apartadosAbiertos.set($any($event.target).open)">
+          <summary>Mis apartados</summary>
+          @if (apartadosAbiertos()) {
+            <div class="detalle"><mio-solicitudes-apartado /></div>
+          }
+        </details>
+        <details>
+          <summary>Mis comprobantes</summary>
+          <div class="detalle"><p>Abrí una reserva en Mis apartados y elegí Comprobantes de pago para adjuntar una imagen, consultar su revisión o corregirla si corresponde. Las capturas de chat o live todavía no están disponibles.</p></div>
+        </details>
+        <details>
+          <summary>Quiero vender en MIO</summary>
+          <div class="detalle"><p>Estamos preparando la activación de vendedor desde esta misma cuenta. Te avisaremos cuando esté disponible; por ahora seguís usando MIO como comprador.</p></div>
+        </details>
+      </div>
+    </section>
+    <div class="cuenta-footer">
+      <a class="btn-secondary" routerLink="/cliente/inicio">Explorar tiendas</a>
+      <button class="btn-danger-ghost" type="button" (click)="cerrarSesion()">Cerrar sesión</button>
+    </div>
+  }
+</section>
