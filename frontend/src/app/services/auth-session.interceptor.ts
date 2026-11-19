@@ -10,6 +10,7 @@ const RUTAS_AUTH_PUBLICAS = [
   '/auth/forgot-password',
   '/auth/reset-password',
   '/auth/logout',
+  '/auth/email-verification',
 ];
 
 export const authSessionInterceptor: HttpInterceptorFn = (req, next) => {

@@ -12,7 +12,8 @@ const listarVendedoresUsuariosActivos = async () => {
 
   return User.find({
     rol: "vendedor",
-    estado: "activo"
+    estado: "activo", deletedAt: null,
+    $or: [{ emailVerificationRequired: { $ne: true } }, { emailVerifiedAt: { $type: 'date' } }]
   }).select("_id nombre estado rol");
 };
 

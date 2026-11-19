@@ -64,13 +64,15 @@ export class Register implements OnInit {
       .register(this.nombre, this.email, this.password, this.rolRegistro)
       .subscribe({
         next: (respuesta) => {
+          this.password = '';
+          if (this.authService.iniciarVerificacion(respuesta)) { this.cargando = false; return; }
           this.authService.guardarSesion(respuesta);
           this.cargando = false;
           this.detectorCambios.detectChanges();
           this.authService.redirigirPorRol();
         },
         error: (error) => {
-          console.error('Error al registrar usuario', error);
+
           this.mensaje = this.obtenerMensajeError(error);
           this.cargando = false;
           this.detectorCambios.detectChanges();

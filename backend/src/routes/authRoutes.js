@@ -31,4 +31,15 @@ router.post("/register", registrar);
 router.post("/login", login);
 router.get("/me", protegerRuta, obtenerPerfil);
 
+const verificacion = require('../controllers/verificacionController');
+const { identidad } = require('../middlewares/verificacionMiddleware');
+const limiteVerificacion = rateLimit({ windowMs: 15 * 60000, limit: 10,
+  standardHeaders: 'draft-8', legacyHeaders: false, message: { mensaje: 'Espera unos minutos antes de volver a intentarlo.' } });
+router.use('/email-verification', (req, res, next) => {
+  res.set('Cache-Control', 'no-store'); res.set('Referrer-Policy', 'no-referrer'); next();
+}, limiteVerificacion);
+router.get('/email-verification/status', identidad, verificacion.estado);
+router.post('/email-verification/resend', identidad, verificacion.reenviar);
+router.post('/email-verification/link-status', verificacion.enlace);
+router.post('/email-verification/confirm', verificacion.confirmar);
 module.exports = router;

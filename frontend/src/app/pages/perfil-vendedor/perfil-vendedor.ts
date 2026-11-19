@@ -52,6 +52,7 @@ export class PerfilVendedor implements OnInit {
   ngOnInit() {
     this.usuario = this.authService.getUsuario();
     this.enlaceCatalogo = `/catalogo/${this.usuario?._id || this.usuario?.id || ''}`;
+    this.authService.obtenerPerfil().subscribe({ next: usuario => { this.usuario = usuario; this.detectorCambios.detectChanges(); }, error: () => {} });
     this.cargarPerfil();
   }
 

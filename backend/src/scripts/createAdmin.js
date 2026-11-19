@@ -37,7 +37,8 @@ const crearAdmin = async () => {
       email: emailNormalizado,
       password: passwordHasheado,
       rol: "admin",
-      estado: "activo"
+      estado: "activo",
+      ...require('../services/verificacionService').inicial()
     });
 
     console.log("Admin creado correctamente");

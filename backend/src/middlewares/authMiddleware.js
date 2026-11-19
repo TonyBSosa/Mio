@@ -8,9 +8,9 @@ module.exports = async (req, res, next) => {
     const authorization = req.headers.authorization;
     if (typeof authorization !== 'string' || !authorization.startsWith('Bearer ')) return rechazar();
     const decoded = jwt.verify(authorization.slice(7), process.env.JWT_SECRET, { algorithms: ['HS256'] });
-    if (!decoded.sid || !decoded.id) return rechazar();
+    if (decoded.scope !== undefined || !decoded.sid || !decoded.id) return rechazar();
     const usuario = await User.findById(decoded.id);
-    if (!vigente(usuario) || (decoded.cv ?? null) !== version(usuario)) return rechazar();
+    if (!vigente(usuario) || require('../config/verificacionConfig').pendienteNueva(usuario) || (decoded.cv ?? null) !== version(usuario)) return rechazar();
     if (!await Sesion.exists({ _id: decoded.sid, usuarioId: decoded.id,
       credentialVersion: version(usuario), expiresAt: { $gt: new Date() } })) return rechazar();
     req.sesionId = decoded.sid;

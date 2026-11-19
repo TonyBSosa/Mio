@@ -10,6 +10,9 @@
     </div>
   </mio-page-header>
 
+  <p>{{ usuario?.emailVerifiedAt ? 'Correo verificado' : 'Correo pendiente de verificación' }}
+    @if (!usuario?.emailVerifiedAt) { <a routerLink="/registro-pendiente">Verificar mi correo</a> }
+  </p>
   @if (error) {
     <p class="mensaje error" role="alert">{{ error }}</p>
   }

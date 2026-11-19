@@ -37,7 +37,7 @@ const crearUsuario = async (data) => {
   const emailNormalizado =
     typeof email === "string" ? email.trim().toLowerCase() : "";
 
-  if (!nombreLimpio || !emailNormalizado || !password) {
+  if (!nombreLimpio || !require('../config/correoConfig').validoEmail(emailNormalizado) || !password) {
     throw crearError(400, "Nombre, email y password son obligatorios");
   }
   validarPassword(password);
@@ -62,7 +62,8 @@ const crearUsuario = async (data) => {
     email: emailNormalizado,
     password: passwordHasheado,
     rol,
-    estado
+    estado,
+    ...require('./verificacionService').inicial()
   });
 
   return {
@@ -124,6 +125,7 @@ const actualizarUsuario = async (id, data, adminId) => {
 
   if (email !== undefined) {
     const emailNormalizado = String(email).trim().toLowerCase();
+    if (!require('../config/correoConfig').validoEmail(emailNormalizado)) throw crearError(400, 'Correo invalido');
     const existente = await userRepository.buscarPorEmail(emailNormalizado);
     if (existente && String(existente._id) !== String(id)) {
       throw crearError(409, "Ya existe un usuario con ese email");

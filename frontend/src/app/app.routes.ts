@@ -1,3 +1,4 @@
+import { Verificacion } from './pages/verificacion/verificacion';
 import { accesoRol } from './acceso-rol';
 import { Recuperar } from './pages/login/recuperar';
 import { Routes } from '@angular/router';
@@ -19,6 +20,8 @@ import { Register } from './pages/register/register';
 import { Resumen } from './pages/resumen/resumen';
 
 export const routes: Routes = [
+  { path: 'verificar-correo', component: Verificacion },
+  { path: 'registro-pendiente', component: Verificacion },
   { path: 'recuperar', component: Recuperar },
   { path: 'bienvenida', component: Bienvenida },
   { path: 'login', component: Login },

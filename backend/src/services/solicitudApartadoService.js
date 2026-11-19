@@ -35,7 +35,10 @@ const crear = async (datos, usuario) => {
   if (!producto) throw error(404, 'Producto no encontrado.');
   if (producto.estado !== 'activo' || producto.reservaSolicitudId) throw error(409, 'El producto ya no está disponible.');
   const vendedor = await repository.buscarVendedor(producto.vendedorId);
-  if (!vendedor) throw error(404, 'La tienda ya no está disponible.');
+  if (!vendedor || vendedor.deletedAt || require('../config/verificacionConfig').pendienteNueva(vendedor)) throw error(404, 'La tienda ya no está disponible.');
+  if (!vendedor.emailVerifiedAt && require('../config/verificacionConfig').modoHistorico() === 'sensitive') {
+    throw error(409, 'La tienda debe confirmar su correo antes de recibir nuevas solicitudes.');
+  }
   const perfil = await repository.buscarPerfil(producto.vendedorId);
   try {
     return await repository.crear({

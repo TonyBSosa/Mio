@@ -55,7 +55,7 @@ const obtenerCatalogo = async (vendedorId) => {
   const vendedor =
     await catalogoPublicoRepository.buscarVendedorPorId?.(vendedorId);
 
-  if (vendedor && (vendedor.estado !== "activo" || vendedor.rol !== "vendedor")) {
+  if (vendedor && (vendedor.estado !== "activo" || vendedor.rol !== "vendedor" || vendedor.deletedAt || require('../config/verificacionConfig').pendienteNueva(vendedor))) {
     throw crearError(404, "Catalogo no disponible");
   }
 

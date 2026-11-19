@@ -49,6 +49,8 @@ export class Login implements OnInit {
       .login(this.email, this.password)
       .subscribe({
         next: (respuesta) => {
+          this.password = '';
+          if (this.authService.iniciarVerificacion(respuesta)) { this.cargando = false; return; }
           this.authService.guardarSesion(respuesta);
           this.cargando = false;
           this.detectorCambios.detectChanges();
@@ -63,7 +65,7 @@ export class Login implements OnInit {
           this.continuar();
         },
         error: (error) => {
-          console.error('Error al iniciar sesion', error);
+
           this.mensaje = this.obtenerMensajeError(error);
           this.cargando = false;
           this.detectorCambios.detectChanges();

@@ -18,6 +18,8 @@
       <div class="identidad-texto">
         <p class="nombre">{{ persona.nombre }}</p>
         <p class="correo">{{ persona.email }}</p>
+        <p>{{ persona.emailVerifiedAt ? 'Correo verificado' : 'Correo pendiente de verificación' }}</p>
+        @if (!persona.emailVerifiedAt) { <a routerLink="/registro-pendiente">Verificar mi correo</a> }
         <span class="tipo-cuenta">Comprador</span>
       </div>
     </div>

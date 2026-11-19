@@ -5,8 +5,10 @@ import { Router } from '@angular/router';
 
 import { ToastService } from './toast.service';
 
-interface AuthResponse {
-  token: string;
+export interface AuthResponse {
+  token?: string;
+  verificationRequired?: boolean;
+  verificationToken?: string;
   [key: string]: unknown;
 }
 
@@ -15,6 +17,7 @@ export interface PerfilUsuario {
   nombre: string;
   email: string;
   rol: 'cliente' | 'vendedor' | 'admin';
+  emailVerifiedAt?: string | null;
 }
 
 const PREFIJOS_RUTAS_PUBLICAS = [
@@ -22,6 +25,8 @@ const PREFIJOS_RUTAS_PUBLICAS = [
   '/login',
   '/register',
   '/recuperar',
+  '/verificar-correo',
+  '/registro-pendiente',
   '/restablecer',
   '/catalogo/',
 ];
@@ -32,6 +37,7 @@ const PREFIJOS_RUTAS_PUBLICAS = [
 export class AuthService {
   private apiUrl = `${environment.apiUrl}/auth`;
   private readonly toast = inject(ToastService);
+  private tokenVerificacion = '';
   private timerExpiracion: ReturnType<typeof setTimeout> | null = null;
   private redirigiendoPorExpiracion = false;
 
@@ -56,9 +62,22 @@ export class AuthService {
     });
   }
 
+  iniciarVerificacion(respuesta: AuthResponse): boolean {
+    if (!respuesta.verificationRequired || !respuesta.verificationToken) return false;
+    this.limpiarAlmacenamiento();
+    this.tokenVerificacion = respuesta.verificationToken;
+    this.router.navigate(['/registro-pendiente']);
+    return true;
+  }
+
+  getTokenVerificacion() { return this.tokenVerificacion; }
+  limpiarVerificacion() { this.tokenVerificacion = ''; }
+
   guardarSesion(respuesta: AuthResponse) {
     const { token, ...usuario } = respuesta;
 
+    if (!token || respuesta.verificationRequired) return;
+    this.tokenVerificacion = '';
     localStorage.setItem('token', token);
     localStorage.setItem('usuario', JSON.stringify(usuario));
     this.redirigiendoPorExpiracion = false;
@@ -252,6 +271,7 @@ export class AuthService {
   }
 
   private limpiarAlmacenamiento() {
+    this.tokenVerificacion = '';
     this.cancelarTemporizadorExpiracion();
     localStorage.removeItem('token');
     localStorage.removeItem('usuario');

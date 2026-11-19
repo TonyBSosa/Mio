@@ -5,6 +5,9 @@ const Recuperacion = require('../models/recuperacion');
 const recuperacionService = require('../services/recuperacionService');
 const politica = require('../services/passwordPolicy');
 const credenciales = require('../services/credentialService');
+const verificacion = require('../services/verificacionService');
+const { pendienteNueva } = require('../config/verificacionConfig');
+const { validoEmail } = require('../config/correoConfig');
 const bcrypt = require('bcryptjs');
 const hashFicticio = bcrypt.hashSync('solo-comparacion-ficticia', 12);
 const credencialesInvalidas = res => res.status(401).json({ mensaje: 'Credenciales invalidas' });
@@ -27,12 +30,19 @@ const generarToken = async usuario => {
   return jwt.sign({ id: usuario._id, sid: String(sesion._id), cv }, process.env.JWT_SECRET,
     { algorithm: 'HS256', expiresIn: '30m' });
 };
+const respuestaPendiente = (usuario, res, status = 200) => {
+  const verificationToken = jwt.sign({ id: String(usuario._id), cv: credenciales.version(usuario), scope: 'email-verification' },
+    process.env.JWT_SECRET, { algorithm: 'HS256', expiresIn: '30m' });
+  res.set('Cache-Control', 'no-store');
+  return res.status(status).json({ verificationRequired: true, verificationToken,
+    mensaje: 'Revisa tu correo para verificar tu cuenta.' });
+};
 const registrar = async (req, res) => {
   try {
     const { nombre, email, password, rol = 'vendedor' } = req.body || {};
     const nombreLimpio = typeof nombre === 'string' ? nombre.trim() : '';
     const emailNormalizado = typeof email === 'string' ? email.trim().toLowerCase() : '';
-    if (!nombreLimpio || !emailNormalizado || !['vendedor', 'cliente'].includes(rol)) {
+    if (!nombreLimpio || !validoEmail(emailNormalizado) || !['vendedor', 'cliente'].includes(rol)) {
       return res.status(400).json({ mensaje: 'Nombre, correo y rol de registro validos son obligatorios.' });
     }
     politica.validarPassword(password);
@@ -40,11 +50,9 @@ const registrar = async (req, res) => {
       return res.status(409).json({ mensaje: 'No se pudo completar el registro con esos datos.' });
     }
     const usuario = await User.create({ nombre: nombreLimpio, email: emailNormalizado,
-      password: await politica.hashPassword(password), rol, credentialVersion: credenciales.nuevaVersion() });
-    const token = await generarToken(usuario);
-    if (!token) return credencialesInvalidas(res);
-    return res.status(201).json({ _id: usuario._id, nombre: usuario.nombre, email: usuario.email,
-      rol: usuario.rol, estado: usuario.estado, token });
+      password: await politica.hashPassword(password), rol, credentialVersion: credenciales.nuevaVersion(), ...verificacion.inicial() });
+    verificacion.encolar(usuario.email);
+    return respuestaPendiente(usuario, res, 201);
   } catch (error) { return errorSeguro(res, error, 'No se pudo procesar el registro.'); }
 };
 const login = async (req, res) => {
@@ -57,10 +65,14 @@ const login = async (req, res) => {
     const usuario = await User.findOne({ email: emailNormalizado }).select('+password');
     const correcto = await politica.verificarPassword(password, usuario?.password || hashFicticio);
     if (!correcto || !credenciales.vigente(usuario)) return credencialesInvalidas(res);
+    if (pendienteNueva(usuario)) {
+      if (!await User.exists({ ...credenciales.filtroVersion(usuario), password: usuario.password })) return credencialesInvalidas(res);
+      return respuestaPendiente(usuario, res);
+    }
     const token = await generarToken(usuario);
     if (!token) return credencialesInvalidas(res);
     return res.json({ _id: usuario._id, nombre: usuario.nombre, email: usuario.email,
-      rol: usuario.rol, estado: usuario.estado, token });
+      rol: usuario.rol, estado: usuario.estado, emailVerifiedAt: usuario.emailVerifiedAt ?? null, token });
   } catch { return res.status(503).json({ mensaje: 'No se pudo iniciar sesion.' }); }
 };
 const obtenerPerfil = async (req, res) => res.json(req.usuario);

@@ -4,7 +4,7 @@ const User = require('../src/models/users');
 const repo = require('../src/repositories/userRepository');
 const auth = require('../src/controllers/authController');
 const admin = require('../src/controllers/userController');
-const res = () => ({ statusCode: 200, status(n) { this.statusCode = n; return this; }, json(body) { this.body = body; return this; } });
+const res = () => ({ set() { return this; }, statusCode: 200, status(n) { this.statusCode = n; return this; }, json(body) { this.body = body; return this; } });
 
 test('errores internos y E11000 de administración se traducen sin datos privados', async t => {
   t.mock.method(repo, 'buscarPorEmail', async () => null);
@@ -42,6 +42,7 @@ test('registro no admite admin ni campos para elevar privilegios o falsificar ve
   await assert.rejects(servicio.actualizarUsuario(id, { rol: 'cliente' }, id), { status: 400 });
   await assert.rejects(servicio.eliminarUsuario(id, id), { status: 400 });
   process.env.JWT_SECRET = 'solo-prueba-registro';
+  t.mock.method(require('../src/services/verificacionService'), 'encolar', () => {});
   t.mock.method(User, 'findOne', async () => null);
   t.mock.method(User, 'exists', async () => true);
   let datos;
@@ -52,5 +53,7 @@ test('registro no admite admin ni campos para elevar privilegios o falsificar ve
     rol: 'cliente', credentialVersion: 'elegida', deletedAt: new Date(), estado: 'inactivo' } }, registro);
   assert.equal(registro.statusCode, 201);
   assert.notEqual(datos.credentialVersion, 'elegida');
+  assert.equal(datos.emailVerifiedAt, null); assert.equal(datos.emailVerificationRequired, true);
+  assert.equal(registro.body.token, undefined); assert.equal(registro.body.verificationRequired, true);
   assert.equal(datos.deletedAt, undefined); assert.equal(datos.estado, undefined);
 });

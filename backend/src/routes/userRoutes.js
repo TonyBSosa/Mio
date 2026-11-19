@@ -16,7 +16,7 @@ const router = express.Router();
 router.use(protegerRuta);
 router.use(validarRol("admin"));
 
-router.post("/", crearUsuario);
+router.post("/", require('../middlewares/verificacionMiddleware').sensible, crearUsuario);
 router.get("/", obtenerUsuarios);
 router.get("/:id", obtenerUsuarioPorId);
 router.put("/:id", actualizarUsuario);

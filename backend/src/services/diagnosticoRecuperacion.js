@@ -15,8 +15,8 @@ function marcar(error, etapa, categoria) {
 async function ejecutar(etapa, fn, categoria) {
   try { return await fn(); } catch (error) { throw marcar(error, etapa, categoria); }
 }
-function registrar(error) {
+function registrar(error, evento = 'recuperacion_trabajo_fallido') {
   // Nunca serializar el error original ni sus mensajes o campos arbitrarios.
-  console.error('recuperacion_trabajo_fallido', JSON.stringify({ ...(datos.get(error) || { etapa: 'trabajo', ...clasificar(error) }), correlacion: randomUUID() }));
+  console.error(evento === 'verificacion_trabajo_fallido' ? evento : 'recuperacion_trabajo_fallido', JSON.stringify({ ...(datos.get(error) || { etapa: 'trabajo', ...clasificar(error) }), correlacion: randomUUID() }));
 }
 module.exports = { ejecutar, marcar, registrar };

@@ -24,10 +24,11 @@ const buscarPorEmail = (email) => {
 };
 
 const actualizarPorId = (id, data) => {
+  const emailActualizado = data.email !== undefined ? { emailVerifiedAt: null, emailVerification: null, verificationRequest: null } : {};
   const revocar = ['password', 'estado', 'rol', 'email'].some(campo => data[campo] !== undefined);
   return User.findOneAndUpdate(
     { _id: id, deletedAt: null },
-    { $set: { ...data, ...(revocar ? { credentialVersion: randomUUID() } : {}) } },
+    { $set: { ...data, ...emailActualizado, ...(revocar ? { credentialVersion: randomUUID() } : {}) } },
     { returnDocument: 'after', runValidators: true, writeConcern: { w: 'majority', wtimeout: 5000 } }
   );
 };

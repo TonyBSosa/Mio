@@ -18,10 +18,11 @@ router.use(protegerRuta);
 router.use(validarRol("vendedor"));
 router.use(require('../middlewares/expirarReservasMiddleware'));
 
-router.post("/", crearPedido);
+router.post("/", require('../middlewares/verificacionMiddleware').sensible, crearPedido);
 router.get("/", obtenerPedidos);
 router.get("/:id", obtenerPedidoPorId);
-router.put("/:id", actualizarPedido);
+router.put("/:id", (req, res, next) => ['clienteId','liveId','producto','productoId','cantidad','precio'].some(campo => req.body?.[campo] !== undefined)
+  ? require('../middlewares/verificacionMiddleware').sensible(req, res, next) : next(), actualizarPedido);
 router.patch("/:id/pago", actualizarPagoPedido);
 router.patch("/:id/entrega", actualizarEntregaPedido);
 router.delete("/:id", eliminarPedido);

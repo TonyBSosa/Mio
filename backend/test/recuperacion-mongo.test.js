@@ -62,7 +62,12 @@ test('recuperación en MongoDB standalone aislado, SMTP siempre simulado', { ski
     for (const r of resultados) { assert.equal(r.statusCode, 200); assert.deepEqual(r.body, resultados[0].body); }
     await servicio.esperarPendientes(); smtp.mock.restore(); log.mock.restore();
     assert.equal(enviados.length, 1);
-    assert.deepEqual(logs, ['recuperacion_trabajo_fallido']);
+    assert.equal(logs.length, 1);
+    assert.match(logs[0], /^recuperacion_trabajo_fallido /);
+    const seguro = JSON.parse(logs[0].slice('recuperacion_trabajo_fallido '.length));
+    assert.deepEqual(Object.keys(seguro).sort(), ['categoria', 'codigo', 'correlacion', 'etapa']);
+    assert.equal(seguro.codigo, 'NO_CLASIFICADO');
+    for (const secreto of [...activos.map(u => u.email), ...enviados, 'secreto SMTP']) assert.equal(logs[0].includes(secreto), false);
   });
 
   await t.test('fallo previo al CAS permite reintentar; fallo de limpieza no permite reutilizar token', async () => {
