@@ -1,4 +1,5 @@
-import { Component, DestroyRef, inject, OnDestroy } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, inject, OnDestroy } from '@angular/core';
+import { finalize, timeout, TimeoutError } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -114,6 +115,7 @@ export class Recuperar implements OnDestroy {
   private location = inject(Location);
   private route = inject(ActivatedRoute);
   private destroyRef = inject(DestroyRef);
+  private detector = inject(ChangeDetectorRef);
   token = '';
   modoReset = false;
   enlaceInvalido = false;
@@ -195,7 +197,14 @@ export class Recuperar implements OnDestroy {
         environment.apiUrl + '/auth/' + (this.token ? 'reset-password' : 'forgot-password'),
         this.token ? { token: this.token, password: this.password } : { email: this.email },
       )
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        timeout(75000),
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => {
+          this.cargando = false;
+          if (!this.destroyRef.destroyed) this.detector.markForCheck();
+        }),
+      )
       .subscribe({
         next: (r) => {
           this.esError = false;
@@ -211,11 +220,21 @@ export class Recuperar implements OnDestroy {
           if (this.modoReset && e.status === 400 && e.error?.mensaje === 'Enlace invalido o vencido') {
             this.invalidarEnlace();
           } else {
-            this.mensaje = e.status === 429 ? 'Has realizado demasiados intentos. Espera 15 minutos e intenta de nuevo.' :
+            this.mensaje = e instanceof TimeoutError ? (this.modoReset
+              ? 'La solicitud tardó demasiado. Comprueba si ya puedes iniciar sesión con la nueva contraseña antes de solicitar otro enlace.'
+              : 'La solicitud tardó demasiado. Revisa tu correo antes de volver a intentarlo.') :
+              e.status === 429 ? 'Límite de solicitudes alcanzado. Espera 15 minutos e intenta de nuevo.' :
               e.status === 400 ? (e.error?.mensaje || 'Revisa la nueva contraseña.') :
+              this.modoReset ? 'No pudimos confirmar el cambio. Comprueba si ya puedes iniciar sesión antes de solicitar otro enlace.' :
               'No se pudo completar la solicitud. Intenta de nuevo más tarde.';
           }
           this.cargando = false;
+        },
+        complete: () => {
+          if (!this.mensaje && !this.destroyRef.destroyed) {
+            this.esError = true;
+            this.mensaje = 'No se pudo confirmar la solicitud. Comprueba tu acceso o tu correo antes de volver a intentarlo.';
+          }
         },
       });
   }
