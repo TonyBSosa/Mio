@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const diagnostico = require('./diagnosticoRecuperacion');
 const net = require('node:net');
 const tls = require('node:tls');
 const { randomUUID } = require('node:crypto');
@@ -14,7 +15,7 @@ const reintentable = error => (error.beforeSmtp === true &&
   (error.responseCode >= 400 && error.responseCode < 500 && ['MAIL FROM', 'RCPT TO', 'DATA'].includes(error.command));
 
 async function enviarIntento(config, mensaje, { createTransport = nodemailer.createTransport,
-  deadlineMs = 20000 } = {}) {
+  deadlineMs = 20000, verificar = false } = {}) {
   let socket, transport, temporizador, connectionTimer;
   const opciones = { host: config.host, port: config.port, secure: config.port === 465,
     requireTLS: true, ignoreTLS: false, opportunisticTLS: false,
@@ -45,7 +46,7 @@ async function enviarIntento(config, mensaje, { createTransport = nodemailer.cre
   try {
     transport = createTransport(opciones);
     return await Promise.race([
-      transport.sendMail(mensaje),
+      verificar ? transport.verify() : transport.sendMail(mensaje),
       new Promise((_, reject) => {
         temporizador = setTimeout(() => {
           const error = Object.assign(new Error('Envio agotado'), { code: 'EDELIVERYTIMEOUT' });
@@ -59,7 +60,7 @@ async function enviarIntento(config, mensaje, { createTransport = nodemailer.cre
 async function enviarRecuperacion(email, token, { minutos = expiracionMinutos(),
   expiresAt = new Date(Date.now() + minutos * 60000), createTransport, sleep = esperar, deadlineMs } = {}) {
   try {
-    const config = configuracion();
+    const config = await diagnostico.ejecutar('configuracion_correo', () => configuracion(), 'configuracion');
     if (!validoEmail(email) || typeof token !== 'string' || !/^[a-f0-9]{64}$/.test(token)) throw falloPublico();
     const url = new URL('/recuperar', config.base);
     // El fragmento no se envía al servidor HTTP ni como Referer.
@@ -71,10 +72,14 @@ async function enviarRecuperacion(email, token, { minutos = expiracionMinutos(),
       if (+expiresAt <= Date.now()) throw falloPublico();
       try { return await enviarIntento(config, mensaje, { createTransport, deadlineMs }); }
       catch (error) {
-        if (intento === 2 || !reintentable(error)) throw falloPublico();
+        if (intento === 2 || !reintentable(error)) throw diagnostico.marcar(error, 'smtp_envio');
         await sleep(250 * (intento + 1));
       }
     }
-  } catch { throw falloPublico(); }
+  } catch (error) { throw diagnostico.marcar(error, 'preparar_correo'); }
 }
-module.exports = { enviarRecuperacion, enviarIntento, reintentable };
+async function verificarSMTP(opciones = {}) {
+  const config = await diagnostico.ejecutar('configuracion_correo', () => configuracion(), 'configuracion');
+  return diagnostico.ejecutar('smtp_verificacion', () => enviarIntento(config, undefined, { ...opciones, verificar: true }));
+}
+module.exports = { enviarRecuperacion, enviarIntento, reintentable, verificarSMTP };

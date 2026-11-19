@@ -58,4 +58,19 @@ describe('Recuperar: enlaces y mensajes seguros', () => {
     component.enviar(); http.expectOne(req => req.url.endsWith('/auth/forgot-password')).flush({}, { status: 429, statusText: 'Too Many Requests' });
     expect(component.mensaje).toContain('15 minutos'); expect(component.mensaje).not.toContain(component.email);
   });
+  it('avisa después del segundo intento sin consultar cuotas; separa correos y vence tras una hora', async () => {
+    const { component, http, fixture } = await preparar();
+    let ahora = 1000000; vi.spyOn(Date, 'now').mockImplementation(() => ahora);
+    const solicitar = (email = 'test@example.invalid') => {
+      component.email = email; component.enviar();
+      http.expectOne(req => req.url.endsWith('/auth/forgot-password')).flush({ mensaje: 'Si la cuenta existe, recibirás un enlace.' });
+    };
+    solicitar(); expect(component.mensaje).toContain('Si la cuenta existe');
+    solicitar(' TEST@example.invalid '); expect(component.mensaje).toContain('Te queda un intento');
+    fixture.detectChanges(); expect(fixture.nativeElement.querySelector('[role="status"]').textContent).toContain('una hora');
+    solicitar(); expect(component.mensaje).toContain('espera una hora');
+    solicitar('otra@example.invalid'); expect(component.mensaje).toContain('Si la cuenta existe');
+    ahora += 3600000; solicitar(); expect(component.mensaje).toContain('Si la cuenta existe');
+  });
+
 });

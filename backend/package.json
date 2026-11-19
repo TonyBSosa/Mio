@@ -17,6 +17,7 @@
   "main": "server.js",
   "scripts": {
     "test": "node --test",
+    "smtp:verify": "node src/scripts/verificarSMTP.js",
     "reservas:expirar": "node src/scripts/expirarReservas.js",
     "dev": "nodemon server.js",
     "create-admin": "node src/scripts/createAdmin.js",

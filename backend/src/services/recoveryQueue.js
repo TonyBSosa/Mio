@@ -1,3 +1,4 @@
+const diagnostico = require('./diagnosticoRecuperacion');
 const { createHmac, randomBytes } = require('node:crypto');
 
 // Cola acotada en memoria. No pretende ser un outbox durable ni garantizar entrega.
@@ -10,9 +11,9 @@ function crearCola(procesar, { now = Date.now, max = 100, concurrency = 2 } = {}
     programado = false;
     while (activos < concurrency && trabajos.length) {
       const email = trabajos.shift(); activos++;
-      Promise.resolve().then(() => procesar(email)).catch(() => {
+      Promise.resolve().then(() => procesar(email)).catch(error => {
         // Nunca imprimir error.message, dirección, token o payload SMTP.
-        console.error('recuperacion_trabajo_fallido');
+        diagnostico.registrar(error);
       }).finally(() => { activos--; bombear(); avisar(); });
     }
     avisar();

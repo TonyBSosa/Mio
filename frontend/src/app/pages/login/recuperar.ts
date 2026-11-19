@@ -125,6 +125,22 @@ export class Recuperar implements OnDestroy {
   cargando = false;
   esError = false;
   mostrarPassword = false;
+  // Orientación local: no consulta ni revela la cuota de una cuenta del servidor.
+  private solicitudes = new Map<string, { inicio: number; cantidad: number }>();
+
+  private avisoSolicitud(email: string): string {
+    const ahora = Date.now();
+    const clave = email.trim().toLowerCase();
+    for (const [correo, ventana] of this.solicitudes) {
+      if (ahora - ventana.inicio >= 3600000) this.solicitudes.delete(correo);
+    }
+    const ventana = this.solicitudes.get(clave) ?? { inicio: ahora, cantidad: 0 };
+    ventana.cantidad++;
+    this.solicitudes.set(clave, ventana);
+    if (ventana.cantidad === 2) return 'Te queda un intento. Después deberás esperar una hora para volver a solicitar el enlace.';
+    if (ventana.cantidad >= 3) return 'Si no recibes el enlace, espera una hora antes de volver a solicitarlo. Revisa también el correo no deseado.';
+    return '';
+  }
 
   constructor() {
     const query = this.route.snapshot.queryParamMap;
@@ -173,6 +189,7 @@ export class Recuperar implements OnDestroy {
     this.esError = false;
     this.mensaje = '';
 
+    const emailSolicitud = this.email;
     this.http
       .post<{ mensaje: string }>(
         environment.apiUrl + '/auth/' + (this.token ? 'reset-password' : 'forgot-password'),
@@ -182,7 +199,8 @@ export class Recuperar implements OnDestroy {
       .subscribe({
         next: (r) => {
           this.esError = false;
-          this.mensaje = r.mensaje;
+          const aviso = this.modoReset ? '' : this.avisoSolicitud(emailSolicitud);
+          this.mensaje = aviso || r.mensaje;
           this.cargando = false;
           this.password = '';
           this.confirmacion = '';
