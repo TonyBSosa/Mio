@@ -105,4 +105,13 @@ describe('authSessionInterceptor y expiración de sesión', () => {
 
     expect(statusRecibido).toBe(401);
   });
+
+  it('recuperación pública no cierra una sesión existente por un 401', () => {
+    localStorage.setItem('token', crearJwt(Math.floor(Date.now() / 1000) + 600));
+    const manejar = vi.spyOn(authService, 'manejarSesionExpirada');
+    let status = 0;
+    http.post('/api/auth/reset-password', {}).subscribe({ error: e => { status = e.status; } });
+    httpMock.expectOne('/api/auth/reset-password').flush({}, { status: 401, statusText: 'Unauthorized' });
+    expect(status).toBe(401); expect(manejar).not.toHaveBeenCalled(); manejar.mockRestore();
+  });
 });

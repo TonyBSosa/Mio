@@ -48,21 +48,19 @@ test('HTTP: roles desde base, propiedad de tienda, logout, caducidad y recuperac
   assert.equal((await request('/auth/me','GET',null,jwt.sign({id},process.env.JWT_SECRET))).status,401);
   let reset;
   t.mock.method(User,'findOne',async()=>usuario);
-  t.mock.method(Recuperacion,'create',async data=>{reset=data;});
   let enviado;
-  t.mock.method(correo,'enviarRecuperacion',async(email,token)=>{enviado=token;});
+  t.mock.method(require('../src/services/recuperacionService'), 'encolar', () => {
+    enviado = require('node:crypto').randomBytes(32).toString('hex');
+    reset = { _id: sid, usuarioId: id, tokenHash: Recuperacion.hashToken(enviado), expiresAt: new Date(Date.now() + 1800000) };
+  });
   const respuesta = await request('/auth/forgot-password','POST',{email:'demo@example.invalid'});
   assert.equal(respuesta.status,200);
   assert.equal(JSON.stringify(await respuesta.json()).includes(enviado),false);
   assert.equal(reset.tokenHash,Recuperacion.hashToken(enviado));
   let disponible = true;
   t.mock.method(Recuperacion, 'findOne', async () => disponible ? reset : null);
-  t.mock.method(Recuperacion,'findOneAndDelete',async filtro=>{
-    assert.equal(filtro.tokenHash,reset.tokenHash);
-    assert.ok(filtro.expiresAt.$gt instanceof Date);
-    if (!disponible) return null;
-    disponible=false; return reset;
-  });
+  t.mock.method(Recuperacion, 'exists', async () => disponible);
+  t.mock.method(Recuperacion, 'deleteOne', async () => { disponible = false; });
   t.mock.method(User,'findOneAndUpdate',async(filtro,data)=>{
     assert.equal(await bcrypt.compare('nueva-clave-123',data.$set.password),true);
     Object.assign(usuario, data.$set);

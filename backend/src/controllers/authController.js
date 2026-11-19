@@ -1,9 +1,8 @@
 const jwt = require('jsonwebtoken');
-const crypto = require('node:crypto');
 const User = require('../models/users');
 const Sesion = require('../models/sesion');
 const Recuperacion = require('../models/recuperacion');
-const correo = require('../services/correoService');
+const recuperacionService = require('../services/recuperacionService');
 const politica = require('../services/passwordPolicy');
 const credenciales = require('../services/credentialService');
 const bcrypt = require('bcryptjs');
@@ -73,15 +72,8 @@ const logout = async (req, res) => {
 };
 const solicitarRecuperacion = async (req, res) => {
   const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
-  try {
-    const usuario = await User.findOne({ email, estado: 'activo', deletedAt: null });
-    if (credenciales.vigente(usuario)) {
-      const token = crypto.randomBytes(32).toString('hex');
-      await Recuperacion.create({ usuarioId: usuario._id, credentialVersion: credenciales.version(usuario),
-        tokenHash: Recuperacion.hashToken(token), expiresAt: new Date(Date.now() + 900000) });
-      await correo.enviarRecuperacion(usuario.email, token);
-    }
-  } catch { console.error('No se pudo procesar el correo de recuperacion'); }
+  // No esperar consulta de usuario, cuota ni SMTP: misma respuesta incluso si la cola descarta.
+  recuperacionService.encolar(email);
   return res.json({ mensaje: 'Si la cuenta existe, recibiras un enlace de recuperacion.' });
 };
 const restablecerPassword = async (req, res) => {
@@ -96,11 +88,12 @@ const restablecerPassword = async (req, res) => {
     const usuario = await User.findById(recuperacion.usuarioId);
     if (!credenciales.vigente(usuario) || credenciales.version(usuario) !== credenciales.version(recuperacion)) return invalido();
     const hash = await politica.hashPassword(password);
-    const consumido = await Recuperacion.findOneAndDelete({ ...filtro, _id: recuperacion._id,
-      credentialVersion: credenciales.version(recuperacion), expiresAt: { $gt: new Date() } });
-    if (!consumido) return invalido();
-    // CAS: password y revocación lógica se confirman juntos en un documento.
-    if (!await credenciales.cambiarConVersion(usuario, hash)) return invalido();
+    if (!await Recuperacion.exists({ ...filtro, _id: recuperacion._id, expiresAt: { $gt: new Date() } })) return invalido();
+    // El CAS consume lógicamente TODA la generación de enlaces. No gastar el token
+    // antes de la escritura: un fallo previo permite reintento sin perder acceso.
+    if (!await credenciales.cambiarConVersion(usuario, hash, recuperacion.expiresAt)) return invalido();
+    try { await Recuperacion.deleteOne({ _id: recuperacion._id }); }
+    catch { console.error('recuperacion_limpieza_pendiente'); } // Ya inválido; no convertir éxito en fallo.
     return res.json({ mensaje: 'Contraseña actualizada. Inicia sesion de nuevo.' });
   } catch (error) { return errorSeguro(res, error, 'No se pudo restablecer la contraseña. Solicita otro enlace.'); }
 };

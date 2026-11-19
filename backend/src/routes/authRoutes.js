@@ -11,7 +11,18 @@ const protegerRuta = require("../middlewares/authMiddleware");
 const router = express.Router();
 const { rateLimit } = require('express-rate-limit');
 const limite = rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: 'draft-8', legacyHeaders: false, message: { mensaje: 'Demasiados intentos. Espera 15 minutos.' } });
-router.use(['/login', '/register', '/forgot-password', '/reset-password'], limite);
+router.use(['/login', '/register'], limite);
+const limiteRecuperacion = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10,
+  standardHeaders: 'draft-8', legacyHeaders: false,
+  message: { mensaje: 'Demasiadas solicitudes. Espera 15 minutos e intenta de nuevo.' } });
+const limiteReset = rateLimit({ windowMs: 15 * 60 * 1000, limit: 20,
+  standardHeaders: 'draft-8', legacyHeaders: false,
+  message: { mensaje: 'Demasiados intentos. Espera 15 minutos e intenta de nuevo.' } });
+router.use(['/forgot-password', '/reset-password'], (req, res, next) => {
+  res.set('Cache-Control', 'no-store'); res.set('Referrer-Policy', 'no-referrer'); next();
+});
+router.use('/forgot-password', limiteRecuperacion);
+router.use('/reset-password', limiteReset);
 
 router.post('/logout', protegerRuta, logout);
 router.post('/forgot-password', solicitarRecuperacion);

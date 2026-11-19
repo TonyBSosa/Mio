@@ -7,8 +7,8 @@ import { AuthService } from './auth.service';
 const RUTAS_AUTH_PUBLICAS = [
   '/auth/login',
   '/auth/register',
-  '/auth/recuperar',
-  '/auth/restablecer',
+  '/auth/forgot-password',
+  '/auth/reset-password',
   '/auth/logout',
 ];
 

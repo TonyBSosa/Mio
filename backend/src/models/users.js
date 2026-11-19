@@ -4,6 +4,9 @@ const userSchema = new mongoose.Schema(
   {
     credentialVersion: { type: String },
     deletedAt: { type: Date, default: null },
+    recoveryRequest: {
+      slot: String, windowStartedAt: Date, count: Number, nextAllowedAt: Date,
+    },
     nombre: {
       type: String,
       required: true,
@@ -46,6 +49,7 @@ userSchema.set("toJSON", {
   transform: (document, returnedObject) => {
     delete returnedObject.password;
     delete returnedObject.credentialVersion;
+    delete returnedObject.recoveryRequest;
     return returnedObject;
   }
 });

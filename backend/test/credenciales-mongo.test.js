@@ -37,9 +37,11 @@ test('MongoDB standalone desechable: credenciales, carreras, baja y compatibilid
     password: await bcrypt.hash(clave, 10), ...extra });
   const login = user => llamar(controller.login, { email: user.email, password: clave });
   const recuperar = async user => {
-    let token;
-    const mock = t.mock.method(correo, 'enviarRecuperacion', async (_, valor) => { token = valor; });
-    await llamar(controller.solicitarRecuperacion, { email: user.email }); mock.mock.restore();
+    // Fixture de enlace: las cuotas/envío se ejercitan en recuperacion-mongo.test.js.
+    const token = crypto.randomBytes(32).toString('hex');
+    const actual = await User.findById(user._id);
+    await Recuperacion.create({ usuarioId: user._id, credentialVersion: actual.credentialVersion ?? null,
+      tokenHash: Recuperacion.hashToken(token), expiresAt: new Date(Date.now() + 1800000) });
     return token;
   };
 

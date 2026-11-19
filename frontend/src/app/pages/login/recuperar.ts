@@ -1,4 +1,6 @@
-import { Component, inject } from '@angular/core';
+import { Component, DestroyRef, inject, OnDestroy } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -14,12 +16,12 @@ import { environment } from '../../../environments/environment';
       <div class="login-container">
         <div class="auth-header">
           <h1 id="recuperar-title">
-            {{ token ? 'Nueva contraseña' : 'Recuperar contraseña' }}
+            {{ modoReset ? 'Nueva contraseña' : 'Recuperar contraseña' }}
           </h1>
           <p class="auth-intro">
-            @if (!token) {
-              Ingresa tu correo registrado. Si la cuenta existe, te enviaremos un enlace para
-              restablecer tu contraseña.
+            @if (!modoReset) {
+              Ingresa tu correo. Si hay una cuenta habilitada, recibirás un enlace.
+              Puedes solicitar otro después de un minuto; revisa también el correo no deseado.
             } @else {
               Define tu nueva contraseña: mínimo 15 caracteres y máximo 72 bytes UTF-8.
             }
@@ -37,8 +39,9 @@ import { environment } from '../../../environments/environment';
           </div>
         }
 
-        <form class="auth-form" (ngSubmit)="enviar()" novalidate>
-          @if (!token) {
+        @if (!completado && !enlaceInvalido) {
+        <form class="auth-form" (ngSubmit)="enviar()" novalidate [attr.aria-busy]="cargando">
+          @if (!modoReset) {
             <div class="form-group">
               <label for="rec-email">Correo electrónico</label>
               <input
@@ -78,6 +81,9 @@ import { environment } from '../../../environments/environment';
                 </button>
               </div>
               <p class="field-hint">Al menos 15 caracteres; máximo 72 bytes UTF-8.</p>
+              <label for="rec-confirmar">Repite la nueva contraseña</label>
+              <input id="rec-confirmar" name="confirmar" type="password" autocomplete="new-password"
+                [(ngModel)]="confirmacion" [disabled]="cargando" required />
             </div>
           }
 
@@ -85,13 +91,17 @@ import { environment } from '../../../environments/environment';
             @if (cargando) {
               Procesando...
             } @else {
-              {{ token ? 'Guardar contraseña' : 'Enviar enlace de recuperación' }}
+              {{ modoReset ? 'Guardar contraseña' : 'Enviar enlace de recuperación' }}
             }
           </button>
         </form>
+        }
 
         <footer class="auth-footer">
           <div class="auth-footer__links">
+            @if (modoReset) {
+              <button type="button" class="btn-ghost" [disabled]="cargando" (click)="solicitarOtro()">Solicitar un enlace nuevo</button>
+            }
             <a routerLink="/login">Volver a iniciar sesión</a>
           </div>
         </footer>
@@ -99,18 +109,50 @@ import { environment } from '../../../environments/environment';
     </section>
   `,
 })
-export class Recuperar {
+export class Recuperar implements OnDestroy {
   private http = inject(HttpClient);
-  token = inject(ActivatedRoute).snapshot.queryParamMap.get('token') || '';
+  private location = inject(Location);
+  private route = inject(ActivatedRoute);
+  private destroyRef = inject(DestroyRef);
+  token = '';
+  modoReset = false;
+  enlaceInvalido = false;
+  completado = false;
   email = '';
   password = '';
+  confirmacion = '';
   mensaje = '';
   cargando = false;
   esError = false;
   mostrarPassword = false;
 
-  enviar() {
+  constructor() {
+    const query = this.route.snapshot.queryParamMap;
+    const fragment = new URLSearchParams(this.route.snapshot.fragment || '');
+    this.modoReset = query.has('token') || fragment.has('token');
+    const valores = [...query.getAll('token'), ...fragment.getAll('token')];
+    if (this.modoReset) {
+      this.location.replaceState('/recuperar'); // Mantener secreto solo en memoria, nunca storage.
+      this.token = valores.length === 1 && /^[a-f0-9]{64}$/.test(valores[0]) ? valores[0] : '';
+      if (!this.token) this.invalidarEnlace();
+    }
+  }
+
+  ngOnDestroy() { this.token = ''; this.password = ''; this.confirmacion = ''; }
+
+  private invalidarEnlace() {
+    this.enlaceInvalido = true; this.token = ''; this.esError = true;
+    this.mensaje = 'Este enlace no es válido, venció o ya fue utilizado. Solicita uno nuevo.';
+  }
+
+  solicitarOtro() {
     if (this.cargando) return;
+    this.token = ''; this.password = ''; this.confirmacion = ''; this.modoReset = false;
+    this.enlaceInvalido = false; this.completado = false; this.mensaje = ''; this.esError = false;
+  }
+
+  enviar() {
+    if (this.cargando || this.completado || this.enlaceInvalido) return;
 
     if (!this.token && !this.email.trim()) {
       this.esError = true;
@@ -123,6 +165,9 @@ export class Recuperar {
       this.mensaje = 'La nueva contraseña necesita al menos 15 caracteres y como máximo 72 bytes UTF-8.';
       return;
     }
+    if (this.modoReset && this.password !== this.confirmacion) {
+      this.esError = true; this.mensaje = 'Las contraseñas no coinciden.'; return;
+    }
 
     this.cargando = true;
     this.esError = false;
@@ -133,16 +178,25 @@ export class Recuperar {
         environment.apiUrl + '/auth/' + (this.token ? 'reset-password' : 'forgot-password'),
         this.token ? { token: this.token, password: this.password } : { email: this.email },
       )
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (r) => {
           this.esError = false;
           this.mensaje = r.mensaje;
           this.cargando = false;
           this.password = '';
+          this.confirmacion = '';
+          if (this.modoReset) { this.token = ''; this.completado = true; }
         },
         error: (e) => {
           this.esError = true;
-          this.mensaje = e.error?.mensaje || 'No se pudo completar. Intenta de nuevo.';
+          if (this.modoReset && e.status === 400 && e.error?.mensaje === 'Enlace invalido o vencido') {
+            this.invalidarEnlace();
+          } else {
+            this.mensaje = e.status === 429 ? 'Has realizado demasiados intentos. Espera 15 minutos e intenta de nuevo.' :
+              e.status === 400 ? (e.error?.mensaje || 'Revisa la nueva contraseña.') :
+              'No se pudo completar la solicitud. Intenta de nuevo más tarde.';
+          }
           this.cargando = false;
         },
       });
