@@ -57,6 +57,15 @@ const pedidoSchema = new mongoose.Schema(
       default: "pendiente"
     },
 
+    planEntrega: {
+      type: new mongoose.Schema({
+        tipo: { type: String, enum: ['local', 'zona_comun'], required: true },
+        lugar: { type: String, trim: true, maxlength: 200, required: true },
+        fecha: { type: String, required: true }
+      }, { _id: false }),
+      default: undefined
+    },
+
     observaciones: {
       type: String,
       trim: true

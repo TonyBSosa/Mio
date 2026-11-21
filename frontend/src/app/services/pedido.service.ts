@@ -53,6 +53,10 @@ export class PedidoService {
     );
   }
 
+  programarEntrega(id: string, planEntrega: { tipo: string; lugar: string; fecha: string }) {
+    return this.http.patch(`${this.apiUrl}/${id}/entrega`, { planEntrega }, this.getHeaders());
+  }
+
   eliminarPedido(id: string) {
     return this.http.delete(`${this.apiUrl}/${id}`, this.getHeaders());
   }

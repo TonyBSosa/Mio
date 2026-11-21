@@ -82,11 +82,12 @@ const actualizarPagoPedido = async (req, res) => {
 
 const actualizarEntregaPedido = async (req, res) => {
   try {
-    const { estadoEntrega } = req.body;
+    const { estadoEntrega, planEntrega } = req.body;
     const pedido = await pedidoService.actualizarEntregaPedido(
       req.params.id,
       estadoEntrega,
-      obtenerVendedorId(req)
+      obtenerVendedorId(req),
+      planEntrega
     );
 
     res.json(pedido);

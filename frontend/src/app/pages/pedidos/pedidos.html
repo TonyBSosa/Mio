@@ -290,7 +290,7 @@
               name="estadoEntrega"
             >
               <option value="pendiente">Pendiente de entrega</option>
-              <option value="entregado">Entregado</option>
+              <option value="entregado" [disabled]="pedido.estadoEntrega !== 'entregado'">Entregado (confirmar desde el listado)</option>
             </select>
           </div>
 
@@ -485,6 +485,19 @@
                   <mio-status-badge [tone]="item.estadoEntrega === 'entregado' ? 'success' : 'warning'">
                     {{ item.estadoEntrega === 'entregado' ? 'Entregado' : 'Por entregar' }}
                   </mio-status-badge>
+                  <div class="delivery-summary">
+                    @if (item.planEntrega) {
+                      <strong>{{ fechaEntrega(item.planEntrega.fecha) }}</strong>
+                      <span>{{ item.planEntrega.tipo === 'local' ? 'Local' : 'Zona común' }} · {{ item.planEntrega.lugar }}</span>
+                    } @else {
+                      <span>{{ item.estadoEntrega === 'entregado' ? 'Sin datos de entrega' : 'Sin programar' }}</span>
+                    }
+                    @if (item.estadoEntrega !== 'entregado') {
+                      <button type="button" class="delivery-link" (click)="abrirEntrega(item)" [disabled]="cargando">
+                        {{ item.planEntrega ? 'Reprogramar' : 'Programar entrega' }}
+                      </button>
+                    }
+                  </div>
                 </td>
                 <td class="col-actions">
                   @if (confirmandoEliminarId === item._id) {
@@ -663,6 +676,19 @@
             </div>
 
             <div class="op-card__actions">
+              <div class="delivery-summary delivery-summary--mobile">
+                @if (item.planEntrega) {
+                  <strong>{{ fechaEntrega(item.planEntrega.fecha) }} · {{ item.planEntrega.tipo === 'local' ? 'Local' : 'Zona común' }}</strong>
+                  <span>{{ item.planEntrega.lugar }}</span>
+                } @else {
+                  <span>{{ item.estadoEntrega === 'entregado' ? 'Sin datos de entrega' : 'Entrega sin programar' }}</span>
+                }
+                @if (item.estadoEntrega !== 'entregado') {
+                  <button type="button" class="delivery-link" (click)="abrirEntrega(item)" [disabled]="cargando">
+                    {{ item.planEntrega ? 'Reprogramar' : 'Programar entrega' }}
+                  </button>
+                }
+              </div>
               @if (confirmandoEliminarId === item._id) {
                 <div class="confirm-inline confirm-inline--full">
                   <span>¿Eliminar pedido?</span>
@@ -780,3 +806,8 @@
     }
   </section>
 </div>
+
+<mio-entrega-dialog [open]="!!entregaPedido" [confirmando]="entregaConfirmando"
+  [subtitle]="entregaPedido ? obtenerNombreCliente(entregaPedido.clienteId) + ' · ' + entregaPedido.producto : ''"
+  [plan]="planEntrega" [error]="entregaError" [guardando]="entregaGuardando"
+  (closed)="cerrarEntrega()" (guardar)="guardarEntrega()" />

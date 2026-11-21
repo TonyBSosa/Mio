@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 
 const pedidoRepository = require("../repositories/pedidoRepository");
 const expiracion = require('./expiracionReservasService');
+const { validarPlanEntrega } = require('./entregaPolicy');
 
 const ESTADOS_PAGO = ["pendiente", "pagado"];
 const ESTADOS_ENTREGA = ["pendiente", "entregado"];
@@ -89,6 +90,9 @@ const validarClienteYLive = async (
 };
 
 const crearPedido = async (data, vendedorId) => {
+  if (data.estadoEntrega === 'entregado') {
+    throw crearError(400, 'Registrá el pedido y programá su entrega antes de marcarlo entregado');
+  }
   const {
     clienteId,
     liveId,
@@ -223,6 +227,9 @@ const actualizarPedido = async (id, data, vendedorId) => {
   if (!pedidoActual) {
     throw crearError(404, "Pedido no encontrado");
   }
+  if (estadoEntrega === 'entregado' && pedidoActual.estadoEntrega !== 'entregado') {
+    validarPlanEntrega(pedidoActual.planEntrega);
+  }
   if (pedidoActual.reservaSolicitudId && ['clienteId', 'liveId', 'producto', 'cantidad', 'precio', 'estadoPago'].some(campo => data[campo] !== undefined)) {
     throw crearError(409, 'El pago aprobado por comprobante y sus importes no se pueden modificar desde pedidos');
   }
@@ -296,19 +303,26 @@ const actualizarPagoPedido = async (id, estadoPago, vendedorId) => {
   return pedido;
 };
 
-const actualizarEntregaPedido = async (id, estadoEntrega, vendedorId) => {
+const actualizarEntregaPedido = async (id, estadoEntrega, vendedorId, planEntrega) => {
   validarIdPedido(id);
-
-  if (!estadoEntrega) {
-    throw crearError(400, "El estadoEntrega es obligatorio");
+  if (estadoEntrega === undefined && planEntrega === undefined) {
+    throw crearError(400, 'Indicá el estado o la programación de entrega');
   }
-
-  validarEstadoEntrega(estadoEntrega);
-
+  if (estadoEntrega !== undefined) validarEstadoEntrega(estadoEntrega);
+  const actual = await obtenerPedidoPorId(id, vendedorId);
+  const cambios = {};
+  if (planEntrega !== undefined) {
+    if (actual.estadoEntrega === 'entregado') {
+      throw crearError(409, 'Volvé a pendiente antes de reprogramar una entrega realizada');
+    }
+    cambios.planEntrega = validarPlanEntrega(planEntrega);
+  }
+  if (estadoEntrega === 'entregado') validarPlanEntrega(cambios.planEntrega || actual.planEntrega);
+  if (estadoEntrega !== undefined) cambios.estadoEntrega = estadoEntrega;
   const pedido = await pedidoRepository.actualizarPorIdYVendedor(
     id,
     vendedorId,
-    { estadoEntrega }
+    cambios
   );
 
   if (!pedido) {
