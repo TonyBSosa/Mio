@@ -47,6 +47,16 @@ El despliegue y la conexión con MongoDB se observaron en los registros de Rende
 
 Versión documental: [semana-5](https://github.com/TonyBSosa/Mio/releases/tag/semana-5). Las sesiones reales siguen pendientes. El ejemplo está identificado como ficticio y no valida las hipótesis; la publicación de la versión no completa el requisito de usuarios reales.
 
+## Preparación de la semana 6 — Segundo flujo y decisiones
+
+- [Arquitectura: contexto, contenedores, capas y carpetas](docs/arquitectura.md).
+- Decisiones: [interfaz y API separadas](docs/decisiones/001-interfaz-api-separadas.md) y [comprobantes privados](docs/decisiones/002-comprobantes-privados.md).
+- [Bitácora y uso de IA](docs/bitacora/semana-6.md).
+- [Flujo de entregas: modalidad, lugar, fecha y confirmación](docs/flujo-entregas.md), con [su decisión registrada](docs/decisiones/003-programacion-entregas.md).
+- [Requisitos, evidencia y pasos de cierre](docs/ENTREGA_SEMANA_6.md).
+
+El flujo de entregas está implementado localmente y compila. Faltan vincularlo a pruebas reales de usuarios, verificarlo en producción, acreditar dos PR conformes y publicar `semana-6`.
+
 ## Tecnologías y ejecución local
 
 Angular 21 y TypeScript para la interfaz; Node.js, Express 5, Mongoose 9 y MongoDB para la API y persistencia. Se requiere una versión de Node compatible con las dependencias de ambos package.json y npm.
