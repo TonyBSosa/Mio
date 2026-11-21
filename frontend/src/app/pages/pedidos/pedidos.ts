@@ -15,6 +15,8 @@ import { PaginationComponent, paginarLista } from '../../shared/ui/pagination/pa
 import { StatusBadgeComponent } from '../../shared/ui/status-badge/status-badge';
 import { SolicitudesApartado } from '../../shared/solicitudes-apartado/solicitudes-apartado';
 
+import { EntregaDialog } from '../../shared/entrega-dialog/entrega-dialog';
+
 const OBJECT_ID_REGEX = /^[a-f0-9]{24}$/i;
 
 export type FiltroOperativoPedidos = '' | 'por-cobrar' | 'por-entregar';
@@ -31,11 +33,67 @@ export type FiltroOperativoPedidos = '' | 'por-cobrar' | 'por-entregar';
     StatusBadgeComponent,
     PaginationComponent,
     SolicitudesApartado,
+    EntregaDialog,
   ],
   templateUrl: './pedidos.html',
   styleUrl: './pedidos.css',
 })
 export class Pedidos implements OnInit {
+  entregaPedido: any = null;
+  entregaConfirmando = false;
+  entregaGuardando = false;
+  entregaError = '';
+  planEntrega = { tipo: 'local', lugar: '', fecha: '' };
+
+  abrirEntrega(pedido: any, confirmar = false) {
+    if (this.cargando || this.entregaGuardando) return;
+    this.entregaPedido = pedido;
+    this.entregaConfirmando = confirmar && !!pedido.planEntrega;
+    this.entregaError = '';
+    this.planEntrega = pedido.planEntrega
+      ? { ...pedido.planEntrega }
+      : { tipo: 'local', lugar: '', fecha: '' };
+  }
+
+  cerrarEntrega() {
+    if (!this.entregaGuardando) this.entregaPedido = null;
+  }
+
+  guardarEntrega() {
+    if (this.entregaGuardando || !this.entregaPedido) return;
+    if (!this.planEntrega.lugar.trim() || !this.planEntrega.fecha) {
+      this.entregaError = 'Completá el lugar y la fecha acordados para la entrega.';
+      return;
+    }
+    this.entregaGuardando = true;
+    this.entregaError = '';
+    const id = this.entregaPedido._id;
+    const solicitud = this.entregaConfirmando
+      ? this.pedidoService.marcarEntrega(id, 'entregado')
+      : this.pedidoService.programarEntrega(id, this.planEntrega);
+    solicitud.subscribe({
+      next: (actualizado: any) => {
+        this.pedidos = this.pedidos.map(item => item._id === id ? actualizado : item);
+        this.filtrarPedidos(false);
+        this.mensaje = this.entregaConfirmando ? 'Entrega confirmada' : 'Entrega programada';
+        this.entregaGuardando = false;
+        this.entregaPedido = null;
+        this.detectorCambios.detectChanges();
+      },
+      error: error => {
+        this.entregaError = error.error?.mensaje || 'No se pudo guardar la entrega. Intentá de nuevo.';
+        this.entregaGuardando = false;
+        this.detectorCambios.detectChanges();
+      },
+    });
+  }
+
+  fechaEntrega(fecha: string): string {
+    if (!fecha) return '';
+    const [ano, mes, dia] = fecha.split('-');
+    return `${dia}/${mes}/${ano}`;
+  }
+
   solicitudesAbiertas = false;
   pedidos: any[] = [];
   pedidosFiltrados: any[] = [];
@@ -542,7 +600,7 @@ export class Pedidos implements OnInit {
 
   marcarEntregado(pedido: any, popoverId?: string) {
     if (popoverId) this.cerrarPopover(popoverId);
-    this.actualizarEntrega(pedido, 'entregado');
+    this.abrirEntrega(pedido, true);
   }
 
   marcarPendienteEntrega(pedido: any, popoverId?: string) {

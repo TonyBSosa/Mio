@@ -1,0 +1,48 @@
+<mio-modal [open]="open" [title]="confirmando ? 'Confirmar entrega' : 'Programar entrega'"
+  [subtitle]="subtitle"
+  size="sm" [error]="error" [closeDisabled]="guardando" (closed)="closed.emit()">
+  @if (open) {
+    @if (confirmando) {
+      <div class="delivery-confirm">
+        <p>¿El cliente ya recibió este pedido?</p>
+        <dl>
+          <div><dt>Modalidad</dt><dd>{{ plan.tipo === 'local' ? 'Local específico' : 'Zona común' }}</dd></div>
+          <div><dt>Lugar</dt><dd>{{ plan.lugar }}</dd></div>
+          <div><dt>Fecha acordada</dt><dd>{{ fechaEntrega(plan.fecha) }}</dd></div>
+        </dl>
+        <p class="field-hint">El estado de pago se mantiene por separado.</p>
+        <div class="delivery-actions">
+          <button type="button" class="btn-secondary" (click)="closed.emit()" [disabled]="guardando">Cancelar</button>
+          <button type="button" class="btn-primary" (click)="guardar.emit()" [disabled]="guardando">{{ guardando ? 'Guardando…' : 'Sí, confirmar entrega' }}</button>
+        </div>
+      </div>
+    } @else {
+      <form class="delivery-form" (ngSubmit)="guardar.emit()">
+        <p class="field-hint">Guardá dónde y cuándo acordaste entregar el pedido.</p>
+        <div class="field">
+          <label for="entrega-tipo">Modalidad de entrega</label>
+          <select id="entrega-tipo" name="entregaTipo" [(ngModel)]="plan.tipo" required [disabled]="guardando">
+            <option value="local">Local específico</option>
+            <option value="zona_comun">Zona común</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="entrega-lugar">{{ plan.tipo === 'local' ? 'Nombre y dirección del local' : 'Lugar y punto de encuentro' }}</label>
+          <input id="entrega-lugar" name="entregaLugar" [(ngModel)]="plan.lugar" required maxlength="200"
+            [placeholder]="plan.tipo === 'local' ? 'Ej. Local del centro, frente al parque' : 'Ej. Entrada principal del centro comercial'"
+            aria-describedby="entrega-lugar-ayuda" [disabled]="guardando" />
+          <small id="entrega-lugar-ayuda" class="field-hint">Incluí una referencia que ayude a encontrar el lugar.</small>
+        </div>
+        <div class="field">
+          <label for="entrega-fecha">Fecha acordada</label>
+          <input id="entrega-fecha" type="date" name="entregaFecha" [(ngModel)]="plan.fecha" required min="2000-01-01" max="2100-12-31" [disabled]="guardando" />
+        </div>
+        <p class="field-hint">Programar mantiene el pedido pendiente. Confirmá la entrega cuando el cliente lo reciba.</p>
+        <div class="delivery-actions">
+          <button type="button" class="btn-secondary" (click)="closed.emit()" [disabled]="guardando">Cancelar</button>
+          <button type="submit" class="btn-primary" [disabled]="guardando">{{ guardando ? 'Guardando…' : 'Guardar programación' }}</button>
+        </div>
+      </form>
+    }
+  }
+</mio-modal>

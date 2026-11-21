@@ -27,6 +27,7 @@ const actualizarPorIdYVendedor = (id, vendedorId, data, session) => {
     {
       _id: id,
       vendedorId, canceladoEn: null,
+      ...(data.planEntrega !== undefined ? { estadoEntrega: 'pendiente' } : {}),
       ...(tocaFinanzas ? { reservaSolicitudId: null } : {})
     },
     data,
